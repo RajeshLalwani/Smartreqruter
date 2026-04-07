@@ -1,0 +1,104 @@
+{% extends 'base.html' %}{% load static %}
+{% block title %}Peer Competitive Standing | SmartRecruit{% endblock %}
+{% block content %}
+<div class="container-fluid px-4 mt-4">
+    <!-- Header -->
+    <div class="glass-panel p-4 mb-4"
+        style="background:linear-gradient(135deg,rgba(103,58,183,0.08),rgba(41,121,255,0.08));border:1px solid rgba(103,58,183,0.25);">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h2 class="fw-bold text-theme mb-1"><i class="fas fa-medal text-warning me-2"></i>Peer Competitive
+                    Standing</h2>
+                <p class="text-muted mb-0">Deep-dive percentile analysis against a pool of {{ total_applicants }}
+                    applicants</p>
+            </div>
+            <div class="text-end">
+                <div class="h2 fw-bold text-theme mb-0">Top {{ top_percentile }}%</div>
+                <div class="text-muted small fw-bold text-uppercase">Percentile Ranking</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Distribution Chart (Simulated with Bars) -->
+    <div class="glass-panel p-4 mb-4" data-aos="fade-up">
+        <h6 class="fw-bold text-theme mb-4">Applicant Pool Distribution (Score Parity)</h6>
+        <div class="d-flex align-items-end gap-2" style="height: 200px;">
+            {% for dist in standing.pool_distribution %}
+            <div class="flex-grow-1 position-relative group">
+                <div class="bg-primary bg-opacity-10 rounded-top transition-all"
+                    style="height: {{ dist.count }}px; min-height: 20px; border: 1px solid rgba(255,255,255,0.05); 
+                            {% if dist.range == '80-100%' %}background:rgba(103,58,183,0.4);border-color:rgba(103,58,183,1);{% endif %}">
+                </div>
+                <div class="text-center mt-2 xx-small text-muted uppercase">{{ dist.range }}</div>
+                {% if dist.range == '80-100%' %}
+                <div class="position-absolute top-0 start-50 translate-middle-x" style="margin-top:-30px;">
+                    <i class="fas fa-caret-down text-warning"></i>
+                    <div class="badge bg-warning text-dark x-small">You</div>
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="row g-4 mb-5">
+        <!-- Superiority Areas -->
+        <div class="col-md-6">
+            <div class="glass-panel p-4 h-100 border-success border-opacity-10" data-aos="fade-right">
+                <h6 class="text-success fw-bold x-small uppercase mb-3"><i class="fas fa-check-double me-2"></i>Areas of
+                    Market Superiority</h6>
+                <div class="d-flex flex-column gap-3">
+                    {% for area in standing.superiority_areas %}
+                    <div
+                        class="p-3 rounded bg-success bg-opacity-5 border border-success border-opacity-10 d-flex align-items-center gap-3">
+                        <div class="rounded-circle bg-success bg-opacity-20 d-flex align-items-center justify-content-center text-success"
+                            style="width:32px;height:32px;">
+                            <i class="fas fa-arrow-up small"></i>
+                        </div>
+                        <span class="text-theme small fw-bold">{{ area }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Catch-up Areas -->
+        <div class="col-md-6">
+            <div class="glass-panel p-4 h-100 border-warning border-opacity-10" data-aos="fade-left">
+                <h6 class="text-warning fw-bold x-small uppercase mb-3"><i
+                        class="fas fa-chart-line-down me-2"></i>Opportunities for Catch-up</h6>
+                <div class="d-flex flex-column gap-3">
+                    {% for area in standing.catchup_areas %}
+                    <div
+                        class="p-3 rounded bg-warning bg-opacity-5 border border-warning border-opacity-10 d-flex align-items-center gap-3">
+                        <div class="rounded-circle bg-warning bg-opacity-20 d-flex align-items-center justify-content-center text-warning"
+                            style="width:32px;height:32px;">
+                            <i class="fas fa-bolt-auto small"></i>
+                        </div>
+                        <span class="text-theme small fw-bold">{{ area }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .x-small {
+        font-size: 0.72rem;
+    }
+
+    .xx-small {
+        font-size: 0.6rem;
+    }
+
+    .uppercase {
+        text-transform: uppercase;
+    }
+
+    .transition-all {
+        transition: all 0.3s ease;
+    }
+</style>
+{% endblock %}

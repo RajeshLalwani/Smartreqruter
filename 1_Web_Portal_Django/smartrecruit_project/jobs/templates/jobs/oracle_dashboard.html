@@ -1,0 +1,270 @@
+{% extends 'base.html' %}{% load static %}
+{% block title %}The Oracle | Market Intelligence{% endblock %}
+{% block content %}
+<div class="container-fluid py-4 px-5">
+    <!-- Header -->
+    <div
+        class="glass-panel p-4 mb-4 border-primary border-opacity-20 shadow-2v d-flex justify-content-between align-items-center">
+        <div class="d-flex align-items-center gap-4">
+            <div class="oracle-eye-icon d-flex align-items-center justify-content-center">
+                <i class="fas fa-eye text-primary fs-3"></i>
+            </div>
+            <div>
+                <h4 class="fw-bold text-theme mb-1">Strategic Intelligence: The Oracle</h4>
+                <p class="text-muted x-small mb-0 uppercase tracking-widest">
+                    <span class="text-primary fw-bold">MARKET SCAN: ACTIVE</span> | Data Fusion: Agentic Intelligence
+                </p>
+            </div>
+        </div>
+        <div class="d-flex align-items-center gap-3">
+            <a href="{% url 'refresh_talent_pool' %}"
+                class="btn btn-primary rounded-pill px-4 btn-sm shadow-sm border-0 glass-effect">
+                <i class="fas fa-sync-alt me-2"></i> Refresh AI Talent Pool
+            </a>
+            <div class="opportunity-gauge d-flex align-items-center gap-3">
+                <div class="text-end">
+                    <div class="x-small text-muted uppercase">Opportunity Score</div>
+                    <div class="fs-4 fw-bold text-primary">{{ intel.opportunity_score }}%</div>
+                </div>
+                <div class="progress" style="width: 80px; height: 8px;">
+                    <div class="progress-bar bg-primary" style="width: {{ intel.opportunity_score }}%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Intelligence briefing -->
+        <div class="col-lg-5">
+            <div class="glass-panel p-4 h-100 shadow border-secondary border-opacity-10" data-aos="fade-right">
+                <h6 class="fw-bold text-theme mb-4"><i class="fas fa-file-alt text-info me-2"></i>Executive Summary</h6>
+                <div class="alert alert-dark bg-dark bg-opacity-40 border-0 rounded-4 p-4 mb-4">
+                    <p class="small text-theme italic lh-lg mb-0 text-justify">
+                        "{{ intel.briefing_text }}"
+                    </p>
+                </div>
+
+                <h6 class="fw-bold text-theme mb-3">Strategic Mandates:</h6>
+                <div class="d-flex flex-column gap-3">
+                    {% for rec in intel.recommendations %}
+                    <div
+                        class="p-3 rounded-4 bg-primary bg-opacity-5 border border-primary border-opacity-10 d-flex align-items-start gap-3">
+                        <i class="fas fa-crosshairs text-primary mt-1"></i>
+                        <span class="small text-theme opacity-90">{{ rec }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <div class="mt-4 p-3 rounded-4 border border-info border-opacity-10 bg-info bg-opacity-5">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="x-small text-muted font-monospace uppercase">Salary Trend</span>
+                        <span class="small fw-bold text-info">{{ intel.salary_trend }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Visual Heatmap / Market Map -->
+        <div class="col-lg-7">
+            <div class="glass-panel p-4 h-100 shadow border-secondary border-opacity-10 overflow-hidden"
+                data-aos="fade-left">
+                <h6 class="fw-bold text-theme mb-4"><i class="fas fa-map-marked-alt text-warning me-2"></i>Talent
+                    Density Heatmap</h6>
+
+                <div id="market-map" class="position-relative rounded-4 overflow-hidden mb-4"
+                    style="height: 400px; background: rgba(0,0,0,0.2);">
+                    <!-- Simulation of a Heatmap with stylized dots -->
+                    <div
+                        class="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/e/ee/India_map_blank.svg"
+                            class="opacity-10 invert-map" style="width: 80%; filter: brightness(0.5) contrast(1.2);">
+                    </div>
+
+                    {% for city in intel.heatmap_data %}
+                    <div class="city-node position-absolute d-flex flex-column align-items-center"
+                        style="top: {{ 30|add:forloop.counter0 }}%; left: {{ 30|add:forloop.counter0 }}%;">
+                        <div class="pulse-dot bg-primary shadow-primary"></div>
+                        <div
+                            class="city-tag x-small fw-bold py-1 px-2 rounded mt-2 border border-primary border-opacity-20">
+                            {{ city.city }} ({{ city.density }})
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-borderless table-dark bg-transparent x-small mb-0">
+                        <thead class="text-muted border-bottom border-secondary border-opacity-10">
+                            <tr>
+                                <th>Location</th>
+                                <th>Density Index</th>
+                                <th>Growth Potential</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for city in intel.heatmap_data %}
+                            <tr>
+                                <td class="fw-bold text-theme">{{ city.city }}</td>
+                                <td>{{ city.density }}/100</td>
+                                <td class="{% if city.growth > 0 %}text-success{% else %}text-danger{% endif %}">
+                                    {{ city.growth }}%
+                                </td>
+                                <td>
+                                    <span
+                                        class="badge bg-{% if city.growth > 0 %}success{% else %}danger{% endif %} bg-opacity-10 text-{% if city.growth > 0 %}success{% else %}danger{% endif %} xx-small">
+                                        {% if city.growth > 0 %}EXPANDING{% else %}CONSOLIDATING{% endif %}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="row g-4 mt-2">
+            <!-- Live Talent Feed (Phase 5 Autonomous Matchmaker) -->
+            <div class="col-12">
+                <div class="glass-panel p-4 shadow-lg border-primary border-opacity-10 overflow-hidden position-relative"
+                    data-aos="fade-up">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h6 class="fw-bold text-theme mb-0">
+                            <i class="fas fa-satellite-dish text-primary me-2 animate-pulse"></i> The Matchmaker:
+                            Autonomous Talent Discovery
+                        </h6>
+                        <span
+                            class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-20 xx-small tracking-widest uppercase">
+                            AI AGENT: PROACTIVE SCANNING
+                        </span>
+                    </div>
+
+                    <div class="talent-feed-container" style="height: 120px; overflow: hidden; position: relative;">
+                        <div class="talent-feed-track d-flex gap-4">
+                            {% if top_matches %}
+                            {% for match in top_matches %}
+                            <div class="talent-card-mini glass-panel p-3 d-flex align-items-center gap-3"
+                                style="min-width: 250px;">
+                                <div
+                                    class="avatar-sm bg-primary bg-opacity-20 rounded-circle d-flex align-items-center justify-content-center text-primary fw-bold">
+                                    {{                                     match.candidate.user.first_name|first|default:match.candidate.user.username|first|upper                                     }}
+                                </div>
+                                <div class="flex-grow-1 overflow-hidden">
+                                    <div class="fw-bold text-theme text-truncate">{{                                         match.candidate.user.get_full_name|default:match.candidate.user.username }}
+                                    </div>
+                                    <div class="x-small text-muted text-truncate">{{                                         match.candidate.current_role|default:"Top Talent" }}</div>
+                                </div>
+                                <div class="text-end">
+                                    <div class="small fw-bold text-success">{{ match.match_score }}%</div>
+                                    <div class="xx-small text-muted uppercase">Match</div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                            {% else %}
+                            <div class="w-100 text-center py-4 text-muted opacity-50">
+                                <i class="fas fa-radar fa-spin me-2"></i> Initializing Autonomous Sourcing Node...
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .oracle-eye-icon {
+        width: 64px;
+        height: 64px;
+        background: rgba(var(--bs-primary-rgb), 0.1);
+        border: 1px solid rgba(var(--bs-primary-rgb), 0.2);
+        border-radius: 16px;
+        box-shadow: inset 0 0 15px rgba(var(--bs-primary-rgb), 0.2);
+    }
+
+    .invert-map {
+        filter: invert(1) brightness(0.8) opacity(0.3);
+    }
+
+    .pulse-dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        animation: pulse-ring 2s infinite;
+    }
+
+    .shadow-primary {
+        box-shadow: 0 0 10px var(--bs-primary);
+    }
+
+    @keyframes pulse-ring {
+        0% {
+            transform: scale(0.8);
+            box-shadow: 0 0 0 0 rgba(var(--bs-primary-rgb), 0.7);
+        }
+
+        70% {
+            transform: scale(1.1);
+            box-shadow: 0 0 0 15px rgba(var(--bs-primary-rgb), 0);
+        }
+
+        100% {
+            transform: scale(0.8);
+            box-shadow: 0 0 0 0 rgba(var(--bs-primary-rgb), 0);
+        }
+    }
+
+    .city-tag {
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(5px);
+    }
+
+    .xx-small {
+        font-size: 0.6rem;
+    }
+
+    .x-small {
+        font-size: 0.75rem;
+    }
+
+    .uppercase {
+        text-transform: uppercase;
+    }
+
+    .italic {
+        font-style: italic;
+    }
+
+    .text-justify {
+        text-align: justify;
+    }
+
+    /* Talent Feed Animation */
+    .talent-feed-track {
+        animation: scroll-feed 30s linear infinite;
+        width: max-content;
+    }
+
+    @keyframes scroll-feed {
+        0% {
+            transform: translateX(0);
+        }
+
+        100% {
+            transform: translateX(-50%);
+        }
+    }
+</style>
+
+<script>
+    // Initialize scrolling if multiple cards
+    document.addEventListener('DOMContentLoaded', () => {
+        const track = document.querySelector('.talent-feed-track');
+        if (track && track.children.length > 3) {
+            const clone = track.innerHTML;
+            track.innerHTML += clone;
+        }
+    });
+</script>
+{% endblock %}

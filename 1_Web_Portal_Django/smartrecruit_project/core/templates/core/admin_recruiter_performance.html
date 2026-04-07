@@ -1,0 +1,136 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Recruiter Performance | SmartRecruit Admin{% endblock %}
+{% block content %}
+<div class="d-flex" style="min-height:calc(100vh - 72px)">
+  {% include 'core/_admin_sidebar.html' %}
+  <main class="flex-grow-1 p-4 p-lg-5">
+
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-5">
+      <div>
+        <h1 class="glow-text mb-1" style="font-size:1.8rem;"><i class="fa-solid fa-ranking-star me-2 text-danger"></i>Recruiter Performance</h1>
+        <p class="text-theme-secondary mb-0">{{ recruiters|length }} active recruiter{{ recruiters|length|pluralize }} · ranked by total hires</p>
+      </div>
+    </div>
+
+    <!-- KPI Row -->
+    <div class="row g-3 mb-5">
+      <div class="col-6 col-lg-3">
+        <div class="glass-card p-4 text-center">
+          <div class="text-warning fw-bold" style="font-size:2rem;">{{ recruiters|length }}</div>
+          <div class="text-theme-secondary small">Total Recruiters</div>
+        </div>
+      </div>
+      <div class="col-6 col-lg-3">
+        <div class="glass-card p-4 text-center">
+          <div class="fw-bold text-primary" style="font-size:2rem;">
+            {{ recruiters.0.job_count|default:"0" }}
+          </div>
+          <div class="text-theme-secondary small">Top Poster's Jobs</div>
+        </div>
+      </div>
+      <div class="col-6 col-lg-3">
+        <div class="glass-card p-4 text-center">
+          <div class="fw-bold text-info" style="font-size:2rem;">
+            {{ recruiters.0.applicant_count|default:"0" }}
+          </div>
+          <div class="text-theme-secondary small">Top Poster's Applicants</div>
+        </div>
+      </div>
+      <div class="col-6 col-lg-3">
+        <div class="glass-card p-4 text-center">
+          <div class="fw-bold text-success" style="font-size:2rem;">
+            {{ recruiters.0.hire_count|default:"0" }}
+          </div>
+          <div class="text-theme-secondary small"># 1 Recruiter Hires</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Performance Table -->
+    <div class="glass-card p-0" style="overflow:hidden;">
+      <div class="table-responsive">
+        <table class="table table-dark table-hover align-middle mb-0" style="background:transparent;">
+          <thead style="background:rgba(0,0,0,.3);">
+            <tr>
+              <th class="ps-4 py-3" style="width:40px;">Rank</th>
+              <th>Recruiter</th>
+              <th>Jobs Posted</th>
+              <th>Applicants</th>
+              <th>Hires</th>
+              <th>Hire Rate</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for r in recruiters %}
+            <tr style="border-bottom:1px solid rgba(255,255,255,.05);">
+              <td class="ps-4 py-3">
+                {% if forloop.counter == 1 %}
+                <span class="badge bg-warning text-dark px-2 py-1"><i class="fa-solid fa-trophy me-1"></i>1st</span>
+                {% elif forloop.counter == 2 %}
+                <span class="badge bg-secondary px-2 py-1">2nd</span>
+                {% elif forloop.counter == 3 %}
+                <span class="badge" style="background:rgba(205,127,50,.3); color:#cd7f32;">3rd</span>
+                {% else %}
+                <span class="text-theme-secondary">#{{ forloop.counter }}</span>
+                {% endif %}
+              </td>
+              <td class="py-3">
+                <div class="d-flex align-items-center gap-3">
+                  <div class="rounded-circle d-flex align-items-center justify-content-center fw-bold flex-shrink-0"
+                    style="width:40px;height:40px;font-size:.85rem;background:linear-gradient(135deg,#f59e0b,#d97706);">
+                    {{ r.first_name|default:r.username|slice:":1"|upper }}
+                  </div>
+                  <div>
+                    <div class="fw-semibold text-white" style="font-size:.9rem;">{{ r.get_full_name|default:r.username }}</div>
+                    <small class="text-theme-secondary">{{ r.email|default:"No email" }}</small>
+                  </div>
+                </div>
+              </td>
+              <td class="text-white fw-semibold">{{ r.job_count }}</td>
+              <td class="text-white">{{ r.applicant_count }}</td>
+              <td>
+                <span class="fw-bold {% if r.hire_count > 0 %}text-success{% else %}text-muted{% endif %}">
+                  {{ r.hire_count }}
+                </span>
+              </td>
+              <td>
+                {% if r.applicant_count > 0 %}
+                  {% widthratio r.hire_count r.applicant_count 100 as rate %}
+                  <div class="d-flex align-items-center gap-2">
+                    <div class="progress flex-grow-1" style="height:6px; background:rgba(255,255,255,.06); border-radius:6px; max-width:80px;">
+                      <div class="progress-bar"
+                        style="width:{{ rate }}%;background:{% if rate >= 20 %}#10b981{% elif rate >= 10 %}#f59e0b{% else %}#ef4444{% endif %};border-radius:6px;">
+                      </div>
+                    </div>
+                    <span class="badge {% if rate >= 20 %}bg-success border border-success{% elif rate >= 10 %}bg-warning border border-warning text-dark{% else %}bg-danger border border-danger{% endif %} bg-opacity-20">
+                      {{ rate }}%
+                    </span>
+                  </div>
+                {% else %}
+                  <span class="text-muted small">No applicants yet</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if r.is_active %}
+                <span class="badge bg-success bg-opacity-20 text-success"><i class="fa-solid fa-circle me-1" style="font-size:.45rem;"></i>Active</span>
+                {% else %}
+                <span class="badge bg-secondary text-white">Suspended</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="7" class="text-center py-5 text-theme-secondary">
+              <i class="fa-solid fa-user-tie opacity-25 fs-1 d-block mb-3"></i>No recruiters in the system yet.
+            </td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        
+        {% include 'core/_admin_pagination.html' %}
+      </div>
+    </div>
+  </main>
+</div>
+{% endblock %}

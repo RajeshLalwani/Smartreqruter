@@ -1,0 +1,967 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    /* Elite Glassmorphism & Animations */
+    :root {
+        --accent-glow: rgba(99, 102, 241, 0.4);
+        --neon-epic: #ff00ff;
+        --neon-std: #00d2ff;
+        --neon-danger: #ff0033;
+    }
+
+    .glass-panel {
+        background: rgba(255, 255, 255, 0.03);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 20px;
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        transition: all 0.3s ease;
+    }
+
+    .q-nav-grid {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 8px;
+    }
+
+    .q-nav-btn {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(255, 255, 255, 0.03);
+        color: var(--text-secondary);
+        font-weight: 700;
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .q-nav-btn:hover {
+        background: rgba(99, 102, 241, 0.15);
+        border-color: rgba(99, 102, 241, 0.4);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+    }
+
+    .q-nav-btn.answered {
+        background: rgba(16, 185, 129, 0.15);
+        color: #10b981;
+        border-color: rgba(16, 185, 129, 0.3);
+    }
+
+    .q-nav-btn.flagged {
+        background: rgba(245, 158, 11, 0.15);
+        color: #f59e0b;
+        border-color: rgba(245, 158, 11, 0.3);
+    }
+
+    .q-nav-btn.current {
+        background: rgba(99, 102, 241, 0.25);
+        color: #818cf8;
+        border-color: #6366f1;
+        box-shadow: 0 0 15px rgba(99, 102, 241, 0.4);
+        transform: scale(1.05);
+    }
+
+    /* Question card animations */
+    .question-slide {
+        display: none;
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    .question-slide.active {
+        display: block;
+        animation: slideUpFade 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    }
+
+    @keyframes slideUpFade {
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Progress bar */
+    .progress-exam {
+        height: 8px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 10px;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .progress-exam .bar {
+        height: 100%;
+        background: linear-gradient(90deg, #6366f1, #10b981);
+        transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        border-radius: 10px;
+    }
+
+    /* Timer Styles */
+    #timer-container {
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        z-index: 1000;
+        background: rgba(15, 23, 42, 0.8);
+        backdrop-filter: blur(12px);
+        padding: 15px 25px;
+        border-radius: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+        transition: all 0.3s ease;
+    }
+
+    #timer-display {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 1.8rem;
+        font-weight: 800;
+        letter-spacing: -1px;
+        color: #fff;
+        text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+    }
+
+    /* Blitz Mode Critical Pulse */
+    .timer-blitz-critical {
+        color: var(--neon-danger) !important;
+        text-shadow: 0 0 20px var(--neon-danger), 0 0 40px var(--neon-danger) !important;
+        animation: neonPulse 1s infinite alternate;
+    }
+
+    @keyframes neonPulse {
+        from { transform: scale(1); opacity: 1; }
+        to { transform: scale(1.05); opacity: 0.8; }
+    }
+
+    /* Option Labels */
+    .option-label {
+        border: 1px solid rgba(255, 255, 255, 0.08) !important;
+        background: rgba(255, 255, 255, 0.02) !important;
+        padding: 20px !important;
+        border-radius: 15px !important;
+        transition: all 0.2s ease !important;
+    }
+
+    .option-label:hover {
+        background: rgba(99, 102, 241, 0.08) !important;
+        border-color: rgba(99, 102, 241, 0.3) !important;
+        transform: translateX(5px);
+    }
+
+    .option-label.selected {
+        background: rgba(99, 102, 241, 0.15) !important;
+        border-color: rgba(99, 102, 241, 0.5) !important;
+        box-shadow: 0 4px 15px rgba(99, 102, 241, 0.2);
+    }
+
+    /* Floating particles background hint */
+    @keyframes float {
+        0% {
+            transform: translateY(0px) rotate(0deg);
+            opacity: 0;
+        }
+
+        50% {
+            opacity: 0.5;
+        }
+
+        100% {
+            transform: translateY(-100px) rotate(360deg);
+            opacity: 0;
+        }
+    }
+</style>
+
+<!-- Fullscreen Start Overlay -->
+<div id="fullscreen-overlay"
+    class="position-fixed top-0 start-0 w-100 h-100 d-flex flex-column gap-3 align-items-center justify-content-center"
+    style="background: radial-gradient(circle at center, rgba(15, 23, 42, 0.95), rgba(2, 6, 23, 0.98)); z-index: 10000; backdrop-filter: blur(10px);">
+    
+    <!-- Assessment Info Card -->
+    <div class="glass-panel p-5 text-center shadow-2xl border-primary border-opacity-20 animate-fade-in w-100 mx-3 text-white"
+        style="max-width: 600px;">
+        <div class="mb-4">
+            <div class="d-inline-block p-3 rounded-circle bg-danger bg-opacity-10 mb-3">
+                <i class="fas fa-shield-alt fa-3x text-danger animate-pulse"></i>
+            </div>
+            <h1 class="display-6 fw-bold text-white mb-2">Elite Assessment</h1>
+            <p class="text-white-50 lead">Proctored Environment Active</p>
+        </div>
+
+        <div class="stats-row d-flex justify-content-center gap-4 mb-5">
+            <div class="text-center">
+                <div class="h3 fw-bold text-primary mb-0">{{ time_limit }}</div>
+                <div class="small text-white-50 text-uppercase">Minutes</div>
+            </div>
+            <div class="vr opacity-10"></div>
+            <div class="text-center">
+                <div class="h3 fw-bold text-primary mb-0">{{ questions|length }}</div>
+                <div class="small text-white-50 text-uppercase">Questions</div>
+            </div>
+        </div>
+        
+        <p class="text-white-50 small mb-0">Camera tracking and tab-switch detection will be enabled upon starting.</p>
+    </div>
+
+    <!-- Blitz Mode Toggle Card -->
+    <div class="glass-panel p-3 border-info border-opacity-20 animate-fade-in w-100 mx-3 text-white shadow" style="max-width: 600px;">
+        <div class="form-check form-switch d-flex justify-content-between align-items-center px-0">
+            <div class="text-start">
+                <label class="form-check-label h6 fw-bold text-info mb-0" for="blitzModeToggle">
+                    <i class="fas fa-bolt me-2"></i> ACTIVATE BLITZ MODE
+                </label>
+                <p class="small text-white-50 mb-0">Bonus points for speed. Hardcore timer active.</p>
+            </div>
+            <input class="form-check-input ms-3" type="checkbox" id="blitzModeToggle" name="blitz_mode" style="width: 3em; height: 1.5em; cursor: pointer;">
+        </div>
+    </div>
+
+    <!-- Start Button Container -->
+    <div class="w-100 mx-3 animate-fade-in" style="max-width: 600px;">
+        <button id="start-fullscreen-btn" class="btn btn-primary shadow-lg btn-lg w-100 rounded-pill py-3 fw-bold border-0">
+            <i class="fas fa-rocket me-2"></i> ENTER NEURAL LINK
+        </button>
+    </div>
+</div>
+
+<script>
+    // Ensure overlays break out of any scoped z-index or rendering contexts 
+    // established by the root theme wrapper
+    document.addEventListener("DOMContentLoaded", () => {
+        const overlay = document.getElementById("fullscreen-overlay");
+        const breakOverlay = document.getElementById("break-overlay");
+        if(overlay) document.body.appendChild(overlay);
+        if(breakOverlay) document.body.appendChild(breakOverlay);
+    });
+</script>
+
+<!-- Timer UI -->
+<div id="timer-container" style="display: none;">
+    <div class="d-flex align-items-center gap-3">
+        <div class="timer-icon">
+            <i class="fas fa-clock text-primary"></i>
+        </div>
+        <div>
+            <div class="small text-muted text-uppercase fw-bold ls-1" style="font-size: 0.65rem;">Remaining</div>
+            <div id="timer-display">{{ time_limit }}:00</div>
+        </div>
+    </div>
+    <div class="d-grid gap-2 mt-2">
+        <button id="break-btn" class="btn btn-xs btn-outline-info rounded-pill py-1"
+            style="font-size: 0.65rem; border-color: rgba(99, 102, 241, 0.2);" onclick="toggleBreak()">
+            <i class="fas fa-brain me-1"></i> ZEN RELIEF
+        </button>
+        <div class="d-flex gap-2">
+            <a href="{% url 'regenerate_ai_assessment' application.id %}" class="btn btn-xs btn-outline-primary rounded-pill flex-grow-1 py-1" 
+               style="font-size: 0.6rem; border-color: rgba(99, 102, 241, 0.2);" title="Wipe session and fetch fresh questions">
+                <i class="fas fa-sync-alt"></i> REGEN AI
+            </a>
+            <a href="{% url 'terminate_ai_session' application.id %}" class="btn btn-xs btn-outline-danger rounded-pill flex-grow-1 py-1" 
+               style="font-size: 0.6rem; border-color: rgba(239, 68, 68, 0.2);" onclick="return confirm('Forcibly end session and submit failure?')" title="Close link immediately">
+                <i class="fas fa-power-off"></i> TERMINATE
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Break Overlay -->
+<div id="break-overlay"
+    style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at center, #0f172a, #020617); z-index: 10000; overflow: hidden;">
+    <div class="d-flex flex-column align-items-center justify-content-center h-100 text-center px-4">
+        <div class="breathing-circle mb-5"></div>
+        <h2 class="text-white fw-bold mb-3">Breathing Logic: Active</h2>
+        <p class="text-muted lead mb-5" style="max-width: 500px;">
+            "Nature does not hurry, yet everything is accomplished." <br>
+            Take a moment to center yourself. Your assessment is paused.
+        </p>
+        <button class="btn btn-primary btn-lg rounded-pill px-5" onclick="toggleBreak()">
+            <i class="fas fa-play me-2"></i> Resume Assessment
+        </button>
+    </div>
+
+    <style>
+        .breathing-circle {
+            width: 180px;
+            height: 180px;
+            background: radial-gradient(circle, rgba(99, 102, 241, 0.3) 0%, transparent 70%);
+            border: 2px solid rgba(99, 102, 241, 0.4);
+            border-radius: 50%;
+            box-shadow: 0 0 80px rgba(99, 102, 241, 0.2);
+            animation: breathe 10s ease-in-out infinite;
+        }
+
+        @keyframes breathe {
+
+            0%,
+            100% {
+                transform: scale(0.95);
+                opacity: 0.3;
+            }
+
+            50% {
+                transform: scale(1.6);
+                opacity: 1;
+                box-shadow: 0 0 120px rgba(99, 102, 241, 0.6);
+            }
+        }
+
+        .animate-fade-in {
+            animation: fadeIn 0.8s ease-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+    </style>
+</div>
+
+<div class="container-fluid mt-4 px-4" id="main-assessment-content" style="display: none;">
+    <div class="row g-4">
+        <!-- Main Question Area (col-8) -->
+        <div class="col-lg-8 col-xl-9">
+            <!-- Header -->
+            <div class="glass-panel p-4 mb-3">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <h3 class="fw-bold text-theme mb-1">
+                            {% if test_type == 'aptitude' %}
+                            <i class="fas fa-brain me-2 text-primary"></i> Round 1: Aptitude Test
+                            {% else %}
+                            <i class="fas fa-laptop-code me-2 text-info"></i> Round 2: Practical Assessment
+                            {% endif %}
+                        </h3>
+                        <p class="text-muted mb-0 small">
+                            <i class="fas fa-user-circle me-1"></i> {{ application.candidate.full_name }}
+                            <span class="mx-2">|</span>
+                            <i class="fas fa-briefcase me-1"></i> {{ application.job.title }}
+                        </p>
+                    </div>
+                    <div class="text-end">
+                        <span
+                            class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-3 py-2">
+                            {{ time_limit }} Min | Passing:
+                            {% if test_type == 'aptitude' %}{{ application.job.passing_score_r1 }}%{% else %}{{
+                            application.job.passing_score_r2 }}%{% endif %}
+                        </span>
+                    </div>
+                </div>
+                <!-- Progress Bar -->
+                <div class="d-flex align-items-center gap-3">
+                    <div class="progress-exam flex-grow-1">
+                        <div class="bar" id="progress-bar" style="width: 0%"></div>
+                    </div>
+                    <span class="text-muted small fw-bold" id="progress-text">0/{{ questions|length }}</span>
+                </div>
+            </div>
+
+            <!-- Question Form -->
+            <form method="POST" id="assessmentForm">
+                {% csrf_token %}
+
+                {% for q in questions %}
+                <div class="question-slide glass-panel p-4 mb-3 {% if forloop.first %}active{% endif %}"
+                    data-q-index="{{ forloop.counter0 }}" id="q-slide-{{ forloop.counter0 }}">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <span class="badge bg-primary bg-opacity-15 text-primary fw-bold me-2 px-3 py-2"
+                                style="font-size: 0.85rem;">
+                                Q{{ forloop.counter }} / {{ questions|length }}
+                            </span>
+                            {% if test_type == 'aptitude' %}
+                            <span
+                                class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25">Aptitude</span>
+                            {% else %}
+                            <span
+                                class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25">Technical</span>
+                            {% endif %}
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-warning flag-btn rounded-pill px-3"
+                            onclick="toggleFlag({{ forloop.counter0 }})" id="flag-btn-{{ forloop.counter0 }}">
+                            <i class="fas fa-flag me-1"></i> Flag
+                        </button>
+                    </div>
+
+                    <h5 class="fw-bold text-theme mb-4 lh-base">{{ q.question }}</h5>
+
+                    <div class="d-flex flex-column gap-2">
+                        {% for option in q.options %}
+                        <label class="d-flex align-items-center gap-3 p-3 rounded-3 option-label"
+                            style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); cursor: pointer; transition: all 0.2s ease;"
+                            onmouseover="this.style.background='rgba(99,102,241,0.08)'"
+                            onmouseout="if(!this.querySelector('input').checked) this.style.background='rgba(255,255,255,0.03)'">
+                            <input class="form-check-input" type="radio" name="{{ q.id }}" value="{{ option }}"
+                                onchange="markAnswered({{ forloop.parentloop.counter0 }}, this)"
+                                style="width: 20px; height: 20px;">
+                            <span class="fw-medium text-theme">{{ option }}</span>
+                        </label>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endfor %}
+
+                {% if test_type == 'practical' and coding_challenge %}
+                <!-- Part B: Coding Challenge (shown AFTER all MCQs) -->
+                <div class="question-slide glass-panel p-4 mb-3" data-q-index="{{ questions|length }}"
+                    id="q-slide-{{ questions|length }}">
+                    <h4 class="text-primary mb-3"><i class="fas fa-code me-2"></i> Coding Challenge</h4>
+                    <h5 class="text-theme">{{ coding_challenge.title }}</h5>
+                    <p class="text-muted lh-lg">{{ coding_challenge.description }}</p>
+
+                    <div class="glass-panel p-3 mb-3 d-flex justify-content-between align-items-center" style="background: rgba(255,255,255,0.03);">
+                        <div class="text-theme">
+                            <strong>Example Input:</strong> <code>{{ coding_challenge.example_input }}</code><br>
+                            <strong>Example Output:</strong> <code>{{ coding_challenge.example_output }}</code>
+                        </div>
+                        <div class="px-3 border-start border-secondary border-opacity-25">
+                            <label class="xx-small text-uppercase tracking-widest text-secondary fw-bold mb-2 d-block">Runtime Engine</label>
+                            <select id="language-select" class="form-select form-select-sm glass-input text-info fw-bold" 
+                                style="width: 140px; background-color: rgba(15, 23, 42, 0.8);" onchange="handleLanguageChange(this.value)">
+                                <option value="python">Python 3.10</option>
+                                <option value="javascript">Node.js 18</option>
+                                <option value="go">Go 1.16</option>
+                                <option value="rust">Rust 1.68</option>
+                                <option value="java">Java 15</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Monaco Editor: Cyber Glass Container -->
+                    <div class="editor-outer mb-3" style="
+                        border: 1px solid rgba(0, 242, 255, 0.3);
+                        border-radius: 12px;
+                        overflow: hidden;
+                        box-shadow: 0 0 20px rgba(0, 242, 255, 0.1);
+                    ">
+                        <div class="terminal-header" style="
+                            background: rgba(255, 255, 255, 0.05);
+                            padding: 10px 16px;
+                            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+                            display: flex;
+                            justify-content: space-between;
+                            align-items: center;
+                        ">
+                            <span style="font-size: 12px; color: rgba(255,255,255,0.4); font-family: 'JetBrains Mono', monospace;">
+                                <span style="color:#ff5f57; margin-right:6px;">●</span>
+                                <span style="color:#ffbd2e; margin-right:6px;">●</span>
+                                <span style="color:#28ca41; margin-right:10px;">●</span>
+                                code_challenge.py
+                            </span>
+                            <div id="copy-shield" style="font-size:11px; color: rgba(0,242,255,0.55); font-weight:600;">
+                                <i class="fa-solid fa-shield-halved me-1"></i>COPY SHIELD ACTIVE
+                            </div>
+                        </div>
+                        <div id="monaco-editor-container" style="height: 460px; background: rgba(10, 11, 16, 0.8); backdrop-filter: blur(10px);"></div>
+                    </div>
+                    <input type="hidden" name="language" id="selected_language" value="python">
+                    <input type="hidden" name="code_submission" id="hidden_code_submission">
+                    <input type="hidden" name="question_id" value="{{ coding_challenge.title }}">
+                    <!-- Proctoring: Tab-switch count captured here for Recruiter report -->
+                    <input type="hidden" name="tab_switch_count" id="tab_switch_count" value="0">
+                </div>
+                {% endif %}
+
+                <!-- Navigation Buttons -->
+                <div class="d-flex justify-content-between align-items-center mt-3">
+                    <button type="button" class="btn btn-outline-secondary rounded-pill px-4" id="prev-btn"
+                        onclick="navigateTo(currentQuestion - 1)" disabled>
+                        <i class="fas fa-arrow-left me-2"></i> Previous
+                    </button>
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-primary rounded-pill px-4" id="next-btn"
+                            onclick="navigateTo(currentQuestion + 1)">
+                            Next <i class="fas fa-arrow-right ms-2"></i>
+                        </button>
+                        <button type="button" class="d-none" id="submit-btn"
+                            onclick="executeSubmissionFlow()"
+                            style="
+                                background: linear-gradient(135deg, #00f2ff, #bc13fe);
+                                border: none;
+                                color: #000;
+                                font-weight: 800;
+                                font-size: 15px;
+                                padding: 12px 32px;
+                                border-radius: 50px;
+                                cursor: pointer;
+                                box-shadow: 0 0 20px rgba(0, 242, 255, 0.4);
+                                animation: neonSubmitPulse 2s infinite;
+                                transition: all 0.3s ease;
+                            ">
+                            <i class="fas fa-bolt me-2"></i>⚡ Submit Assessment
+                        </button>
+                        <style>
+                            @keyframes neonSubmitPulse {
+                                0%, 100% { box-shadow: 0 0 20px rgba(0, 242, 255, 0.4), 0 0 40px rgba(188, 19, 254, 0.2); }
+                                50% { box-shadow: 0 0 35px rgba(0, 242, 255, 0.7), 0 0 70px rgba(188, 19, 254, 0.5); }
+                            }
+                            #submit-btn:hover { transform: scale(1.05); }
+                        </style>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Right Sidebar (col-4) -->
+        <div class="col-lg-4 col-xl-3">
+            <!-- Proctoring -->
+            <div class="glass-panel p-3 mb-3 sticky-top" style="top: 80px; z-index: 100;">
+                <h6 class="fw-bold mb-2 text-theme"><i class="fas fa-video me-2 text-danger"></i> Proctoring</h6>
+                <video id="webcam" autoplay playsinline muted class="img-fluid rounded mb-2 w-100"
+                    style="transform: scaleX(-1); max-height: 140px; object-fit: cover;"></video>
+                <div class="d-flex gap-2 mb-3">
+                    <div id="status-indicator" class="badge bg-warning text-dark flex-grow-1">Checking Permissions...</div>
+                    <div id="emotion-tag" class="badge bg-secondary bg-opacity-25 text-theme border border-secondary border-opacity-25 flex-grow-1 d-none" style="font-size: 0.7rem; line-height: 1.5; align-content: center;">
+                        <i class="fas fa-circle-notch fa-spin me-1"></i> Sentiment Live
+                    </div>
+                </div>
+
+                <!-- Question Navigator -->
+                <h6 class="fw-bold mb-2 text-theme"><i class="fas fa-th me-2"></i> Question Navigator</h6>
+                <div class="q-nav-grid mb-3" id="q-nav-grid">
+                    {% for q in questions %}
+                    <button type="button" class="q-nav-btn {% if forloop.first %}current{% endif %}"
+                        id="q-nav-{{ forloop.counter0 }}" onclick="navigateTo({{ forloop.counter0 }})">
+                        {{ forloop.counter }}
+                    </button>
+                    {% endfor %}
+                    {% if test_type == 'practical' and coding_challenge %}
+                    <button type="button" class="q-nav-btn" id="q-nav-{{ questions|length }}"
+                        onclick="navigateTo({{ questions|length }})">
+                        <i class="fas fa-code" style="font-size: 0.7rem;"></i>
+                    </button>
+                    {% endif %}
+                </div>
+
+                <!-- Legend -->
+                <div class="d-flex flex-wrap gap-2 small text-theme">
+                    <span><span class="d-inline-block rounded"
+                            style="width:12px;height:12px;background:rgba(16,185,129,0.4);"></span> Answered: <strong
+                            id="answered-count">0</strong></span>
+                    <span><span class="d-inline-block rounded"
+                            style="width:12px;height:12px;background:rgba(245,158,11,0.4);"></span> Flagged: <strong
+                            id="flagged-count">0</strong></span>
+                    <span><span class="d-inline-block rounded"
+                            style="width:12px;height:12px;background:rgba(148,163,184,0.3);"></span> Unanswered: <strong
+                            id="unanswered-count">{{ questions|length }}</strong></span>
+                </div>
+
+                <p class="small text-muted mt-3 mb-0">
+                    <i class="fas fa-exclamation-triangle text-warning me-1"></i>
+                    Tab-switching or minimizing will be detected.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Load TensorFlow.js and COCO-SSD -->
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"></script>
+<script src="https://cdn.jsdelivr.net/npm/face-api.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.36.1/min/vs/loader.min.js"></script>
+<script src="{% static 'js/proctoring.js' %}"></script>
+
+<script>
+    // ===== ADVANCED ASSESSMENT ENGINE =====
+    const TOTAL_QUESTIONS = {{ questions| length }};
+    const HAS_CODING = {% if test_type == 'practical' and coding_challenge %}true{% else %} false{% endif %};
+    const TOTAL_SLIDES = HAS_CODING ? TOTAL_QUESTIONS + 1 : TOTAL_QUESTIONS;
+    let currentQuestion = 0;
+    let answeredSet = new Set();
+    let flaggedSet = new Set();
+    let testDuration = {{ time_limit }} * 60;
+    let timeRemaining = testDuration;
+    let timerInterval;
+    let proctor;
+    let editor;
+    let isPaused = false; 
+    let isBlitzActive = false;
+    const BOILERPLATES = JSON.parse('{{ boilerplates|safe }}');
+
+    function handleLanguageChange(lang) {
+        if (!editor) return;
+        
+        // Update Monaco Model Language
+        const model = editor.getModel();
+        const monacoLang = lang === 'javascript' ? 'javascript' : (lang === 'go' ? 'go' : (lang === 'rust' ? 'rust' : (lang === 'java' ? 'java' : 'python')));
+        monaco.editor.setModelLanguage(model, monacoLang);
+        
+        // Update Boilerplate? (Only if current code is empty or just another boilerplate)
+        const currentCode = editor.getValue().trim();
+        const isStandardBoilerplate = Object.values(BOILERPLATES).some(b => b.trim() === currentCode);
+        
+        if (!currentCode || isStandardBoilerplate) {
+            editor.setValue(BOILERPLATES[lang] || BOILERPLATES['python']);
+        }
+        
+        document.getElementById('selected_language').value = lang;
+        console.log(`[Polyglot] Switched to ${lang} (Monaco: ${monacoLang})`);
+    }
+
+    // Anti-Cheat
+    let blurWarnings = 0;
+    const MAX_BLUR_WARNINGS = 3;
+
+    function toggleBreak() {
+        isPaused = !isPaused;
+        const overlay = document.getElementById('break-overlay');
+        const mainContent = document.getElementById('main-assessment-content');
+
+        if (isPaused) {
+            overlay.style.display = 'block';
+            mainContent.style.filter = 'blur(10px) opacity(0.3)';
+            mainContent.style.pointerEvents = 'none';
+        } else {
+            overlay.style.display = 'none';
+            mainContent.style.filter = 'none';
+            mainContent.style.pointerEvents = 'auto';
+        }
+    }
+
+    window.addEventListener('blur', () => {
+        const overlayStyle = document.getElementById('fullscreen-overlay').style.display;
+        if (overlayStyle === 'none' && timeRemaining > 0 && !isPaused) {
+            blurWarnings++;
+            // Increment hidden counter for recruiter report
+            const tcField = document.getElementById('tab_switch_count');
+            if (tcField) tcField.value = blurWarnings;
+
+            if (blurWarnings >= MAX_BLUR_WARNINGS) {
+                Swal.fire({
+                    icon: 'error',
+                    title: '🚨 Max Violations Reached!',
+                    text: 'Repeated tab-switching detected. Auto-submitting your assessment now.',
+                    background: 'rgba(10,11,16,0.97)',
+                    color: '#fff',
+                    timer: 3000,
+                    timerProgressBar: true,
+                    showConfirmButton: false
+                }).then(() => {
+                    if (proctor && typeof proctor.logViolation === 'function') {
+                        proctor.logViolation('Tab Switching Violation Limit');
+                    }
+                    executeSubmissionFlow(true);
+                });
+            } else {
+                Swal.fire({
+                    icon: 'warning',
+                    title: '⚠️ Thunder Warning!',
+                    html: `Tab switching detected! <br><strong style="color:#ff4646">${blurWarnings}/${MAX_BLUR_WARNINGS} violations used.</strong><br><small style="color:rgba(255,255,255,0.5)">This event has been reported to the Recruiter.</small>`,
+                    background: 'rgba(10,11,16,0.97)',
+                    color: '#fff',
+                    confirmButtonColor: '#00f2ff',
+                    confirmButtonText: 'Return to Test',
+                    timer: 6000,
+                    timerProgressBar: true
+                });
+            }
+        }
+    });
+
+    document.addEventListener('contextmenu', e => e.preventDefault());
+    document.addEventListener('copy', e => { e.preventDefault(); alert("Copying is prohibited."); });
+    document.addEventListener('cut', e => { e.preventDefault(); alert("Cutting is prohibited."); });
+    document.addEventListener('paste', e => { e.preventDefault(); alert("Pasting is prohibited."); });
+    document.addEventListener('keydown', (e) => {
+        if (e.keyCode === 123 || (e.ctrlKey && [67, 86, 85, 117].includes(e.keyCode))) {
+            e.preventDefault(); alert("This action is prohibited.");
+        }
+    });
+
+    // Navigation
+    function navigateTo(index) {
+        if (index < 0 || index >= TOTAL_SLIDES) return;
+
+        // Hide current
+        document.getElementById(`q-slide-${currentQuestion}`).classList.remove('active');
+        document.getElementById(`q-nav-${currentQuestion}`)?.classList.remove('current');
+
+        // Show target
+        currentQuestion = index;
+        document.getElementById(`q-slide-${currentQuestion}`).classList.add('active');
+        document.getElementById(`q-nav-${currentQuestion}`)?.classList.add('current');
+
+        // Update buttons
+        document.getElementById('prev-btn').disabled = currentQuestion === 0;
+        const isLast = currentQuestion === TOTAL_SLIDES - 1;
+        document.getElementById('next-btn').classList.toggle('d-none', isLast);
+        document.getElementById('submit-btn').classList.toggle('d-none', !isLast);
+
+        // Scroll to top
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // Mark Answered
+    function markAnswered(qIndex, radio) {
+        answeredSet.add(qIndex);
+        const btn = document.getElementById(`q-nav-${qIndex}`);
+        if (btn) btn.classList.add('answered');
+
+        // Highlight selected option
+        const slide = document.getElementById(`q-slide-${qIndex}`);
+        slide.querySelectorAll('.option-label').forEach(lbl => {
+            lbl.style.background = 'rgba(255,255,255,0.03)';
+            lbl.style.borderColor = 'rgba(255,255,255,0.08)';
+        });
+        const parent = radio.closest('.option-label');
+        if (parent) {
+            parent.style.background = 'rgba(99,102,241,0.12)';
+            parent.style.borderColor = 'rgba(99,102,241,0.4)';
+        }
+
+        updateCounts();
+    }
+
+    // Flag for Review
+    function toggleFlag(qIndex) {
+        const btn = document.getElementById(`flag-btn-${qIndex}`);
+        const navBtn = document.getElementById(`q-nav-${qIndex}`);
+        if (flaggedSet.has(qIndex)) {
+            flaggedSet.delete(qIndex);
+            btn?.classList.remove('flagged');
+            navBtn?.classList.remove('flagged');
+        } else {
+            flaggedSet.add(qIndex);
+            btn?.classList.add('flagged');
+            navBtn?.classList.add('flagged');
+        }
+        updateCounts();
+    }
+
+    // Update Counts
+    function updateCounts() {
+        const answered = answeredSet.size;
+        const flagged = flaggedSet.size;
+        document.getElementById('answered-count').textContent = answered;
+        document.getElementById('flagged-count').textContent = flagged;
+        document.getElementById('unanswered-count').textContent = TOTAL_QUESTIONS - answered;
+
+        // Progress bar
+        const pct = Math.round((answered / TOTAL_QUESTIONS) * 100);
+        document.getElementById('progress-bar').style.width = pct + '%';
+        document.getElementById('progress-text').textContent = `${answered}/${TOTAL_QUESTIONS}`;
+    }
+
+    // Monaco + Submission
+    function prepareSubmission() {
+        if (editor) {
+            document.getElementById('hidden_code_submission').value = editor.getValue();
+        }
+    }
+
+    function executeSubmissionFlow(isAuto = false) {
+        prepareSubmission();
+        
+        // Calculate Confidence
+        let avgConf = 75; // baseline fallback
+        if (window.assessmentConfidenceScores && window.assessmentConfidenceScores.length > 0) {
+            avgConf = Math.round(window.assessmentConfidenceScores.reduce((a, b) => a + b, 0) / window.assessmentConfidenceScores.length);
+        }
+        
+        // Disable interactions
+        isPaused = true;
+        
+        // Show Fullscreen Popup
+        const popupHtml = `
+        <div id="confidence-popup" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(2, 6, 23, 0.9); z-index: 99999; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(20px);">
+            <div class="glass-panel p-5 text-center shadow-2xl animate-fade-in" style="max-width: 500px; border: 1px solid rgba(99, 102, 241, 0.3);">
+                <div class="mb-4">
+                    <i class="fas fa-brain fa-4x text-primary pulse-red mb-3" style="animation: none;"></i>
+                    <h2 class="fw-bold text-white mb-2 tracking-widest">NEURAL ANALYSIS COMPLETE</h2>
+                    <p class="text-secondary small">Compiling biometric focus and articulation stability.</p>
+                </div>
+                <div class="mb-4">
+                    <h1 class="display-3 fw-bold text-info mb-0">${avgConf}%</h1>
+                    <div class="text-uppercase tracking-widest small text-info fw-bold">Overall Confidence Level</div>
+                </div>
+                <div class="progress-exam mb-3" style="height: 4px;">
+                    <div class="bar" style="width: ${avgConf}%; background: linear-gradient(90deg, #3b82f6, #10b981);"></div>
+                </div>
+                <p class="text-muted small mb-0"><i class="fas fa-satellite-dish me-2"></i>Submitting encrypted packet to recruiter grid...</p>
+            </div>
+        </div>
+        <style>
+          .pulse-red { animation: pulseWarning 2s infinite; }
+          @keyframes pulseWarning { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.7; transform: scale(1.1); } 100% { opacity: 1; transform: scale(1); } }
+        </style>`;
+        
+        document.body.insertAdjacentHTML('beforeend', popupHtml);
+        
+        // Delay actual submission by 4 seconds
+        setTimeout(() => {
+            document.documentElement.classList.add("preloader-active");
+            const preStatus = document.getElementById("preloader-status");
+            if (preStatus) preStatus.innerText = "Encrypting Assessment Data...";
+            document.getElementById('assessmentForm').submit();
+        }, 4000);
+    }
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+        // ─── Real-time Sentiment Tracking ───
+        const sentimentTag = document.getElementById('emotion-tag');
+        let sentimentInterval = null;
+        window.assessmentConfidenceScores = [];
+
+        function initSentimentAI() {
+            const video = document.getElementById('webcam');
+            if (!video) return;
+            sentimentInterval = setInterval(async () => {
+                if (video.readyState !== 4 || isPaused) return;
+                const sCanvas = document.createElement('canvas');
+                sCanvas.width = video.videoWidth;
+                sCanvas.height = video.videoHeight;
+                sCanvas.getContext('2d').drawImage(video, 0, 0, sCanvas.width, sCanvas.height);
+                const frameBase64 = sCanvas.toDataURL('image/jpeg', 0.6);
+                
+                try {
+                    const response = await fetch("{% url 'process_sentiment_stream' application.id %}", {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value },
+                        body: JSON.stringify({ frame_base64: frameBase64 })
+                    });
+                    const data = await response.json();
+                    if (data.status === 'success') {
+                        sentimentTag.classList.remove('d-none');
+                        const emotionMap = {
+                            'happy': { i: 'fa-smile', c: 'success' }, 'sad': { i: 'fa-frown', c: 'primary' },
+                            'angry': { i: 'fa-angry', c: 'danger' }, 'fear': { i: 'fa-flushed', c: 'warning' },
+                            'fearful': { i: 'fa-flushed', c: 'warning' }, 'disgust': { i: 'fa-grimace', c: 'danger' },
+                            'surprise': { i: 'fa-surprise', c: 'info' }, 'neutral': { i: 'fa-meh', c: 'secondary' },
+                            'no_face': { i: 'fa-user-slash', c: 'danger', label: 'FACE NOT FOUND' },
+                            'multiple_faces': { i: 'fa-user-friends', c: 'warning', label: 'MULTIPLE FACES' },
+                            'mobile_phone': { i: 'fa-mobile-alt', c: 'danger', label: 'PHONE DETECTED' }
+                        };
+                        const eData = emotionMap[data.emotion] || emotionMap['neutral'];
+                        const displayLabel = eData.label ? eData.label : data.emotion;
+                        sentimentTag.className = `badge bg-${eData.c} bg-opacity-20 text-${eData.c} border border-${eData.c} border-opacity-25 flex-grow-1`;
+                        sentimentTag.innerHTML = `<span class="fw-bold tracking-widest text-uppercase" style="font-size: 0.65rem;"><i class="fas ${eData.i} me-1"></i>${displayLabel} (${data.score}%)</span>`;
+                        if(data.score) window.assessmentConfidenceScores.push(data.score);
+                    }
+                } catch (e) {
+                    console.warn("Sentiment pulse temporarily paused.");
+                }
+            }, 3500);
+        }
+        initSentimentAI();
+
+        proctor = new ProctoringSystem({
+            maxWarnings: 3,
+            applicationId: "{{ application.id }}",
+            logUrl: "{% url 'log_violation' application.id %}",
+            heartbeatUrl: "{% url 'vision_heartbeat' application.id %}"
+        });
+
+        if (document.getElementById('monaco-editor-container')) {
+            require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.36.1/min/vs' } });
+            require(['vs/editor/editor.main'], function () {
+                editor = monaco.editor.create(document.getElementById('monaco-editor-container'), {
+                    value: BOILERPLATES['python'],
+                    language: 'python',
+                    theme: 'vs-dark',
+                    automaticLayout: true,
+                    fontSize: 14,
+                    fontFamily: "'Fira Code', 'JetBrains Mono', monospace",
+                    cursorSmoothCaretAnimation: true,
+                    smoothScrolling: true,
+                    roundedSelection: true,
+                    padding: { top: 20 },
+                    minimap: { enabled: false }
+                });
+            });
+        }
+    });
+
+    // Fullscreen and Timer Init
+    document.getElementById('start-fullscreen-btn').addEventListener('click', async () => {
+        try {
+            await document.documentElement.requestFullscreen();
+        } catch (err) {
+            console.warn('Fullscreen request failed or was denied:', err);
+            // We ignore the error and start the test anyway, to avoid locking out users in restrictive environments
+        } finally {
+            document.getElementById('fullscreen-overlay').style.display = 'none';
+            document.getElementById('main-assessment-content').style.display = 'block';
+
+            // Blitz Mode check
+            if (document.getElementById('blitzModeToggle').checked) {
+                isBlitzActive = true;
+                document.getElementById('timer-container').style.borderColor = 'var(--neon-danger)';
+                document.getElementById('timer-container').style.boxShadow = '0 0 20px rgba(255, 0, 51, 0.3)';
+                console.log("[Gamification] Blitz Mode Activated!");
+            }
+
+            const timerContainer = document.getElementById('timer-container');
+            if (timerContainer) {
+                timerContainer.style.display = 'block';
+            }
+
+            startTimer();
+        }
+    });
+
+    // Timer
+    function startTimer() {
+        if (timerInterval) clearInterval(timerInterval);
+
+        timerInterval = setInterval(() => {
+            if (!isPaused) { // Phase 2: Pause logic
+                timeRemaining--;
+                updateTimerDisplay();
+                if (timeRemaining <= 0) {
+                    clearInterval(timerInterval);
+                    if (proctor && typeof proctor.logViolation === 'function') {
+                        proctor.logViolation('Time Expired');
+                    }
+                    executeSubmissionFlow(true);
+                }
+            }
+        }, 1000);
+    }
+
+    function updateTimerDisplay() {
+        const minutes = Math.floor(timeRemaining / 60);
+        const seconds = timeRemaining % 60;
+        document.getElementById('timer-display').textContent =
+            `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+
+        const timerEl = document.getElementById('timer-container');
+        const displayEl = document.getElementById('timer-display');
+        
+        if (timeRemaining < (testDuration * 0.2) || (isBlitzActive && timeRemaining < (testDuration * 0.5))) {
+            displayEl.classList.add('timer-blitz-critical');
+            timerEl.style.background = 'rgba(255, 0, 51, 0.1)';
+            timerEl.classList.add('timer-critical');
+        } else if (timeRemaining < 300) {
+            timerEl.style.background = 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)';
+        } else if (timeRemaining < 600) {
+            timerEl.style.background = 'linear-gradient(135deg, #f59e0b 0%, #f97316 100%)';
+        }
+    }
+
+    window.addEventListener('beforeunload', (e) => {
+        if (timeRemaining > 0) {
+            e.preventDefault();
+            e.returnValue = 'Assessment in progress. Are you sure you want to leave?';
+        }
+    });
+
+    // Keyboard navigation
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowRight' && currentQuestion < TOTAL_SLIDES - 1) navigateTo(currentQuestion + 1);
+        if (e.key === 'ArrowLeft' && currentQuestion > 0) navigateTo(currentQuestion - 1);
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,15 @@
+John Doe
+Python Developer
+
+Summary:
+Experienced software engineer with 5 years of experience in backend development.
+
+Skills:
+Python, Django, AWS, React, SQL, PostgreSQL, Machine Learning, JavaScript, Data Structures, Algorithms, Fast Learner.
+
+Experience:
+- Built scalable web applications using Django and React.
+- Deployed services to AWS.
+
+Education:
+Bachelors in Computer Science, State University, 2021.

@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Applications Oversight | SmartRecruit Admin{% endblock %}
+{% block content %}
+<div class="d-flex" style="min-height:calc(100vh - 72px)">
+  {% include 'core/_admin_sidebar.html' %}
+  <main class="flex-grow-1 p-4 p-lg-5">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+      <div>
+        <h1 class="glow-text mb-1" style="font-size:1.8rem;"><i class="fa-solid fa-layer-group me-2 text-danger"></i>Application Oversight</h1>
+        <p class="text-theme-secondary mb-0">{{ total_shown }} application{{ total_shown|pluralize }} across all roles</p>
+      </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="glass-card p-3 mb-4">
+      <div class="d-flex flex-wrap gap-3 align-items-center">
+        <select class="form-select glass-input py-2" style="max-width:220px;" onchange="window.location='?stage='+this.value+'{% if search_q %}&q={{ search_q }}{% endif %}'">
+          <option value="all" {% if stage_filter == 'all' %}selected{% endif %}>All Stages</option>
+          {% for val, label in stage_choices %}
+          <option value="{{ val }}" {% if stage_filter == val %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+        <form method="get" class="d-flex gap-2 flex-grow-1" style="max-width:400px;">
+          <input type="hidden" name="stage" value="{{ stage_filter }}">
+          <input type="search" name="q" class="form-control glass-input py-2" placeholder="Search by candidate name or job title..." value="{{ search_q }}">
+          <button type="submit" class="btn btn-primary px-3"><i class="fa-solid fa-magnifying-glass"></i></button>
+        </form>
+      </div>
+    </div>
+
+    <div class="glass-card p-0" style="overflow:hidden;">
+      <div class="table-responsive">
+        <table class="table table-dark table-hover align-middle mb-0" style="background:transparent;">
+          <thead style="background:rgba(0,0,0,.3);">
+            <tr>
+              <th class="ps-4 py-3">Candidate</th>
+              <th>Applied For</th>
+              <th>AI Score</th>
+              <th>Stage</th>
+              <th>Applied On</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for app in apps_list %}
+            <tr style="border-bottom:1px solid rgba(255,255,255,.05);">
+              <td class="ps-4 py-3">
+                <div class="fw-semibold text-white" style="font-size:.9rem;">{{ app.candidate.full_name }}</div>
+                <small class="text-theme-secondary">{{ app.candidate.email }}</small>
+              </td>
+              <td>
+                <div class="text-white" style="font-size:.88rem;">{{ app.job.title }}</div>
+                <small class="text-theme-secondary">{{ app.job.location }}</small>
+              </td>
+              <td>
+                {% if app.ai_score > 0 %}
+                <span class="fw-bold" style="color:{% if app.ai_score >= 75 %}#10b981{% elif app.ai_score >= 50 %}#f59e0b{% else %}#ef4444{% endif %};">
+                  {{ app.ai_score|floatformat:1 }}%
+                </span>
+                {% else %}
+                <span class="text-muted">—</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if app.status == 'HIRED' %}
+                <span class="badge bg-success bg-opacity-25 text-success">{{ app.get_status_display }}</span>
+                {% elif 'REJECTED' in app.status %}
+                <span class="badge bg-danger bg-opacity-25 text-danger">{{ app.get_status_display }}</span>
+                {% elif 'PASSED' in app.status %}
+                <span class="badge bg-info bg-opacity-25 text-info">{{ app.get_status_display }}</span>
+                {% elif 'PENDING' in app.status %}
+                <span class="badge bg-warning bg-opacity-25 text-warning">{{ app.get_status_display }}</span>
+                {% else %}
+                <span class="badge bg-secondary text-white">{{ app.get_status_display }}</span>
+                {% endif %}
+              </td>
+              <td class="text-theme-secondary" style="font-size:.85rem;">{{ app.applied_at|date:"M d, Y" }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="5" class="text-center py-5 text-theme-secondary">
+              <i class="fa-solid fa-layer-group opacity-25 fs-1 d-block mb-3"></i>No applications found.
+            </td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        
+        {% include 'core/_admin_pagination.html' %}
+      </div>
+    </div>
+  </main>
+</div>
+{% endblock %}

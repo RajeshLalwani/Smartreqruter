@@ -1,0 +1,388 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Offer of Employment - IR Info Tech</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 3.4cm 2cm 2.8cm 2cm;
+
+            @frame header_frame {
+                -pdf-frame-content: header_content;
+                left: 2cm;
+                width: 17cm;
+                top: 1cm;
+                height: 2.2cm;
+            }
+
+            @frame footer_frame {
+                -pdf-frame-content: footer_content;
+                left: 2cm;
+                width: 17cm;
+                bottom: 0.8cm;
+                height: 1.2cm;
+            }
+        }
+
+        body {
+            font-family: Helvetica, Arial, sans-serif;
+            font-size: 10pt;
+            line-height: 1.45;
+            color: #1f2937;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        td, th {
+            vertical-align: top;
+        }
+
+        #header_content {
+            border-bottom: 2px solid #0f172a;
+            padding-bottom: 8px;
+        }
+
+        .header-logo {
+            width: 36%;
+        }
+
+        .header-details {
+            width: 64%;
+            text-align: right;
+            font-size: 8pt;
+            line-height: 1.35;
+            color: #475569;
+        }
+
+        .company-name {
+            font-size: 12pt;
+            font-weight: bold;
+            color: #0f172a;
+            letter-spacing: 0.4px;
+        }
+
+        #footer_content {
+            border-top: 1px solid #cbd5e1;
+            padding-top: 5px;
+            text-align: center;
+            font-size: 8pt;
+            color: #64748b;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 17pt;
+            letter-spacing: 1.4px;
+            margin: 10px 0 18px 0;
+            color: #0f172a;
+            text-transform: uppercase;
+        }
+
+        h2 {
+            font-size: 11pt;
+            margin: 18px 0 8px 0;
+            color: #0f172a;
+            border-bottom: 1px solid #cbd5e1;
+            padding-bottom: 3px;
+        }
+
+        p {
+            margin: 0 0 10px 0;
+            text-align: justify;
+        }
+
+        .bold {
+            font-weight: bold;
+            color: #0f172a;
+        }
+
+        .meta-table {
+            margin-bottom: 20px;
+        }
+
+        .meta-left {
+            width: 55%;
+        }
+
+        .meta-right {
+            width: 45%;
+            text-align: right;
+        }
+
+        .meta-label {
+            color: #475569;
+            font-weight: bold;
+        }
+
+        .panel {
+            border: 1px solid #dbe2ea;
+            background-color: #f8fafc;
+            margin-bottom: 18px;
+        }
+
+        .panel td {
+            padding: 7px 8px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .panel tr:last-child td {
+            border-bottom: none;
+        }
+
+        .panel-label {
+            width: 34%;
+            font-weight: bold;
+            color: #334155;
+        }
+
+        .panel-value {
+            width: 66%;
+            color: #0f172a;
+            font-weight: bold;
+        }
+
+        .comp-table {
+            margin-top: 10px;
+            margin-bottom: 10px;
+        }
+
+        .comp-table th {
+            background-color: #0f172a;
+            color: #ffffff;
+            padding: 8px;
+            font-size: 9pt;
+            text-align: left;
+        }
+
+        .comp-table td {
+            border: 1px solid #dbe2ea;
+            padding: 8px;
+            font-size: 9pt;
+        }
+
+        .amount {
+            text-align: right;
+            width: 36%;
+        }
+
+        .total-row td {
+            background-color: #eef2f7;
+            font-weight: bold;
+        }
+
+        .note {
+            font-size: 8.5pt;
+            color: #64748b;
+        }
+
+        .bullet-table {
+            margin-top: 5px;
+        }
+
+        .bullet-table td {
+            padding-bottom: 6px;
+        }
+
+        .bullet-mark {
+            width: 14px;
+            font-weight: bold;
+            color: #0f172a;
+        }
+
+        .acceptance-box {
+            border: 1px solid #dbe2ea;
+            padding: 10px;
+            background-color: #f8fafc;
+            margin-top: 8px;
+        }
+
+        .signature-table {
+            margin-top: 38px;
+        }
+
+        .signature-cell {
+            width: 48%;
+        }
+
+        .signature-gap {
+            width: 4%;
+        }
+
+        .signature-line {
+            border-top: 1px solid #0f172a;
+            margin-top: 42px;
+            padding-top: 6px;
+        }
+
+        .signature-name {
+            font-weight: bold;
+            color: #0f172a;
+        }
+
+        .signature-title {
+            font-size: 8.5pt;
+            color: #64748b;
+        }
+    </style>
+</head>
+<body>
+    <div id="header_content">
+        <table>
+            <tr>
+                <td class="header-logo">
+                    {% if logo_url %}
+                    <img src="{{ logo_url }}" style="height: 42px;" alt="IR Info Tech">
+                    {% else %}
+                    <div class="company-name">IR Info Tech</div>
+                    {% endif %}
+                </td>
+                <td class="header-details">
+                    <div class="company-name">IR Info Tech Private Limited</div>
+                    <div>Registered Office: Level 5, Tech Park, Cyber City, Bengaluru, Karnataka 560100</div>
+                    <div>www.irinfotech.com | hr@irinfotech.com</div>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <div id="footer_content">
+        Confidential employment communication | Page <pdf:pagenumber> of <pdf:pagecount>
+    </div>
+
+    <table class="meta-table">
+        <tr>
+            <td class="meta-left">
+                <span class="meta-label">Date of Issue:</span> {% now "F d, Y" %}
+            </td>
+            <td class="meta-right">
+                <span class="meta-label">Reference No.:</span>
+                IIT/HR/{% now "Y" %}/{% if application.id %}{{ application.id }}{% else %}0001{% endif %}
+            </td>
+        </tr>
+    </table>
+
+    <p>To,</p>
+    <p class="bold">{{ candidate_name }}</p>
+
+    <h1>Offer of Employment</h1>
+
+    <p>Dear <span class="bold">{{ candidate_name }}</span>,</p>
+
+    <p>We are pleased to offer you employment with <span class="bold">IR Info Tech Private Limited</span> for the position of <span class="bold">{{ designation }}</span>, subject to the terms and conditions set out in this letter.</p>
+
+    <h2>1. Employment Details</h2>
+    <table class="panel">
+        <tr>
+            <td class="panel-label">Designation</td>
+            <td class="panel-value">{{ designation }}</td>
+        </tr>
+        <tr>
+            <td class="panel-label">Department</td>
+            <td class="panel-value">Engineering &amp; Technology</td>
+        </tr>
+        <tr>
+            <td class="panel-label">Employment Type</td>
+            <td class="panel-value">{{ application.job.get_job_type_display|default:"Full Time" }}</td>
+        </tr>
+        <tr>
+            <td class="panel-label">Work Location</td>
+            <td class="panel-value">{{ application.job.location|default:"Bengaluru, Karnataka" }}</td>
+        </tr>
+        <tr>
+            <td class="panel-label">Proposed Joining Date</td>
+            <td class="panel-value">{{ joining_date|date:"F d, Y" }}</td>
+        </tr>
+    </table>
+
+    <h2>2. Compensation</h2>
+    <p>Your annual gross Cost to Company (CTC) will be <span class="bold">Rs. {{ salary }}</span>, payable in accordance with the company payroll cycle and subject to applicable taxes and statutory deductions.</p>
+
+    <table class="comp-table">
+        <tr>
+            <th>Compensation Component</th>
+            <th class="amount">Indicative Structure</th>
+        </tr>
+        <tr>
+            <td>Basic Salary</td>
+            <td class="amount">Approx. 40% of CTC</td>
+        </tr>
+        <tr>
+            <td>House Rent Allowance</td>
+            <td class="amount">Approx. 20% of CTC</td>
+        </tr>
+        <tr>
+            <td>Special / Flexible Allowances</td>
+            <td class="amount">Approx. 30% of CTC</td>
+        </tr>
+        <tr>
+            <td>Employer Statutory Contributions</td>
+            <td class="amount">Approx. 10% of CTC</td>
+        </tr>
+        <tr class="total-row">
+            <td>Total Annual CTC</td>
+            <td class="amount">Rs. {{ salary }}</td>
+        </tr>
+    </table>
+    <p class="note">The detailed salary break-up, payroll deductions, and benefit enrollment documents will be shared during onboarding.</p>
+
+    <h2>3. Terms and Conditions</h2>
+    <table class="bullet-table">
+        <tr>
+            <td class="bullet-mark">1.</td>
+            <td>This offer is based on the information and documents shared by you during the recruitment process. Any material discrepancy may lead to withdrawal of this offer or subsequent disciplinary action.</td>
+        </tr>
+        <tr>
+            <td class="bullet-mark">2.</td>
+            <td>Your employment is subject to satisfactory background verification, reference checks, and submission of all required proof of identity, education, and prior employment.</td>
+        </tr>
+        <tr>
+            <td class="bullet-mark">3.</td>
+            <td>You will be required to comply with all company policies, code of conduct requirements, confidentiality obligations, and information security practices applicable from time to time.</td>
+        </tr>
+        <tr>
+            <td class="bullet-mark">4.</td>
+            <td>This letter should be read together with the employment agreement and onboarding documentation that will be issued separately at or before joining.</td>
+        </tr>
+    </table>
+
+    <h2>4. Acceptance of Offer</h2>
+    <div class="acceptance-box">
+        <p style="margin-bottom: 6px;">Please confirm your acceptance of this offer on or before:</p>
+        <p class="bold" style="margin-bottom: 6px;">
+            {% if application.offer_letter.response_deadline %}
+            {{ application.offer_letter.response_deadline|date:"F d, Y, h:i A" }}
+            {% else %}
+            within three (3) business days from the date of issue
+            {% endif %}
+        </p>
+        <p style="margin-bottom: 0;">If acceptance is not received within the above timeline, the offer may be treated as declined and may lapse without further notice.</p>
+    </div>
+
+    <p style="margin-top: 16px;">We look forward to your contribution and hope you will have a successful and rewarding career with us.</p>
+
+    <table class="signature-table">
+        <tr>
+            <td class="signature-cell">
+                <p>For <span class="bold">IR Info Tech Private Limited</span></p>
+                <div class="signature-line">
+                    <div class="signature-name">Authorized Signatory</div>
+                    <div class="signature-title">Human Resources</div>
+                </div>
+            </td>
+            <td class="signature-gap"></td>
+            <td class="signature-cell">
+                <p>Accepted by Candidate</p>
+                <div class="signature-line">
+                    <div class="signature-name">{{ candidate_name }}</div>
+                    <div class="signature-title">Signature and Date</div>
+                </div>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

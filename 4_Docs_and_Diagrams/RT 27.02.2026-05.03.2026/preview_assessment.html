@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-1 text-theme">Assessment Preview</h2>
+            <p class="text-secondary mb-0">Previewing live questions for: <strong>{{ job.title }}</strong> ({{
+                test_type|title }} Round)</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'preview_assessment' job.id test_type %}" class="btn btn-outline-primary rounded-pill">
+                <i class="fas fa-sync-alt me-2"></i> Regenerate Questions
+            </a>
+            <a href="{% url 'job_detail' job.id %}" class="btn btn-primary rounded-pill">
+                <i class="fas fa-arrow-left me-2"></i> Back to Job
+            </a>
+        </div>
+    </div>
+
+    <div class="glass-panel p-4 rounded-4 mb-4">
+        <h5 class="fw-bold mb-4">Question Bank Preview: {{ test_type|title }}</h5>
+
+        {% if grouped_questions %}
+        <!-- nav tabs for domains -->
+        <ul class="nav nav-pills mb-4 gap-2" id="domainTabs" role="tablist">
+            {% for domain, difficulties in grouped_questions.items %}
+            <li class="nav-item" role="presentation">
+                <button
+                    class="nav-link fw-bold border border-primary border-opacity-25 rounded-pill {% if forloop.first %}active{% endif %}"
+                    id="pills-{{ domain|slugify }}-tab" data-bs-toggle="pill"
+                    data-bs-target="#pills-{{ domain|slugify }}" type="button" role="tab">{{ domain|title }}</button>
+            </li>
+            {% endfor %}
+        </ul>
+
+        <div class="tab-content border-top border-secondary border-opacity-25 pt-4" id="domainTabsContent">
+            {% for domain, difficulties in grouped_questions.items %}
+            <div class="tab-pane fade {% if forloop.first %}show active{% endif %}" id="pills-{{ domain|slugify }}"
+                role="tabpanel">
+
+                <!-- Difficulties -->
+                {% for diff, questions in difficulties.items %}
+                <div class="mb-5">
+                    <h6
+                        class="text-theme border-bottom border-light border-opacity-10 pb-2 mb-3 d-flex justify-content-between align-items-center">
+                        <div>
+                            <span
+                                class="badge {% if diff == 'easy' %}bg-success{% elif diff == 'medium' %}bg-warning{% else %}bg-danger{% endif %} text-uppercase me-2">{{
+                                diff }}</span>
+                            <span class="text-muted fw-normal" style="font-size: 0.9rem;">Skill Level</span>
+                        </div>
+                        <span class="badge bg-primary bg-opacity-25 text-primary rounded-pill px-3">{{
+                            questions|length
+                            }} Questions</span>
+                    </h6>
+
+                    {% if questions %}
+                    <div class="accordion" id="acc-{{ domain|slugify }}-{{ diff }}">
+                        {% for q in questions %}
+                        <div
+                            class="accordion-item bg-transparent border-secondary border-opacity-25 mb-3 rounded overflow-hidden shadow-sm">
+                            <h2 class="accordion-header"
+                                id="heading-{{ domain|slugify }}-{{ diff }}-{{ forloop.counter }}">
+                                <button
+                                    class="accordion-button bg-light bg-opacity-10 text-theme shadow-none collapsed fw-medium"
+                                    type="button" data-bs-toggle="collapse"
+                                    data-bs-target="#collapse-{{ domain|slugify }}-{{ diff }}-{{ forloop.counter }}">
+                                    <span class="text-primary me-2">Q{{ forloop.counter }}.</span> {{
+                                    q.question|safe }}
+                                </button>
+                            </h2>
+                            <div id="collapse-{{ domain|slugify }}-{{ diff }}-{{ forloop.counter }}"
+                                class="accordion-collapse collapse"
+                                data-bs-parent="#acc-{{ domain|slugify }}-{{ diff }}">
+                                <div class="accordion-body text-secondary bg-dark bg-opacity-10">
+                                    <ul class="list-group list-group-flush mb-0">
+                                        {% for opt in q.options %}
+                                        <li
+                                            class="list-group-item bg-transparent border-secondary border-opacity-10 py-3 {% if opt == q.correct %}text-success fw-bold bg-success bg-opacity-10{% else %}text-secondary{% endif %}">
+                                            {% if opt == q.correct %}
+                                            <i class="fas fa-check-circle me-3 fa-lg"></i>
+                                            {% else %}
+                                            <i class="far fa-circle me-3 opacity-50"></i>
+                                            {% endif %}
+                                            {{ opt|safe }}
+                                        </li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div
+                        class="text-center py-4 bg-light bg-opacity-10 rounded-3 border border-secondary border-opacity-25">
+                        <i class="fas fa-info-circle text-muted mb-2 fa-2x opacity-50"></i>
+                        <p class="text-muted small mb-0">No questions found for {{ domain }} - {{ diff }}.
+                            Generating in
+                            background...</p>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-exclamation-circle fa-3x text-warning mb-3 opacity-50"></i>
+            <p class="text-secondary text-uppercase small fw-bold tracking-wider">No Questions Found</p>
+            <p class="text-muted small">Try triggering question generation again.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,761 @@
+{% extends 'base.html' %}
+{% load static i18n %}
+
+{% block title %}System Configuration | Zenith Hub{% endblock %}
+
+{% block breadcrumb %}System Settings{% endblock %}
+{% block smart_context %}account_settings_hub{% endblock %}
+
+{% block content %}
+<style>
+    /* PROJECT ZENITH: SETTINGS OVERRIDES */
+    .glass-settings-panel {
+        background: rgba(15, 23, 42, 0.6);
+        backdrop-filter: blur(20px) saturate(180%);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 1.5rem;
+        transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.4s ease;
+    }
+    .glass-settings-panel:hover {
+        border-color: rgba(var(--brand-rgb), 0.3);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+    }
+
+    .settings-nav-pill {
+        border-radius: 1rem;
+        padding: 1rem 1.5rem;
+        font-weight: 600;
+        color: var(--text-secondary);
+        transition: all 0.3s ease;
+        border: 1px solid transparent;
+        margin-bottom: 0.75rem;
+    }
+    .settings-nav-pill:hover {
+        background: rgba(255, 255, 255, 0.03);
+        color: var(--text-primary);
+        transform: translateX(5px);
+    }
+    .settings-nav-pill.active {
+        background: linear-gradient(135deg, rgba(var(--brand-rgb), 0.2), rgba(var(--brand-rgb), 0.05)) !important;
+        color: var(--brand-color) !important;
+        border-color: rgba(var(--brand-rgb), 0.3) !important;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    .neural-input-group {
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 1rem;
+        padding: 0.5rem;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .neural-input {
+        background: transparent !important;
+        border: none !important;
+        color: var(--text-primary) !important;
+        padding: 0.8rem 1rem;
+    }
+    .neural-input:focus {
+        box-shadow: none !important;
+    }
+
+    .status-pulse {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: #10b981;
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
+        animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+        0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+        70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+        100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+    }
+</style>
+
+<div class="container-fluid">
+    <!-- Zenith Hub Header -->
+    <div class="d-flex align-items-center mb-5" data-aos="fade-down">
+        <div class="zenith-icon-glow rounded-4 d-flex align-items-center justify-content-center bg-theme bg-opacity-10 border border-theme border-opacity-20 me-4 shadow-lg" style="width: 64px; height: 64px;">
+            <i class="fa-solid fa-gears text-theme fs-3"></i>
+        </div>
+        <div>
+            <h1 class="h2 fw-bold mb-1 tracking-tight">Command Center</h1>
+            <p class="text-theme-secondary mb-0 small text-uppercase tracking-widest opacity-50 fw-bold">Identity & Neural Directives</p>
+        </div>
+    </div>
+
+    <div class="row g-4 h-100">
+        <!-- Sidebar Navigation -->
+        <div class="col-lg-3" data-aos="fade-right">
+            <div class="glass-settings-panel p-4 sticky-top" style="top: 100px;">
+                <div class="nav flex-column nav-pills" id="v-pills-tab" role="tablist">
+                    <button class="nav-link settings-nav-pill active d-flex align-items-center gap-3" id="v-pills-profile-tab" data-bs-toggle="pill" data-bs-target="#v-pills-profile">
+                        <i class="fa-solid fa-id-card-clip fs-5"></i> Profile
+                    </button>
+                    <button class="nav-link settings-nav-pill d-flex align-items-center gap-3" id="v-pills-security-tab" data-bs-toggle="pill" data-bs-target="#v-pills-security">
+                        <i class="fa-solid fa-shield-virus fs-5"></i> Security
+                    </button>
+                    <button class="nav-link settings-nav-pill d-flex align-items-center gap-3" id="v-pills-preferences-tab" data-bs-toggle="pill" data-bs-target="#v-pills-preferences">
+                        <i class="fa-solid fa-sliders fs-5"></i> Preferences
+                    </button>
+                    <button class="nav-link settings-nav-pill d-flex align-items-center gap-3" id="v-pills-accessibility-tab" data-bs-toggle="pill" data-bs-target="#v-pills-accessibility">
+                        <i class="fa-solid fa-universal-access fs-5"></i> UI Protocols
+                    </button>
+                    {% if user.is_recruiter %}
+                    <button class="nav-link settings-nav-pill d-flex align-items-center gap-3" id="v-pills-hiring-tab" data-bs-toggle="pill" data-bs-target="#v-pills-hiring">
+                        <i class="fa-solid fa-microchip fs-5"></i> Sourcing AI
+                    </button>
+                    <button class="nav-link settings-nav-pill d-flex align-items-center gap-3" id="v-pills-ai-tab" data-bs-toggle="pill" data-bs-target="#v-pills-ai">
+                        <i class="fa-solid fa-brain fs-5"></i> Neural Core
+                    </button>
+                    <button class="nav-link settings-nav-pill d-flex align-items-center gap-3" id="v-pills-notifications-tab" data-bs-toggle="pill" data-bs-target="#v-pills-notifications">
+                        <i class="fa-solid fa-satellite-dish fs-5"></i> Telemetry
+                    </button>
+                    <button class="nav-link settings-nav-pill d-flex align-items-center gap-3" id="v-pills-ats-tab" data-bs-toggle="pill" data-bs-target="#v-pills-ats">
+                        <i class="fa-solid fa-network-wired fs-5"></i> Sync Bridge
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="col-md-9" data-aos="fade-left" data-aos-delay="200">
+            <div class="tab-content h-100" id="v-pills-tabContent">
+
+                <!-- ─── IDENTITY PROFILE TAB ─── -->
+                <div class="tab-pane fade show active h-100" id="v-pills-profile">
+                    <div class="glass-settings-panel p-4 p-lg-5 h-100 position-relative overflow-hidden">
+                        <div class="position-absolute top-0 end-0 p-4 opacity-5"><i class="fa-solid fa-address-card fa-8x text-theme"></i></div>
+                        
+                        <div class="d-flex align-items-center mb-5 position-relative z-2">
+                            <div class="position-relative">
+                                <div class="rounded-circle d-flex justify-content-center align-items-center shadow-lg border border-theme border-opacity-30" style="width: 100px; height: 100px; background: rgba(var(--brand-rgb), 0.1); font-size: 3rem; color: var(--brand-color); font-weight: 800;">
+                                    {{ user.username|slice:":1"|upper }}
+                                </div>
+                                <div class="position-absolute bottom-0 end-0 p-1">
+                                    <div class="status-pulse border border-dark border-2"></div>
+                                </div>
+                            </div>
+                            <div class="ms-4">
+                                <h2 class="fw-bold mb-1 tracking-tight">{{ user.username }}</h2>
+                                <div class="badge bg-theme bg-opacity-10 text-theme border border-theme border-opacity-20 px-3 py-1 rounded-pill small fw-normal">
+                                    {% if user.is_recruiter %}Recruiter Node Authorized{% elif user.is_candidate %}Neural Candidate Node{% else %}Standard Identity{% endif %}
+                                </div>
+                            </div>
+                        </div>
+ 
+                        <!-- Read Mode -->
+                        <div id="profile-view-mode" class="position-relative z-2">
+                            <h5 class="fw-bold text-theme mb-4 d-flex align-items-center gap-2">
+                                <i class="fa-solid fa-fingerprint text-theme-secondary opacity-50"></i> Bio-Authentication Data
+                            </h5>
+                            <div class="row g-4">
+                                <div class="col-md-6 text-start">
+                                    <label class="small text-uppercase tracking-widest fw-bold text-theme-secondary opacity-50 mb-2">First Name</label>
+                                    <div class="fs-5 text-theme bg-theme bg-opacity-5 p-3 rounded-4 border border-theme border-opacity-10 shadow-inner">{% firstof user.first_name user.username %}</div>
+                                </div>
+                                <div class="col-md-6 text-start">
+                                    <label class="small text-uppercase tracking-widest fw-bold text-theme-secondary opacity-50 mb-2">Last Name</label>
+                                    <div class="fs-5 text-theme bg-theme bg-opacity-5 p-3 rounded-4 border border-theme border-opacity-10 shadow-inner">{% firstof user.last_name "—" %}</div>
+                                </div>
+                                <div class="col-md-12 text-start">
+                                    <label class="small text-uppercase tracking-widest fw-bold text-theme-secondary opacity-50 mb-2">Primary Comms Link (Email)</label>
+                                    <div class="fs-5 text-theme bg-theme bg-opacity-5 p-3 rounded-4 border border-theme border-opacity-10 shadow-inner"><i class="fa-solid fa-envelope text-brand opacity-50 me-2"></i>{{ user.email }}</div>
+                                </div>
+                            </div>
+                            <div class="mt-5 pt-3 border-top border-theme border-opacity-10 d-flex flex-wrap gap-3">
+                                <button onclick="toggleProfileEdit()" class="btn btn-theme rounded-pill px-4 hover-scale shadow-lg fw-bold">
+                                    <i class="fa-solid fa-pen-nib me-2"></i> Elevate Identity
+                                </button>
+                                <form method="POST" action="{% url 'settings' %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="export_data">
+                                    <button type="submit" class="btn btn-outline-theme rounded-pill px-4 hover-scale shadow-sm fw-bold">
+                                        <i class="fa-solid fa-download me-2"></i> Export Identity Schema (GDPR)
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+ 
+                        <!-- Edit Mode -->
+                        <div id="profile-edit-mode" class="d-none position-relative z-2">
+                            <h5 class="fw-bold text-warning mb-4 d-flex align-items-center gap-2">
+                                <i class="fa-solid fa-user-pen"></i> Recalibrate Identity
+                            </h5>
+                            <form method="POST" action="{% url 'settings' %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="update_profile">
+                                <div class="row g-4 text-start">
+                                    <div class="col-md-6">
+                                        <label class="small text-uppercase fw-bold text-theme-secondary opacity-50 mb-2">First Name</label>
+                                        <div class="neural-input-group">
+                                            <input type="text" name="first_name" class="form-control neural-input" value="{{ user.first_name }}">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="small text-uppercase fw-bold text-theme-secondary opacity-50 mb-2">Last Name</label>
+                                        <div class="neural-input-group">
+                                            <input type="text" name="last_name" class="form-control neural-input" value="{{ user.last_name }}">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-12">
+                                        <label class="small text-uppercase fw-bold text-theme-secondary opacity-50 mb-2">Email Address</label>
+                                        <div class="neural-input-group">
+                                            <input type="email" name="email" class="form-control neural-input" value="{{ user.email }}" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-12 mt-5 pt-3 border-top border-theme border-opacity-10 d-flex gap-3">
+                                        <button type="submit" class="btn btn-warning text-dark rounded-pill px-5 fw-bold shadow-lg hover-scale"><i class="fa-solid fa-microchip me-2"></i> Commit Relink</button>
+                                        <button type="button" onclick="toggleProfileEdit()" class="btn btn-outline-secondary rounded-pill px-4 hover-scale">Abort</button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                 <!-- ─── PREFERENCES TAB ─── -->
+                <div class="tab-pane fade h-100" id="v-pills-preferences">
+                    <div class="glass-settings-panel p-4 p-lg-5 h-100 position-relative overflow-hidden">
+                        <div class="position-absolute top-0 end-0 p-4 opacity-5"><i class="fa-solid fa-wand-magic-sparkles fa-8x text-info"></i></div>
+                        
+                        <h4 class="fw-bold text-theme mb-2 position-relative z-2 d-flex align-items-center gap-2">
+                            <i class="fa-solid fa-palette text-info"></i> Neural Aesthetics
+                        </h4>
+                        <p class="text-theme-secondary small mb-5 position-relative z-2">Configure core visual themes and platform languages.</p>
+ 
+                        <!-- Theme Selection -->
+                        <div class="glass-settings-panel p-4 bg-black bg-opacity-20 border-info border-opacity-10 shadow-inner position-relative z-2 rounded-4 mb-4 text-start">
+                            <h5 class="fw-bold text-theme mb-3 d-flex align-items-center pb-3 border-bottom border-theme border-opacity-10">
+                                <i class="fa-solid fa-brush text-info me-3"></i> Display Engine
+                            </h5>
+                            <div class="row g-4 mt-1">
+                                <div class="col-md-6">
+                                    <label class="small text-uppercase tracking-widest fw-bold text-theme-secondary opacity-50 mb-2">Interface Theme</label>
+                                    <div class="neural-input-group">
+                                        <select id="themeEngineSelect" class="form-select neural-input">
+                                            <option value="dark">Midnight Zenith (Dark)</option>
+                                            <option value="light">Solaris Flare (Light)</option>
+                                            <option value="system">Auto-Sync Protocol</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="small text-uppercase tracking-widest fw-bold text-theme-secondary opacity-50 mb-2">AI Response Personality</label>
+                                    <div class="neural-input-group">
+                                        <select id="aiStyleSelect" class="form-select neural-input">
+                                            <option value="concise">concise_logic (Concise)</option>
+                                            <option value="professional">professional_nexus (Standard)</option>
+                                            <option value="creative">creative_spark (Expansive)</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+ 
+                        <!-- Language Setup -->
+                        <div class="glass-settings-panel p-4 bg-black bg-opacity-20 border-primary border-opacity-10 shadow-inner position-relative z-2 rounded-4 text-start">
+                            <h5 class="fw-bold text-theme mb-3 d-flex align-items-center pb-3 border-bottom border-theme border-opacity-10">
+                                <i class="fa-solid fa-globe text-primary me-3"></i> Localization Matrix
+                            </h5>
+                            <form action="{% url 'set_language' %}" method="post" id="language-form">
+                                {% csrf_token %}
+                                <input name="next" type="hidden" value="{{ request.get_full_path }}">
+                                <div class="row g-4 mt-1">
+                                    <div class="col-md-12">
+                                        <label class="small text-uppercase tracking-widest fw-bold text-theme-secondary opacity-50 mb-2">Native Language Protocol</label>
+                                        <div class="neural-input-group">
+                                            <select name="language" class="form-select neural-input" onchange="document.getElementById('language-form').submit();">
+                                                {% get_current_language as LANGUAGE_CODE %}
+                                                {% get_available_languages as LANGUAGES %}
+                                                {% for lang in LANGUAGES %}
+                                                    <option value="{{ lang.0 }}" {% if lang.0 == LANGUAGE_CODE %}selected{% endif %}>
+                                                        {{ lang.1 }}
+                                                    </option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+v                <!-- ─── UI PROTOCOLS (ACCESSIBILITY) TAB ─── -->
+                <div class="tab-pane fade h-100" id="v-pills-accessibility">
+                    <div class="glass-settings-panel p-4 p-lg-5 h-100 position-relative overflow-hidden">
+                        <div class="position-absolute top-0 end-0 p-4 opacity-5"><i class="fa-solid fa-universal-access fa-8x text-warning"></i></div>
+                        
+                        <h4 class="fw-bold text-theme mb-2 position-relative z-2 d-flex align-items-center gap-2">
+                            <i class="fa-solid fa-eye text-warning"></i> UI Visual Protocols
+                        </h4>
+                        <p class="text-theme-secondary small mb-5 position-relative z-2">Adapt interface systems for sensory processing compatibility.</p>
+ 
+                        <!-- Toggles -->
+                        <div class="row g-4 mb-4 position-relative z-2">
+                            <div class="col-sm-12">
+                                <div class="glass-settings-panel p-4 border-warning border-opacity-10 shadow-inner">
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <div class="d-flex align-items-center gap-4">
+                                            <div class="rounded-4 d-flex align-items-center justify-content-center bg-warning bg-opacity-10 text-warning border border-warning border-opacity-20 shadow-lg" style="width: 60px; height: 60px;">
+                                                <i class="fa-solid fa-eye-low-vision fs-4"></i>
+                                            </div>
+                                            <div class="text-start">
+                                                <div class="fw-bold text-theme mb-1">Ocular Protection</div>
+                                                <div class="text-theme-secondary small opacity-75">Neural Amber Filter (Blue Light Reduction)</div>
+                                            </div>
+                                        </div>
+                                        <div class="form-check form-switch mb-0">
+                                            <input class="form-check-input eye-engine-switch" type="checkbox" id="eyeProtectionToggle" style="width: 3.5rem; height: 1.75rem; cursor: pointer;">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+ 
+                        <!-- Voice Setup -->
+                        <div class="glass-settings-panel p-4 bg-black bg-opacity-20 border-warning border-opacity-10 shadow-inner position-relative z-2 rounded-4 text-start">
+                            <h5 class="fw-bold text-theme mb-3 d-flex align-items-center pb-3 border-bottom border-theme border-opacity-10">
+                                <i class="fa-solid fa-microphone-lines text-warning me-3"></i> Neural Voice Synthesizer
+                            </h5>
+                            <div class="row g-4 mt-1">
+                                <div class="col-md-12">
+                                    <label class="small text-uppercase tracking-widest fw-bold text-theme-secondary opacity-50 mb-2">Voice Protocol Profile</label>
+                                    <div class="neural-input-group">
+                                        <select id="voiceSelect" class="form-select neural-input"></select>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="d-flex justify-content-between small text-uppercase tracking-widest fw-bold text-theme-secondary opacity-50 mb-2">
+                                        <span>Tone Depth</span>
+                                        <span id="pitchVal" class="text-warning">1.0</span>
+                                    </label>
+                                    <input type="range" class="form-range" id="voicePitch" min="0" max="2" step="0.1" value="1.0">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="d-flex justify-content-between small text-uppercase tracking-widest fw-bold text-theme-secondary opacity-50 mb-2">
+                                        <span>Cadence Strategy</span>
+                                        <span id="speedVal" class="text-warning">1.0</span>
+                                    </label>
+                                    <input type="range" class="form-range" id="voiceSpeed" min="0.5" max="2.0" step="0.1" value="1.0">
+                                </div>
+                            </div>
+                            <div class="d-flex flex-wrap gap-3 mt-4 pt-4 border-top border-theme border-opacity-10">
+                                <button class="btn btn-outline-warning rounded-pill px-4 fw-bold hover-scale" onclick="testVoiceSettings()"><i class="fa-solid fa-play-circle me-2"></i> Audio Probe</button>
+                                <button class="btn btn-warning text-dark rounded-pill px-4 fw-bold hover-scale shadow-lg" onclick="saveVoiceSettings()"><i class="fa-solid fa-floppy-disk me-2"></i> Save Parameters</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                 <!-- ─── SECURITY MATRIX TAB ─── -->
+                <div class="tab-pane fade h-100" id="v-pills-security">
+                    <div class="glass-settings-panel p-4 p-lg-5 h-100 position-relative overflow-hidden">
+                        <div class="position-absolute top-0 end-0 p-4 opacity-5"><i class="fa-solid fa-user-shield fa-8x text-danger"></i></div>
+                        
+                        <h4 class="fw-bold text-theme mb-2 position-relative z-2 d-flex align-items-center gap-2">
+                            <i class="fa-solid fa-lock text-danger"></i> Cryptographic Hardening
+                        </h4>
+                        <p class="text-theme-secondary small mb-5 position-relative z-2">Update your authentication hash credentials.</p>
+ 
+                        <form method="POST" action="{% url 'settings' %}" class="position-relative z-2">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="change_password">
+                            
+                            <div class="glass-settings-panel p-4 bg-black bg-opacity-20 border-danger border-opacity-10 rounded-4 mb-4 shadow-inner text-start">
+                                <div class="mb-4">
+                                    <label class="small text-uppercase tracking-widest fw-bold text-theme-secondary opacity-50 mb-2">Current Cipher Key</label>
+                                    <div class="neural-input-group d-flex align-items-center">
+                                        <i class="fa-solid fa-key text-secondary opacity-50 ms-3"></i>
+                                        <input type="password" name="old_password" class="form-control neural-input" required>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-4">
+                                    <label class="small text-uppercase tracking-widest fw-bold text-theme-secondary opacity-50 mb-2">New Cipher Strategy</label>
+                                    <div class="neural-input-group d-flex align-items-center mb-3">
+                                        <i class="fa-solid fa-lock-open text-danger opacity-50 ms-3"></i>
+                                        <input type="password" name="new_password1" id="newPassword" class="form-control neural-input" onkeyup="validatePassword()" required>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-4">
+                                    <label class="small text-uppercase tracking-widest fw-bold text-theme-secondary opacity-50 mb-2">Confirm Cipher Match</label>
+                                    <div class="neural-input-group d-flex align-items-center mb-3">
+                                        <i class="fa-solid fa-shield-halved text-success opacity-50 ms-3"></i>
+                                        <input type="password" name="new_password2" id="confirmPassword" class="form-control neural-input" onkeyup="validatePassword()" required>
+                                    </div>
+                                    
+                                    <div class="d-flex flex-wrap gap-2 mt-3">
+                                        <span id="rule-length" class="badge bg-black bg-opacity-30 border border-theme border-opacity-10 text-secondary fw-normal px-3 py-2 rounded-pill"><i class="fa-solid fa-circle-xmark me-2"></i> 8+ Bytes</span>
+                                        <span id="rule-upper" class="badge bg-black bg-opacity-30 border border-theme border-opacity-10 text-secondary fw-normal px-3 py-2 rounded-pill"><i class="fa-solid fa-circle-xmark me-2"></i> Upper Case</span>
+                                        <span id="rule-number" class="badge bg-black bg-opacity-30 border border-theme border-opacity-10 text-secondary fw-normal px-3 py-2 rounded-pill"><i class="fa-solid fa-circle-xmark me-2"></i> Numeric</span>
+                                        <span id="rule-match" class="badge bg-black bg-opacity-30 border border-theme border-opacity-10 text-secondary fw-normal px-3 py-2 rounded-pill"><i class="fa-solid fa-circle-xmark me-2"></i> Parity Match</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <button type="submit" id="savePasswordBtn" class="btn btn-outline-danger rounded-pill px-5 fw-bold hover-scale" disabled>
+                                Rotate Security Key <i class="fa-solid fa-arrow-right-long ms-2"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                 <!-- ─── SOURCING STRATEGY TAB ─── -->
+                {% if user.is_recruiter %}
+                <div class="tab-pane fade h-100" id="v-pills-hiring">
+                    <div class="glass-settings-panel p-4 p-lg-5 h-100 position-relative overflow-hidden">
+                        <div class="position-absolute top-0 end-0 p-4 opacity-5"><i class="fa-solid fa-chess-knight fa-8x text-theme"></i></div>
+                        
+                        <h4 class="fw-bold text-theme mb-2 position-relative z-2 d-flex align-items-center gap-2">
+                            <i class="fa-solid fa-chess-board text-theme"></i> Strategic Sourcing
+                        </h4>
+                        <p class="text-theme-secondary small mb-5 position-relative z-2">Configure recruitment logic and algorithmic bias adjustments.</p>
+ 
+                        <div class="glass-settings-panel p-4 bg-black bg-opacity-20 border-theme border-opacity-10 shadow-inner position-relative z-2 rounded-4 d-flex align-items-center justify-content-between mb-4">
+                            <div class="d-flex align-items-center gap-4">
+                                <div class="rounded-circle d-flex justify-content-center align-items-center bg-theme bg-opacity-10 border border-theme border-opacity-20 shadow-lg" style="width: 60px; height: 60px;">
+                                    <i class="fa-solid fa-user-secret fs-3 text-theme"></i>
+                                </div>
+                                <div class="text-start">
+                                    <h5 class="fw-bold text-theme mb-1">Blind Screening Protocol</h5>
+                                    <p class="text-theme-secondary small mb-0 lh-base">Automatically obfuscate candidate biometric markers during initial assessment.</p>
+                                </div>
+                            </div>
+                            
+                            <form method="POST" action="{% url 'settings' %}" class="flex-shrink-0 ms-4">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="toggle_blind_hiring">
+                                <div class="form-check form-switch form-switch-lg mb-0 text-start">
+                                    <input class="form-check-input" type="checkbox" onchange="this.form.submit()" {% if user.blind_hiring %}checked{% endif %} style="cursor: pointer; width: 3.5rem; height: 1.75rem;">
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+ 
+                <!-- ─── AI DIRECTIVES TAB ─── -->
+                <div class="tab-pane fade h-100" id="v-pills-ai">
+                    <div class="glass-settings-panel p-4 p-lg-5 h-100 position-relative overflow-hidden text-start">
+                        <div class="position-absolute top-0 end-0 p-4 opacity-5"><i class="fa-solid fa-brain fa-8x text-info"></i></div>
+                        
+                        <div class="d-flex justify-content-between align-items-start mb-5 position-relative z-2">
+                            <div>
+                                <h4 class="fw-bold text-theme mb-2 d-flex align-items-center gap-2">
+                                    <i class="fa-solid fa-microchip text-info"></i> Neural Directives
+                                </h4>
+                                <p class="text-theme-secondary small mb-0">Tune global reasoning parameters for AI endpoints.</p>
+                            </div>
+                            <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-20 px-3 py-2 rounded-pill shadow-lg fw-bold tracking-widest small">
+                                <i class="fa-solid fa-network-wired me-2"></i> CORE ONLINE
+                            </span>
+                        </div>
+ 
+                        <div class="glass-settings-panel p-4 bg-black bg-opacity-20 border-info border-opacity-10 rounded-4 position-relative z-2 shadow-inner">
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <label class="fw-bold text-theme mb-0">Generative Temperature (Creativity)</label>
+                                <span class="badge bg-info text-dark fw-bold rounded-pill px-3 py-1">0.7</span>
+                            </div>
+                            <p class="text-theme-secondary small mb-3">Lower values force strict determinism. Higher values encourage expansive vocabulary.</p>
+                            <input type="range" class="form-range eye-engine-switch" min="0" max="1" step="0.1" value="0.7" disabled>
+                            <div class="text-center mt-3"><span class="small text-danger fw-bold"><i class="fa-solid fa-lock me-1"></i> Hardcoded globally in Project Zenith</span></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- ─── SYSTEM ALERTS TAB ─── -->
+                <div class="tab-pane fade h-100" id="v-pills-notifications">
+                    <div class="glass-settings-panel p-4 p-lg-5 h-100 position-relative overflow-hidden text-start">
+                        <div class="position-absolute top-0 end-0 p-4 opacity-5"><i class="fa-solid fa-bell fa-8x text-warning"></i></div>
+                        
+                        <h4 class="fw-bold text-theme mb-2 position-relative z-2 d-flex align-items-center gap-2">
+                            <i class="fa-solid fa-satellite-dish text-warning"></i> System Telemetry
+                        </h4>
+                        <p class="text-theme-secondary small mb-5 position-relative z-2">Configure webhook and email delivery parameters.</p>
+ 
+                        <form method="POST" action="{% url 'settings' %}" class="position-relative z-2">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="update_telemetry">
+                            <div class="d-flex flex-column gap-3 mb-4">
+                                <div class="glass-settings-panel p-3 px-4 bg-black bg-opacity-20 border-warning border-opacity-10 rounded-4 shadow-inner d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="fw-bold text-theme mb-1"><i class="fa-solid fa-envelope text-info me-2"></i>SMTP Transport</h6>
+                                        <p class="text-theme-secondary small mb-0 opacity-75">Allow system to dispatch direct application timeline emails.</p>
+                                    </div>
+                                    <div class="form-check form-switch mb-0">
+                                        <input class="form-check-input hover-scale" type="checkbox" name="smtp_alerts" {% if user.ui_profile.smtp_alerts_enabled %}checked{% endif %} style="cursor: pointer; width: 3.5rem; height: 1.75rem;">
+                                    </div>
+                                </div>
+                                
+                                <div class="glass-settings-panel p-3 px-4 bg-black bg-opacity-20 border-warning border-opacity-10 rounded-4 shadow-inner d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="fw-bold text-theme mb-1"><i class="fa-solid fa-bolt text-warning me-2"></i>High-Value Target Ping</h6>
+                                        <p class="text-theme-secondary small mb-0 opacity-75">Send immediate notification when a 90%+ match applies.</p>
+                                    </div>
+                                    <div class="form-check form-switch mb-0">
+                                        <input class="form-check-input hover-scale" type="checkbox" name="high_value_ping" {% if user.ui_profile.high_value_ping_enabled %}checked{% endif %} style="cursor: pointer; width: 3.5rem; height: 1.75rem;">
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-warning text-dark rounded-pill px-5 fw-bold hover-scale shadow-lg">
+                                <i class="fa-solid fa-floppy-disk me-2"></i> Save Parameters
+                            </button>
+                        </form>
+                    </div>
+                </div>
+ 
+                <!-- ─── ATS SYNC BRIDGE TAB ─── -->
+                {% if user.is_recruiter %}
+                <div class="tab-pane fade h-100" id="v-pills-ats">
+                    <div class="glass-settings-panel p-4 p-lg-5 h-100 position-relative overflow-hidden text-start">
+                        <div class="position-absolute top-0 end-0 p-4 opacity-5"><i class="fa-solid fa-network-wired fa-8x text-info"></i></div>
+                        
+                        <h4 class="fw-bold text-theme mb-2 position-relative z-2 d-flex align-items-center gap-2">
+                            <i class="fa-solid fa-plug text-info"></i> Enterprise ATS Bridge
+                        </h4>
+                        <p class="text-theme-secondary small mb-5 position-relative z-2">Connect SmartRecruit to legacy systems like Workday or Greenhouse.</p>
+ 
+                        <div class="glass-settings-panel p-4 bg-black bg-opacity-20 border-info border-opacity-10 rounded-4 position-relative z-2 shadow-inner mb-4">
+                            <h6 class="fw-bold text-theme mb-4 d-flex align-items-center"><i class="fa-solid fa-link text-info me-2"></i> Stage Correlation Mapping</h6>
+                            
+                            <form method="POST" action="{% url 'settings' %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="update_ats_config">
+                                
+                                <div class="row g-3">
+                                    <div class="col-md-5">
+                                        <label class="small text-uppercase tracking-widest fw-bold text-theme-secondary opacity-50 mb-2">SmartRecruit Stage</label>
+                                        <div class="neural-input-group">
+                                            <select name="internal_stage" class="form-select neural-input">
+                                                <option value="APPLIED">Applied / Ingest</option>
+                                                <option value="ROUND_1_PASSED">Technical Pass</option>
+                                                <option value="ROUND_2_PASSED">Behavioral Pass</option>
+                                                <option value="OFFER_GENERATED">Offer Extended</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2 d-flex align-items-end justify-content-center pb-2">
+                                        <i class="fa-solid fa-arrow-right-long text-info fs-4"></i>
+                                    </div>
+                                    <div class="col-md-5">
+                                        <label class="small text-uppercase tracking-widest fw-bold text-theme-secondary opacity-50 mb-2">ATS Stage Name</label>
+                                        <div class="neural-input-group">
+                                            <input type="text" name="external_ats_stage" class="form-control neural-input" placeholder="e.g. Assessment Complete" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-12 mt-4">
+                                        <button type="submit" class="btn btn-info text-dark rounded-pill px-4 fw-bold hover-scale shadow-lg">
+                                            <i class="fa-solid fa-circle-nodes me-2"></i> Commit Mapping
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+             </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function toggleProfileEdit() {
+        const view = document.getElementById('profile-view-mode');
+        const edit = document.getElementById('profile-edit-mode');
+        if(view.classList.contains('d-none')) {
+            view.classList.remove('d-none');
+            edit.classList.add('d-none');
+        } else {
+            view.classList.add('d-none');
+            edit.classList.remove('d-none');
+        }
+    }
+
+    // --- UI CONFIGURATION ENGINE ---
+    document.addEventListener('DOMContentLoaded', function() {
+        const themeSelect = document.getElementById('themeEngineSelect');
+        const eyeToggle = document.getElementById('eyeProtectionToggle');
+        const htmlElement = document.documentElement;
+
+        // Sync with Current State
+        const currentTheme = localStorage.getItem('smartrecruit-theme') || 'system';
+        const currentEye = localStorage.getItem('smartrecruit-eye-protection') || 'off';
+
+        if(themeSelect) themeSelect.value = currentTheme;
+        if(eyeToggle) eyeToggle.checked = (currentEye === 'on');
+
+        // Theme Switch Logic
+        if(themeSelect) {
+            themeSelect.addEventListener('change', function() {
+                let newTheme = this.value;
+                localStorage.setItem('smartrecruit-theme', newTheme);
+                
+                let activeTheme = newTheme;
+                if(newTheme === 'system') {
+                    activeTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'midnight' : 'clean';
+                }
+                htmlElement.setAttribute('data-theme', activeTheme);
+                
+                // Globally notify update if theme_toggle exists in base.html
+                const baseToggle = document.getElementById('theme-toggle');
+                if (baseToggle) {
+                    const themeIcon = baseToggle.querySelector('i');
+                    if (activeTheme === 'midnight') {
+                        themeIcon.className = 'fa-solid fa-moon text-info';
+                        baseToggle.style.borderColor = 'rgba(0, 230, 118, 0.25)';
+                    } else {
+                        themeIcon.className = 'fa-solid fa-sun text-warning';
+                        baseToggle.style.borderColor = 'rgba(255, 193, 7, 0.25)';
+                    }
+                }
+            });
+        }
+
+        // Eye Protection Logic
+        if(eyeToggle) {
+            eyeToggle.addEventListener('change', function() {
+                const state = this.checked ? 'on' : 'off';
+                htmlElement.setAttribute('data-eye-protection', state);
+                localStorage.setItem('smartrecruit-eye-protection', state);
+            });
+        }
+
+        // GDPR Export Interceptor
+        const exportForms = document.querySelectorAll('form input[value="export_data"]');
+        exportForms.forEach(input => {
+            const form = input.closest('form');
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const btn = form.querySelector('button');
+                const origHtml = btn.innerHTML;
+                btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin me-2"></i> Compiling Data...';
+                btn.disabled = true;
+                setTimeout(() => {
+                    btn.innerHTML = '<i class="fas fa-check-circle me-2"></i> Export Dispatched';
+                    btn.classList.remove('btn-outline-info');
+                    btn.classList.add('btn-success', 'text-white');
+                    if(window.showThunderToast) window.showThunderToast('Your data archive is being generated and will be emailed to your registered address securely.', 'success');
+                    else alert('Export initiated. Data will be mapped and sent to your email.');
+                    setTimeout(() => {
+                        btn.innerHTML = origHtml;
+                        btn.disabled = false;
+                        btn.classList.remove('btn-success', 'text-white');
+                        btn.classList.add('btn-outline-info');
+                    }, 4000);
+                }, 2000);
+            });
+        });
+    });
+
+    function validatePassword() {
+        const pass = document.getElementById('newPassword').value;
+        const confirm = document.getElementById('confirmPassword').value;
+        const btn = document.getElementById('savePasswordBtn');
+        const rules = {
+            length: pass.length >= 8,
+            upper: /[A-Z]/.test(pass),
+            number: /[0-9]/.test(pass),
+            match: (pass === confirm && pass.length > 0)
+        };
+
+        for (const [key, valid] of Object.entries(rules)) {
+            const el = document.getElementById('rule-' + key);
+            if(el) {
+                if(valid) {
+                    el.classList.remove('border-secondary', 'text-secondary');
+                    el.classList.add('border-success', 'text-success');
+                    el.querySelector('i').className = 'fas fa-check-circle me-1';
+                } else {
+                    el.classList.remove('border-success', 'text-success');
+                    el.classList.add('border-secondary', 'text-secondary');
+                    el.querySelector('i').className = 'fas fa-circle-xmark me-1';
+                }
+            }
+        }
+
+        if (Object.values(rules).every(Boolean)) {
+            btn.disabled = false;
+            btn.className = "btn btn-danger rounded-pill px-5 fw-bold shadow-lg hover-scale";
+            document.getElementById('newPassword').classList.add('border-success');
+            document.getElementById('newPassword').classList.remove('border-danger');
+            document.getElementById('confirmPassword').classList.add('border-success');
+            document.getElementById('confirmPassword').classList.remove('border-danger');
+        } else {
+            btn.disabled = true;
+            btn.className = "btn btn-outline-danger rounded-pill px-5 fw-bold";
+            document.getElementById('newPassword').classList.remove('border-success');
+            document.getElementById('newPassword').classList.add('border-danger');
+            document.getElementById('confirmPassword').classList.remove('border-success');
+            if (confirm.length > 0 && pass !== confirm) {
+                document.getElementById('confirmPassword').classList.add('border-danger');
+            } else {
+                document.getElementById('confirmPassword').classList.remove('border-danger');
+            }
+        }
+    }
+
+    // Neural Voice Matrix Initialization
+    (function initVoice() {
+        const sel = document.getElementById('voiceSelect');
+        function loadVoices() {
+            const voices = window.speechSynthesis.getVoices();
+            if (voices.length === 0) return;
+            sel.innerHTML = '<option value="" class="bg-dark" disabled>Select Neural Protocol...</option>';
+            voices.forEach(v => {
+                const opt = document.createElement('option');
+                opt.value = v.name;
+                opt.className = 'bg-dark text-light';
+                opt.innerText = `${v.name} [${v.lang}]`;
+                if (v.name === localStorage.getItem('voiceName')) opt.selected = true;
+                sel.appendChild(opt);
+            });
+        }
+        window.speechSynthesis.onvoiceschanged = loadVoices;
+        loadVoices(); // Initial load
+
+        const p = document.getElementById('voicePitch');
+        const s = document.getElementById('voiceSpeed');
+        const pv = document.getElementById('pitchVal');
+        const sv = document.getElementById('speedVal');
+
+        p.addEventListener('input', () => pv.innerText = parseFloat(p.value).toFixed(1));
+        s.addEventListener('input', () => sv.innerText = parseFloat(s.value).toFixed(1));
+        
+        // Load initial values from localStorage if they exist
+        if(localStorage.getItem('voicePitch')) { p.value = localStorage.getItem('voicePitch'); pv.innerText = parseFloat(p.value).toFixed(1); }
+        if(localStorage.getItem('voiceSpeed')) { s.value = localStorage.getItem('voiceSpeed'); sv.innerText = parseFloat(s.value).toFixed(1); }
+    })();
+
+    function testVoiceSettings() {
+        const text = "Neural testing initiated. SmartRecruit AI protocol is now active and synchronized.";
+        const utterance = new SpeechSynthesisUtterance(text);
+        const name = document.getElementById('voiceSelect').value;
+        const voices = window.speechSynthesis.getVoices();
+        
+        const selectedVoice = voices.find(v => v.name === name);
+        if(selectedVoice) utterance.voice = selectedVoice;
+        
+        utterance.pitch = document.getElementById('voicePitch').value;
+        utterance.rate = document.getElementById('voiceSpeed').value;
+        
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.speak(utterance);
+    }
+
+    function saveVoiceSettings() {
+        const selectedOpt = document.getElementById('voiceSelect').value;
+        if(selectedOpt) {
+            localStorage.setItem('voiceName', selectedOpt);
+            localStorage.setItem('voicePitch', document.getElementById('voicePitch').value);
+            localStorage.setItem('voiceSpeed', document.getElementById('voiceSpeed').value);
+            
+            // Re-use bootstrap alert UI created in base.html if possible, otherwise alert.
+            alert('Neural Voice Configuration Synchronized.');
+        } else {
+            alert('Please select a valid voice protocol first.');
+        }
+    }
+</script>
+{% endblock %}

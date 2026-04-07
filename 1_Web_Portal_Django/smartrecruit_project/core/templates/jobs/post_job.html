@@ -1,0 +1,288 @@
+{% extends 'base.html' %}
+
+{% block title %}Post Job | SmartRecruit{% endblock %}
+
+{% block sidebar %}
+    {% include 'jobs/_recruiter_sidebar.html' %}
+{% endblock %}
+
+{% block content %}
+<div class="candidate-wrapper d-flex flex-grow-1" style="background: #0a0b10; min-height: 100vh;">
+    <div class="main-content flex-grow-1 p-4" style="max-height: 100vh; overflow-y: auto; scrollbar-width: none;">
+<style>
+    /* Z-INDEX SAFEGUARDS & FORM STYLING */
+    .modal { z-index: 2000 !important; }
+    .modal-backdrop { z-index: 1050 !important; }
+    
+    /* Silicon Valley Form Overrides */
+    .form-control, .form-select {
+        background-color: var(--glass-bg, rgba(0, 0, 0, 0.25)) !important;
+        backdrop-filter: blur(10px);
+        border: 1px solid var(--border-color, rgba(255, 255, 255, 0.1)) !important;
+        color: var(--text-primary, #fdfcfb) !important;
+        padding: 0.75rem 1rem;
+        border-radius: 0.5rem;
+        transition: all 0.3s ease;
+    }
+    .form-control::placeholder, .form-select::placeholder {
+        color: rgba(255, 255, 255, 0.4) !important;
+        opacity: 1;
+    }
+    .form-control:focus, .form-select:focus {
+        background-color: rgba(0, 0, 0, 0.1) !important;
+        border-color: var(--primary, #0d6efd) !important;
+        box-shadow: 0 0 15px rgba(13, 110, 253, 0.25) inset, 0 0 5px rgba(13, 110, 253, 0.5) !important;
+    }
+    label.form-label {
+        color: var(--text-secondary, #b0bec5);
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        font-weight: 700;
+        margin-bottom: 0.4rem;
+    }
+    .form-text { color: var(--text-muted, rgba(255, 255, 255, 0.4)) !important; font-size: 0.75rem; }
+</style>
+
+<div class="container-fluid">
+    <!-- Hero Section -->
+    <section class="page-hero mb-4 glass-panel p-5 border-primary border-opacity-10 shadow-lg position-relative overflow-hidden" data-aos="fade-down">
+        <div class="position-absolute top-0 end-0 p-4 opacity-10">
+            <i class="fas fa-satellite-dish fa-6x text-primary"></i>
+        </div>
+        <div class="row align-items-center g-4 position-relative z-2">
+            <div class="col-lg-8">
+                <div class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-3 py-2 rounded-pill mb-3 text-uppercase tracking-widest small fw-bold">
+                    <i class="fas fa-plus-circle me-2"></i>Recruiter Publishing Module
+                </div>
+                <h1 class="display-6 fw-bold text-theme mb-3 tracking-tight">Deploy a <span class="text-transparent bg-clip-text bg-gradient-primary">new campaign</span> to the neural matrix.</h1>
+                <p class="lead text-theme-secondary mb-0">Define the core parameters, assessment thresholds, and skill vectors. Our AI engine is on standby to assist with generating the perfect role description.</p>
+            </div>
+            <div class="col-lg-4 d-none d-lg-block">
+                <div class="glass-panel p-4 bg-dark bg-opacity-25 border-secondary border-opacity-25 text-theme shadow-inner rounded-4 h-100 d-flex flex-column justify-content-center text-center">
+                    <div class="text-info text-uppercase tracking-widest small fw-bold mb-2"><i class="fas fa-clock me-2"></i>Estimated Time</div>
+                    <div class="display-5 fw-bold text-theme mb-1">3<span class="fs-4 text-theme-secondary">min</span></div>
+                    <div class="text-theme-secondary small">Average time to launch a fully optimized role.</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Form Architecture -->
+    <div class="row justify-content-center pb-5">
+        <div class="col-12 col-xl-11">
+            <form method="post" class="glass-panel p-0 rounded-4 border-primary overflow-hidden" style="box-shadow: 0 0 40px rgba(0, 255, 255, 0.3); backdrop-filter: blur(20px);" data-aos="fade-up">
+                {% csrf_token %}
+                <div class="row g-0">
+                    
+                    <!-- Left Column: Core Data -->
+                    <div class="col-lg-8 p-4 p-lg-5 position-relative">
+                        <div class="position-absolute top-0 end-0 p-3 opacity-5"><i class="fas fa-align-left fa-4x text-theme"></i></div>
+                        
+                        <h4 class="fw-bold text-theme mb-4 d-flex align-items-center border-bottom border-light border-opacity-10 pb-3">
+                            <div class="rounded-circle d-flex align-items-center justify-content-center bg-primary bg-opacity-10 text-primary shadow-inner me-3" style="width:40px;height:40px;"><i class="fas fa-layer-group"></i></div>
+                            Role Specifications
+                        </h4>
+
+                        <div class="row g-4 position-relative z-2">
+                            <div class="col-12">
+                                <label class="form-label"><i class="fas fa-heading text-theme-secondary me-1"></i> Job Title</label>
+                                {{ form.title }}
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label class="form-label"><i class="fas fa-briefcase text-theme-secondary me-1"></i> Job Category</label>
+                                {{ form.job_type }}
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label class="form-label"><i class="fas fa-code text-theme-secondary me-1"></i> Tech Stack Focus</label>
+                                {{ form.technology_stack }}
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label class="form-label"><i class="fas fa-map-marker-alt text-theme-secondary me-1"></i> Location</label>
+                                {{ form.location }}
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label class="form-label"><i class="fas fa-money-bill-wave text-theme-secondary me-1"></i> Compensation Range</label>
+                                {{ form.salary_range }}
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label class="form-label"><i class="fas fa-hourglass-end text-theme-secondary me-1"></i> Application Deadline</label>
+                                {{ form.deadline }}
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label class="form-label"><i class="fas fa-history text-theme-secondary me-1"></i> Min. Experience (Years)</label>
+                                {{ form.min_experience }}
+                            </div>
+                            
+                            <div class="col-12 mt-5 border-top border-light border-opacity-10 pt-4">
+                                <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-3">
+                                    <label class="form-label mb-0"><i class="fas fa-align-left text-theme-secondary me-1"></i> Job Description</label>
+                                    
+                                    <div class="p-2 rounded-pill bg-dark bg-opacity-50 border border-primary border-opacity-25 shadow-inner d-flex align-items-center gap-2">
+                                        <span class="badge bg-primary bg-opacity-10 text-primary fw-bold tracking-widest small ms-2"><i class="fas fa-magic me-1"></i>AI Assist</span>
+                                        <select id="jdTone" class="form-select border-0 bg-transparent text-theme shadow-none py-1 pe-4" style="min-width: 140px; font-size: 0.85rem;">
+                                            <option value="professional" class="bg-dark text-white">Professional</option>
+                                            <option value="modern" class="bg-dark text-white">Modern Startup</option>
+                                            <option value="dynamic" class="bg-dark text-white">High Energy</option>
+                                        </select>
+                                        <button type="button" class="btn btn-sm btn-primary rounded-pill px-3 shadow-sm hover-scale me-1" id="generateBtn" style="white-space:nowrap;">
+                                            <i class="fas fa-bolt me-1"></i> Generate
+                                        </button>
+                                    </div>
+                                </div>
+                                {{ form.description }}
+                            </div>
+                            
+                            <div class="col-12 mt-4">
+                                <label class="form-label"><i class="fas fa-project-diagram text-theme-secondary me-1"></i> Required Skill Vector (Comma separated)</label>
+                                {{ form.required_skills }}
+                                <div class="form-text mt-2"><i class="fas fa-info-circle me-1 text-info"></i>The neural engine uses these exact skills to match candidates. e.g. "Python, React, Django, AWS"</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Security & Publishing -->
+                    <div class="col-lg-4 d-flex flex-column border-start border-light border-opacity-10 bg-dark bg-opacity-25 p-4 p-lg-5">
+                        <!-- Evaluation Matrix -->
+                        <div class="glass-panel p-4 flex-grow-1 border-warning border-opacity-25 shadow-sm position-relative overflow-hidden mb-4">
+                            <div class="position-absolute top-0 end-0 p-3 opacity-10"><i class="fas fa-brain fa-4x text-warning"></i></div>
+                            
+                            <h5 class="fw-bold text-theme mb-4 d-flex align-items-center border-bottom border-light border-opacity-10 pb-3 position-relative z-2">
+                                <div class="rounded-circle d-flex align-items-center justify-content-center bg-warning bg-opacity-10 text-warning shadow-inner me-3" style="width:35px;height:35px;"><i class="fas fa-cogs"></i></div>
+                                Assessment Matrix
+                            </h5>
+                            
+                            <div class="row g-4 position-relative z-2">
+                                <div class="col-12">
+                                    <label class="form-label text-warning"><i class="fas fa-percentage me-1"></i> Aptitude Threshold (%)</label>
+                                    {{ form.passing_score_r1 }}
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label text-warning"><i class="fas fa-percentage me-1"></i> Practical Threshold (%)</label>
+                                    {{ form.passing_score_r2 }}
+                                </div>
+                                <div class="col-12 pt-3 border-top border-light border-opacity-10">
+                                    <label class="form-label text-info"><i class="fas fa-balance-scale me-1"></i> Aptitude Difficulty</label>
+                                    {{ form.aptitude_difficulty }}
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label text-info"><i class="fas fa-balance-scale me-1"></i> Practical Difficulty</label>
+                                    {{ form.practical_difficulty }}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Deploy Module -->
+                        <div class="glass-panel p-4 text-center mt-auto border-success border-opacity-50" style="background: rgba(25, 135, 84, 0.05); box-shadow: 0 0 20px rgba(25,135,84,0.1) inset;">
+                            <h6 class="fw-bold text-success mb-2 text-uppercase tracking-widest small"><i class="fas fa-rocket me-2"></i>Launch Sequence</h6>
+                            <p class="small text-theme-secondary mb-4 lh-base">Publishing this role will immediately open it to candidates and activate the neural sourcing channels.</p>
+                            <div class="d-grid gap-3">
+                                <button type="submit" class="btn thunder-btn btn-lg rounded-pill fw-bold shadow-lg hover-scale border-0 thunder-pulse" style="animation: bubble-pulse 2s infinite ease-in-out;"><i class="fas fa-satellite-dish me-2"></i> Deploy Campaign</button>
+                                <a href="{% url 'job_list' %}" class="btn btn-outline-secondary rounded-pill fw-bold hover-scale"><i class="fas fa-times me-2"></i> Cancel Deployment</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // Force specific classes onto Django generated form fields to match the dark glass UI safely
+    const inputs = document.querySelectorAll('input[type="text"], input[type="number"], input[type="date"], select, textarea');
+    inputs.forEach(input => {
+        if (!input.classList.contains('form-control') && !input.classList.contains('form-select')) {
+            if (input.tagName === 'SELECT') {
+                input.classList.add('form-select');
+            } else {
+                input.classList.add('form-control');
+            }
+        }
+    });
+
+    const generateBtn = document.getElementById('generateBtn');
+    if (generateBtn) {
+        generateBtn.addEventListener('click', async function () {
+            const btn = this;
+            // Target the Django form inputs by their auto-generated IDs
+            const titleInput = document.getElementById('id_title');
+            const skillsInput = document.getElementById('id_required_skills');
+            const descriptionField = document.getElementById('id_description');
+            const toneSelect = document.getElementById('jdTone');
+            
+            if (!titleInput || !descriptionField) {
+                alert('Form structure error. Cannot find title or description fields.');
+                return;
+            }
+
+            const title = titleInput.value.trim();
+            const skills = skillsInput ? skillsInput.value.trim() : '';
+            const tone = toneSelect ? toneSelect.value : 'professional';
+
+            if (!title) {
+                // UI friendly alert
+                alert('Enter a job title first so the AI knows what role to generate.');
+                titleInput.focus();
+                return;
+            }
+
+            // Loading state
+            btn.disabled = true;
+            const originalContent = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-circle-notch fa-spin me-1"></i> Parsing...';
+
+            try {
+                const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+                const response = await fetch('{% url "generate_jd_ai" %}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken
+                    },
+                    body: JSON.stringify({ title, skills, tone })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                if (data.description) {
+                    descriptionField.value = data.description;
+                    if (data.suggested_skills && skillsInput && !skillsInput.value.trim()) {
+                        skillsInput.value = data.suggested_skills;
+                    }
+                    // Flash the field green to indicate success
+                    descriptionField.style.transition = 'border-color 0.3s ease, box-shadow 0.3s ease';
+                    descriptionField.style.borderColor = '#198754';
+                    descriptionField.style.boxShadow = '0 0 15px rgba(25, 135, 84, 0.4) inset';
+                    setTimeout(() => {
+                        descriptionField.style.borderColor = '';
+                        descriptionField.style.boxShadow = '';
+                    }, 1500);
+                } else {
+                    alert(data.error || 'The AI engine could not generate a description right now.');
+                }
+            } catch (error) {
+                console.error('AI Generation Error:', error);
+                alert('Connection to the AI engine failed. Please try typing manually.');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalContent;
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

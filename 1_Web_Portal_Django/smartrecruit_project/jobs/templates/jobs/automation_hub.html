@@ -1,0 +1,152 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}AI Automation Hub | SmartRecruit{% endblock %}
+
+{% block content %}
+<style>
+    /* Z-INDEX SAFEGUARDS */
+    .modal { z-index: 2000 !important; }
+    .modal-backdrop { z-index: 1050 !important; }
+    .tracking-widest { letter-spacing: 0.15em; }
+    .x-small { font-size: 0.75rem; }
+    .xx-small { font-size: 0.65rem; }
+    .italic { font-style: italic; }
+
+    /* Pulse dot for active connections */
+    .pulse-dot {
+        width: 8px; height: 8px; border-radius: 50%;
+        background: #00e676;
+        box-shadow: 0 0 10px rgba(0,255,100,0.5);
+        animation: pulse-glow 2s ease-in-out infinite;
+        flex-shrink: 0;
+    }
+    @keyframes pulse-glow {
+        0%, 100% { opacity: 1; box-shadow: 0 0 6px rgba(0,255,100,0.4); }
+        50% { opacity: 0.6; box-shadow: 0 0 14px rgba(0,255,100,0.7); }
+    }
+
+    /* Form inputs */
+    .sv-input {
+        background: rgba(255,255,255,0.05) !important;
+        color: var(--text-color, #e2e8f0) !important;
+        border: 1px solid rgba(255,255,255,0.1) !important;
+        border-radius: 999px; padding: 0.5rem 1.25rem;
+        transition: border-color 0.2s ease;
+        font-size: 0.85rem;
+    }
+    .sv-input:focus { border-color: rgba(41,121,255,0.5) !important; box-shadow: 0 0 0 3px rgba(41,121,255,0.1) !important; outline: none; }
+
+    /* Webhook table */
+    .hook-row { border-bottom: 1px solid rgba(255,255,255,0.03); }
+    .hook-row:last-child { border-bottom: none; }
+</style>
+
+<div class="container-fluid px-4 mt-4 fade-up">
+
+    <!-- ─── Hero ─── -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-5 gap-3" data-aos="fade-down">
+        <div class="d-flex align-items-center gap-3">
+            <div class="rounded-circle d-flex align-items-center justify-content-center text-primary fw-bold flex-shrink-0" style="width: 56px; height: 56px; background: rgba(41,121,255,0.12); border: 1px solid rgba(41,121,255,0.25); font-size: 1.25rem;">
+                <i class="fas fa-network-wired"></i>
+            </div>
+            <div>
+                <div class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-3 py-1 rounded-pill tracking-widest text-uppercase x-small fw-bold mb-2">Webhook Orchestrator v1.0</div>
+                <h1 class="display-6 fw-bold text-white mb-0" style="font-family: 'Space Grotesk', sans-serif;">AI Automation <span style="background: linear-gradient(90deg, #2979FF, #7C4DFF); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">Hub</span></h1>
+                <p class="text-secondary mb-0 small mt-1"><i class="fas fa-link me-2 text-info"></i>Connect SmartRecruit AI events to <strong class="text-white">n8n</strong>, Slack, or Zapier.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-5">
+        <!-- ─── New Connection Form ─── -->
+        <div class="col-lg-4" data-aos="fade-right">
+            <div class="glass-panel p-4 h-100 shadow rounded-4 border-secondary border-opacity-25">
+                <h6 class="fw-bold text-white mb-4 x-small tracking-widest text-uppercase border-bottom border-light border-opacity-10 pb-3"><i class="fas fa-plus-circle text-primary me-2"></i>New AI Connector</h6>
+
+                <form action="." method="POST">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label text-secondary xx-small tracking-widest text-uppercase fw-bold mb-2">Integration Name</label>
+                        <input type="text" name="name" class="form-control sv-input" placeholder="e.g. n8n Slack Notifier" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-secondary xx-small tracking-widest text-uppercase fw-bold mb-2">Target Event</label>
+                        <select name="event_type" class="form-select sv-input">
+                            {% for code, label in event_choices %}
+                            <option value="{{ code }}">{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label text-secondary xx-small tracking-widest text-uppercase fw-bold mb-2">Webhook URL</label>
+                        <input type="url" name="url" class="form-control sv-input" placeholder="https://n8n.your-instance.com/..." required>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100 rounded-pill py-2 shadow-sm fw-bold x-small tracking-widest text-uppercase hover-scale">
+                        <i class="fas fa-rocket me-2"></i>Deploy AI Connector
+                    </button>
+                </form>
+
+                <hr class="border-secondary border-opacity-10 my-4">
+                <div class="p-3 rounded-4" style="background: rgba(0,176,255,0.05); border: 1px solid rgba(0,176,255,0.12);">
+                    <p class="xx-small text-secondary mb-0 italic"><i class="fas fa-info-circle me-1 text-info"></i>Data payloads are sent as secure JSON POST requests. Ensure your endpoint is configured for CORS if necessary.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ─── Active Connections Table ─── -->
+        <div class="col-lg-8" data-aos="fade-up">
+            <div class="glass-panel p-0 h-100 shadow-lg rounded-4 overflow-hidden border-secondary border-opacity-25">
+                <div class="p-4 border-bottom border-light border-opacity-10 bg-dark bg-opacity-25 d-flex align-items-center justify-content-between">
+                    <h6 class="fw-bold text-white mb-0 x-small tracking-widest text-uppercase"><i class="fas fa-plug text-success me-2"></i>Active AI Pipelines</h6>
+                    <span class="badge bg-success bg-opacity-20 text-success border border-success border-opacity-25 rounded-pill x-small fw-bold px-3">{{ webhooks|length }} Connected</span>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-borderless align-middle mb-0 text-white w-100">
+                        <thead class="text-secondary xx-small tracking-widest text-uppercase border-bottom border-light border-opacity-10 bg-light bg-opacity-5">
+                            <tr>
+                                <th class="ps-4 py-3 border-0">Connector</th>
+                                <th class="py-3 border-0">Event Hook</th>
+                                <th class="py-3 border-0">URL Preview</th>
+                                <th class="py-3 pe-4 border-0 text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for hook in webhooks %}
+                            <tr class="hook-row">
+                                <td class="ps-4 py-3">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="pulse-dot"></div>
+                                        <span class="fw-bold text-white x-small">{{ hook.name }}</span>
+                                    </div>
+                                </td>
+                                <td class="py-3">
+                                    <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-20 xx-small rounded-pill px-2 fw-bold">{{ hook.get_event_type_display }}</span>
+                                </td>
+                                <td class="py-3 xx-small text-secondary" style="max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ hook.url }}</td>
+                                <td class="py-3 pe-4 text-end">
+                                    <div class="d-flex justify-content-end gap-2">
+                                        <button class="btn btn-sm btn-outline-info rounded-circle" title="Test Connection" style="width: 32px; height: 32px; padding: 0;">
+                                            <i class="fas fa-vial x-small"></i>
+                                        </button>
+                                        <a href="{% url 'delete_webhook' hook.id %}" class="btn btn-sm btn-outline-danger rounded-circle" style="width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center;">
+                                            <i class="fas fa-trash-alt x-small"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center py-5 text-secondary small italic">
+                                    No active AI pipelines detected. Add an n8n webhook on the left to get started.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

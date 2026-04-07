@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📅 Your Interview is Confirmed!</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+  
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: #0a0b10;
+    color: #ffffff;
+    padding: 30px 0;
+  }
+  
+  .wrapper {
+    max-width: 600px;
+    margin: 0 auto;
+    background: #12141f;
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid rgba(124, 77, 255, 0.25);
+    box-shadow: 0 0 40px rgba(124, 77, 255, 0.1);
+  }
+  
+  .email-header {
+    background: linear-gradient(135deg, #0d0e1a, #1a1030);
+    padding: 40px 40px 30px;
+    text-align: center;
+    border-bottom: 1px solid rgba(124, 77, 255, 0.2);
+    position: relative;
+  }
+  
+  .email-header::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, #7c4dff, transparent);
+  }
+  
+  .logo-area {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  
+  .logo-icon {
+    width: 42px;
+    height: 42px;
+    background: linear-gradient(135deg, #7c4dff, #00e5ff);
+    border-radius: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+  }
+  
+  .logo-name {
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+  }
+  
+  .logo-name span { color: #7c4dff; }
+  
+  .hero-badge {
+    display: inline-block;
+    background: rgba(124, 77, 255, 0.1);
+    border: 1px solid rgba(124, 77, 255, 0.4);
+    color: #7c4dff;
+    padding: 6px 18px;
+    border-radius: 50px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+  
+  .hero-title {
+    font-size: 30px;
+    font-weight: 800;
+    background: linear-gradient(90deg, #ffffff, #7c4dff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1.2;
+  }
+  
+  /* Interview Details Card */
+  .details-card {
+    background: rgba(124, 77, 255, 0.06);
+    border: 1px solid rgba(124, 77, 255, 0.2);
+    border-radius: 14px;
+    padding: 24px;
+    margin: 24px 0;
+  }
+  
+  .detail-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+  
+  .detail-row:last-child { border-bottom: none; }
+  
+  .detail-icon {
+    font-size: 18px;
+    width: 32px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+  
+  .detail-label {
+    font-size: 11px;
+    color: rgba(255,255,255,0.4);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 2px;
+  }
+  
+  .detail-value {
+    font-size: 15px;
+    font-weight: 600;
+    color: #ffffff;
+  }
+  
+  .email-body {
+    padding: 36px 40px;
+  }
+  
+  .greeting {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 16px;
+  }
+  
+  p {
+    font-size: 15px;
+    color: rgba(255,255,255,0.75);
+    line-height: 1.7;
+    margin-bottom: 16px;
+  }
+  
+  /* Prep Checklist */
+  .prep-list {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 10px;
+    padding: 16px 20px;
+    margin: 20px 0;
+    list-style: none;
+  }
+  
+  .prep-list li {
+    font-size: 14px;
+    color: rgba(255,255,255,0.7);
+    padding: 6px 0;
+    padding-left: 22px;
+    position: relative;
+  }
+  
+  .prep-list li::before {
+    content: '✓';
+    position: absolute;
+    left: 0;
+    color: #7c4dff;
+    font-weight: 700;
+  }
+  
+  .cta-section {
+    text-align: center;
+    margin: 28px 0;
+  }
+  
+  .cta-button {
+    display: inline-block;
+    background: linear-gradient(135deg, #7c4dff, #00e5ff);
+    color: #fff !important;
+    text-decoration: none;
+    padding: 14px 40px;
+    border-radius: 50px;
+    font-size: 15px;
+    font-weight: 700;
+    box-shadow: 0 4px 25px rgba(124, 77, 255, 0.35);
+  }
+  
+  .ics-notice {
+    background: rgba(0, 229, 255, 0.05);
+    border: 1px solid rgba(0, 229, 255, 0.15);
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 13px;
+    color: rgba(255,255,255,0.55);
+    margin: 16px 0;
+    text-align: center;
+  }
+  
+  .email-footer {
+    background: #0d0e1a;
+    padding: 24px 40px;
+    text-align: center;
+    border-top: 1px solid rgba(255,255,255,0.06);
+  }
+  
+  .footer-text {
+    font-size: 12px;
+    color: rgba(255,255,255,0.35);
+    margin-bottom: 4px;
+  }
+</style>
+</head>
+<body>
+
+<div class="wrapper">
+  <!-- Header -->
+  <div class="email-header">
+    <div class="logo-area">
+      <div class="logo-icon">📅</div>
+      <div class="logo-name">Smart<span>Recruit</span></div>
+    </div>
+    <div class="hero-badge">✓ Confirmed</div>
+    <div class="hero-title">Your AI Interview<br>is Scheduled!</div>
+  </div>
+
+  <!-- Body -->
+  <div class="email-body">
+    <p class="greeting">Hello {{ candidate_name }},</p>
+
+    <p>
+      Your interview for <strong style="color:#7c4dff;">{{ job_title }}</strong> at <strong>{{ company_name|default:"IR Info Tech" }}</strong> is officially confirmed. The details are below:
+    </p>
+
+    <!-- Interview Details Card -->
+    <div class="details-card">
+      <div class="detail-row">
+        <div class="detail-icon">💼</div>
+        <div>
+          <div class="detail-label">Position</div>
+          <div class="detail-value">{{ job_title }}</div>
+        </div>
+      </div>
+      <div class="detail-row">
+        <div class="detail-icon">🎯</div>
+        <div>
+          <div class="detail-label">Interview Round</div>
+          <div class="detail-value">{{ round_name|default:"Technical Assessment" }}</div>
+        </div>
+      </div>
+      <div class="detail-row">
+        <div class="detail-icon">📅</div>
+        <div>
+          <div class="detail-label">Date & Time</div>
+          <div class="detail-value">{{ scheduled_time|default:"To be confirmed" }}</div>
+        </div>
+      </div>
+      <div class="detail-row">
+        <div class="detail-icon">🎥</div>
+        <div>
+          <div class="detail-label">Format</div>
+          <div class="detail-value">AI Video Interview with Real-Time Sentiment Analysis</div>
+        </div>
+      </div>
+    </div>
+
+    <p><strong style="color: rgba(255,255,255,0.9);">Preparation Checklist:</strong></p>
+    <ul class="prep-list">
+      <li>Ensure your camera and microphone are working.</li>
+      <li>Use a stable internet connection in a well-lit area.</li>
+      <li>Review the job description and key skills required.</li>
+      <li>You will interact with our AI Interviewer — be clear and confident.</li>
+      <li>Our system captures real-time Sentiment Analysis — stay composed!</li>
+    </ul>
+
+    <div class="cta-section">
+      <a href="{{ interview_url|default:'http://localhost:8000/dashboard/' }}" class="cta-button">
+        🎥 Enter the Interview Room →
+      </a>
+    </div>
+
+    <div class="ics-notice">
+      📎 A <strong>.ics calendar invite</strong> is attached. Open it to add this event to Google Calendar, Outlook, or Apple Calendar.
+    </div>
+
+    <p>
+      See you in the Multiverse, and best of luck!
+    </p>
+
+    <p>
+      Warm regards,<br>
+      <strong>The {{ company_name|default:"IR Info Tech" }} Talent Team</strong><br>
+      <span style="color: rgba(255,255,255,0.4); font-size: 13px;">Powered by SmartRecruit AI</span>
+    </p>
+  </div>
+
+  <!-- Footer -->
+  <div class="email-footer">
+    <p class="footer-text">You are receiving this because you applied to a position on SmartRecruit.</p>
+    <p class="footer-text">© 2026 SmartRecruit · IR Info Tech · All rights reserved.</p>
+  </div>
+</div>
+
+</body>
+</html>

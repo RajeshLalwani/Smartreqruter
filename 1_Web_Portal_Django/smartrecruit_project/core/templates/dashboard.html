@@ -1,0 +1,457 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard | SmartRecruit{% endblock %}
+
+{% block body_class %}has-sidebar{% endblock %}
+
+{% block sidebar %}
+    {% include 'sidebar.html' %}
+{% endblock %}
+
+{% block content %}
+<section class="dashboard-hero glass-card" data-entrance id="overview">
+    <div class="hero-stage">
+        <div class="hero-stage__content">
+            <span class="hero-eyebrow"><i class="fa-solid fa-bolt"></i>Recruitment Command Center</span>
+            <h1 class="hero-title">High-velocity hiring, wrapped in a <span class="text-transparent bg-clip-text bg-gradient-primary">dual-theme glass operating system</span>.</h1>
+            <p class="hero-copy">
+                Track live requisitions, pressure-test the pipeline, monitor candidate sentiment, and push every open role forward from one command surface built for speed, clarity, and recruiter focus.
+            </p>
+            <div class="hero-stage__actions">
+                <a href="{% url 'post_job' %}" class="btn thunder-btn thunder-btn--primary">
+                    <i class="fa-solid fa-plus me-2"></i>Post New Role
+                </a>
+                <a href="{% url 'candidate_list' %}" class="btn thunder-btn thunder-btn--ghost">
+                    <i class="fa-solid fa-users-viewfinder me-2"></i>Review Talent
+                </a>
+                <a href="#operations" class="btn thunder-btn thunder-btn--ghost">
+                    <i class="fa-solid fa-wave-square me-2"></i>Inspect Operations
+                </a>
+            </div>
+        </div>
+
+        <aside class="hero-stage__summary">
+            <span class="signal-pill"><i class="fa-solid fa-satellite-dish"></i>Live Signal</span>
+            <div class="meta-stat-grid">
+                <div class="meta-stat">
+                    <span class="meta-stat__label">Offers Ready</span>
+                    <strong class="meta-stat__value">{{ total_offers|default:0 }}</strong>
+                </div>
+                <div class="meta-stat">
+                    <span class="meta-stat__label">Sentiment Pulse</span>
+                    <strong class="meta-stat__value">{{ avg_sentiment|default:0 }}%</strong>
+                </div>
+                <div class="meta-stat">
+                    <span class="meta-stat__label">Dominant Emotion</span>
+                    <strong class="meta-stat__value">{{ dominant_emotion|default:"Neutral" }}</strong>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <div class="signal-strip">
+        <div class="signal-item">
+            <strong>{% if urgent_job %}Urgent Role: {{ urgent_job.title }}{% else %}Timelines Stable{% endif %}</strong>
+            <span>
+                {% if urgent_job %}
+                    {{ urgent_job.location }}{% if urgent_job.deadline %} | Deadline {{ urgent_job.deadline|date:"M d, Y" }}{% endif %}
+                {% else %}
+                    No overdue requisitions detected across active campaigns.
+                {% endif %}
+            </span>
+        </div>
+        <div class="signal-item">
+            <strong>Live Interviews</strong>
+            <span>{{ total_interviews|default:0 }} scheduled sessions under recruiter control.</span>
+        </div>
+        <div class="signal-item">
+            <strong>{% if last_sync %}ATS Bridge Active{% else %}ATS Bridge Idle{% endif %}</strong>
+            <span>
+                {% if last_sync %}
+                    Last sync {{ last_sync.timestamp|date:"M d, H:i" }} | {% if last_sync.is_success %}success{% else %}needs review{% endif %}
+                {% else %}
+                    No recent ATS traffic detected yet.
+                {% endif %}
+            </span>
+        </div>
+    </div>
+</section>
+
+<section class="metric-grid">
+    <article class="metric-card glass-card" data-entrance>
+        <div class="metric-card__top">
+            <div class="metric-card__icon"><i class="fa-solid fa-briefcase"></i></div>
+            <span class="metric-card__delta">Live</span>
+        </div>
+        <span class="metric-card__label">Open Roles</span>
+        <strong class="metric-card__value">{{ total_jobs|default:0 }}</strong>
+        <span class="metric-card__subtext">Published campaigns currently accepting applications.</span>
+    </article>
+
+    <article class="metric-card glass-card" data-entrance>
+        <div class="metric-card__top">
+            <div class="metric-card__icon"><i class="fa-solid fa-users"></i></div>
+            <span class="metric-card__delta">Pipeline</span>
+        </div>
+        <span class="metric-card__label">Candidates</span>
+        <strong class="metric-card__value">{{ total_candidates|default:0 }}</strong>
+        <span class="metric-card__subtext">Applicants moving through screening, assessment, and interview stages.</span>
+    </article>
+
+    <article class="metric-card glass-card" data-entrance>
+        <div class="metric-card__top">
+            <div class="metric-card__icon"><i class="fa-solid fa-video"></i></div>
+            <span class="metric-card__delta">Scheduled</span>
+        </div>
+        <span class="metric-card__label">Interviews</span>
+        <strong class="metric-card__value">{{ total_interviews|default:0 }}</strong>
+        <span class="metric-card__subtext">AI or HR sessions already booked in the calendar.</span>
+    </article>
+
+    <article class="metric-card glass-card" data-entrance>
+        <div class="metric-card__top">
+            <div class="metric-card__icon"><i class="fa-solid fa-gauge-high"></i></div>
+            <span class="metric-card__delta">Velocity</span>
+        </div>
+        <span class="metric-card__label">Avg. Time to Move</span>
+        <strong class="metric-card__value">{{ avg_velocity|default:0 }}d</strong>
+        <span class="metric-card__subtext">Average days required to close or convert active applications.</span>
+    </article>
+</section>
+
+<section class="dashboard-grid" id="operations">
+    <article class="panel-card glass-card" data-entrance>
+        <div class="panel-card__header">
+            <div>
+                <span class="panel-eyebrow">Live Campaigns</span>
+                <h2 class="panel-card__title">Recent Roles</h2>
+            </div>
+            <a href="{% url 'job_list' %}" class="panel-card__link">View all roles</a>
+        </div>
+
+        <div class="table-shell">
+            <table class="table thunder-table align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Role</th>
+                        <th>Type</th>
+                        <th>Deadline</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for job in recent_jobs %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'job_detail' job.id %}" class="table-title">{{ job.title }}</a>
+                            <span class="table-meta">{{ job.location }} | Posted {{ job.created_at|date:"M d, Y" }}</span>
+                        </td>
+                        <td>{{ job.get_job_type_display }}</td>
+                        <td>{% if job.deadline %}{{ job.deadline|date:"M d, Y" }}{% else %}Open{% endif %}</td>
+                        <td>
+                            <span class="status-pill {% if job.status == 'OPEN' %}status-pill--success{% else %}status-pill--muted{% endif %}">
+                                {% if job.status == 'OPEN' %}Live{% else %}Closed{% endif %}
+                            </span>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4">
+                            <div class="empty-panel">
+                                <i class="fa-solid fa-layer-group"></i>
+                                <strong>No active campaigns yet</strong>
+                                <span>Post a role to bring the command center online.</span>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </article>
+
+    <div class="panel-stack">
+        <article class="panel-card glass-card" data-entrance>
+            <div class="panel-card__header">
+                <div>
+                    <span class="panel-eyebrow">Funnel Pressure</span>
+                    <h2 class="panel-card__title">Stage Load</h2>
+                </div>
+            </div>
+            <div class="pipeline-list">
+                <div class="pipeline-item">
+                    <div class="pipeline-item__top">
+                        <span class="pipeline-item__label">Screening</span>
+                        <strong class="pipeline-item__value">{{ pipeline_screening|default:0 }}</strong>
+                    </div>
+                    <div class="pipeline-item__track">
+                        <span class="pipeline-item__bar" data-meter="{% if total_candidates %}{% widthratio pipeline_screening total_candidates 100 %}{% else %}0{% endif %}" style="width: {% if total_candidates %}{% widthratio pipeline_screening total_candidates 100 %}{% else %}0{% endif %}%;"></span>
+                    </div>
+                </div>
+                <div class="pipeline-item">
+                    <div class="pipeline-item__top">
+                        <span class="pipeline-item__label">Assessment</span>
+                        <strong class="pipeline-item__value">{{ pipeline_assessment|default:0 }}</strong>
+                    </div>
+                    <div class="pipeline-item__track">
+                        <span class="pipeline-item__bar" data-meter="{% if total_candidates %}{% widthratio pipeline_assessment total_candidates 100 %}{% else %}0{% endif %}" style="width: {% if total_candidates %}{% widthratio pipeline_assessment total_candidates 100 %}{% else %}0{% endif %}%;"></span>
+                    </div>
+                </div>
+                <div class="pipeline-item">
+                    <div class="pipeline-item__top">
+                        <span class="pipeline-item__label">Interview</span>
+                        <strong class="pipeline-item__value">{{ pipeline_interview|default:0 }}</strong>
+                    </div>
+                    <div class="pipeline-item__track">
+                        <span class="pipeline-item__bar" data-meter="{% if total_candidates %}{% widthratio pipeline_interview total_candidates 100 %}{% else %}0{% endif %}" style="width: {% if total_candidates %}{% widthratio pipeline_interview total_candidates 100 %}{% else %}0{% endif %}%;"></span>
+                    </div>
+                </div>
+                <div class="pipeline-item">
+                    <div class="pipeline-item__top">
+                        <span class="pipeline-item__label">Offered</span>
+                        <strong class="pipeline-item__value">{{ pipeline_offered|default:0 }}</strong>
+                    </div>
+                    <div class="pipeline-item__track">
+                        <span class="pipeline-item__bar" data-meter="{% if total_candidates %}{% widthratio pipeline_offered total_candidates 100 %}{% else %}0{% endif %}" style="width: {% if total_candidates %}{% widthratio pipeline_offered total_candidates 100 %}{% else %}0{% endif %}%;"></span>
+                    </div>
+                </div>
+            </div>
+        </article>
+
+        <article class="panel-card glass-card" data-entrance>
+            <div class="panel-card__header">
+                <div>
+                    <span class="panel-eyebrow">Quick Access</span>
+                    <h2 class="panel-card__title">Operational Shortcuts</h2>
+                </div>
+            </div>
+            <div class="quick-links">
+                <a href="{% url 'post_job' %}" class="quick-link">
+                    <span class="quick-link__icon"><i class="fa-solid fa-plus"></i></span>
+                    <span class="quick-link__copy">
+                        <strong>Create Role</strong>
+                        <span>Launch a new requisition.</span>
+                    </span>
+                </a>
+                <a href="{% url 'candidate_list' %}" class="quick-link">
+                    <span class="quick-link__icon"><i class="fa-solid fa-users-viewfinder"></i></span>
+                    <span class="quick-link__copy">
+                        <strong>Talent Pool</strong>
+                        <span>Review scored candidates.</span>
+                    </span>
+                </a>
+                <a href="{% url 'interview_list' %}" class="quick-link">
+                    <span class="quick-link__icon"><i class="fa-solid fa-calendar-check"></i></span>
+                    <span class="quick-link__copy">
+                        <strong>Interviews</strong>
+                        <span>Open the session queue.</span>
+                    </span>
+                </a>
+                <a href="{% url 'recruiter_analytics' %}" class="quick-link">
+                    <span class="quick-link__icon"><i class="fa-solid fa-chart-line"></i></span>
+                    <span class="quick-link__copy">
+                        <strong>Analytics</strong>
+                        <span>Review conversion patterns.</span>
+                    </span>
+                </a>
+            </div>
+        </article>
+    </div>
+</section>
+
+<section class="dashboard-grid">
+    <article class="panel-card glass-card" data-entrance>
+        <div class="panel-card__header">
+            <div>
+                <span class="panel-eyebrow">Retention Forecast</span>
+                <h2 class="panel-card__title">Candidate Stability Radar</h2>
+            </div>
+        </div>
+
+        {% if featured_prediction %}
+        <div class="signal-block">
+            <strong>{{ featured_prediction.candidate.full_name }}</strong>
+            <span>{{ featured_prediction.candidate.current_role|default:"Candidate" }} | {{ featured_prediction.candidate.current_location|default:"Remote" }}</span>
+            <span>
+                Retention score {{ featured_prediction.retention_score|floatformat:0 }}% |
+                <span class="risk-badge {% if featured_prediction.risk_level == 'HIGH' %}risk-badge--high{% elif featured_prediction.risk_level == 'LOW' %}risk-badge--low{% else %}risk-badge--medium{% endif %}">
+                    {{ featured_prediction.get_risk_level_display }}
+                </span>
+            </span>
+        </div>
+
+        <div class="insight-bars mt-4">
+            <div class="insight-row">
+                <div class="insight-row__head">
+                    <span>Technical stability</span>
+                    <strong>{{ featured_prediction.technical_stability|floatformat:0 }}%</strong>
+                </div>
+                <div class="insight-row__track">
+                    <span class="insight-row__bar" data-meter="{{ featured_prediction.technical_stability|floatformat:0 }}" style="width: {{ featured_prediction.technical_stability|floatformat:0 }}%;"></span>
+                </div>
+            </div>
+            <div class="insight-row">
+                <div class="insight-row__head">
+                    <span>Sentiment stability</span>
+                    <strong>{{ featured_prediction.sentiment_stability|floatformat:0 }}%</strong>
+                </div>
+                <div class="insight-row__track">
+                    <span class="insight-row__bar" data-meter="{{ featured_prediction.sentiment_stability|floatformat:0 }}" style="width: {{ featured_prediction.sentiment_stability|floatformat:0 }}%;"></span>
+                </div>
+            </div>
+            <div class="insight-row">
+                <div class="insight-row__head">
+                    <span>Behavioral alignment</span>
+                    <strong>{{ featured_prediction.behavioral_alignment|floatformat:0 }}%</strong>
+                </div>
+                <div class="insight-row__track">
+                    <span class="insight-row__bar" data-meter="{{ featured_prediction.behavioral_alignment|floatformat:0 }}" style="width: {{ featured_prediction.behavioral_alignment|floatformat:0 }}%;"></span>
+                </div>
+            </div>
+            <div class="insight-row">
+                <div class="insight-row__head">
+                    <span>Time efficiency</span>
+                    <strong>{{ featured_prediction.time_efficiency|floatformat:0 }}%</strong>
+                </div>
+                <div class="insight-row__track">
+                    <span class="insight-row__bar" data-meter="{{ featured_prediction.time_efficiency|floatformat:0 }}" style="width: {{ featured_prediction.time_efficiency|floatformat:0 }}%;"></span>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <i class="fa-solid fa-shield-halved"></i>
+            <strong>No prediction profile yet</strong>
+            <span>The retention engine will populate once recent applications are processed.</span>
+        </div>
+        {% endif %}
+
+        <div class="feature-grid mt-4">
+            <div class="feature-card">
+                <strong>At-risk candidates</strong>
+                <span>{{ at_risk_candidates|length }} profile(s) below the stability threshold.</span>
+            </div>
+            <div class="feature-card">
+                <strong>Stable candidates</strong>
+                <span>{{ stable_candidates|length }} profile(s) tracking at high retention scores.</span>
+            </div>
+        </div>
+    </article>
+
+    <div class="panel-stack">
+        <article class="panel-card glass-card" data-entrance>
+            <div class="panel-card__header">
+                <div>
+                    <span class="panel-eyebrow">Watchlist</span>
+                    <h2 class="panel-card__title">Retention Signals</h2>
+                </div>
+            </div>
+            <div class="risk-list">
+                {% for prediction in at_risk_candidates %}
+                <div class="risk-entry">
+                    <div class="risk-entry__copy">
+                        <strong>{{ prediction.candidate.full_name }}</strong>
+                        <span>{{ prediction.candidate.current_role|default:"Candidate" }} | {{ prediction.get_risk_level_display }}</span>
+                    </div>
+                    <span class="risk-score">{{ prediction.retention_score|floatformat:0 }}%</span>
+                </div>
+                {% empty %}
+                <div class="empty-state">
+                    <i class="fa-solid fa-shield"></i>
+                    <strong>No high-risk profiles</strong>
+                    <span>The active slate is currently stable.</span>
+                </div>
+                {% endfor %}
+            </div>
+        </article>
+
+        <article class="panel-card glass-card" data-entrance>
+            <div class="panel-card__header">
+                <div>
+                    <span class="panel-eyebrow">Operational Journal</span>
+                    <h2 class="panel-card__title">Recent Activity</h2>
+                </div>
+            </div>
+            <div class="activity-list">
+                {% for activity in recent_activities %}
+                <div class="activity-entry">
+                    <div class="activity-entry__copy">
+                        <strong>{{ activity.action }}</strong>
+                        <span>{% if activity.details %}{{ activity.details }}{% else %}Tracked inside the recruiter workspace.{% endif %}</span>
+                    </div>
+                    <span class="activity-entry__time">{{ activity.timestamp|date:"M d, H:i" }}</span>
+                </div>
+                {% empty %}
+                <div class="empty-state">
+                    <i class="fa-solid fa-clock-rotate-left"></i>
+                    <strong>No activity captured</strong>
+                    <span>Actions will appear here as the pipeline moves.</span>
+                </div>
+                {% endfor %}
+            </div>
+        </article>
+    </div>
+</section>
+
+<section class="dashboard-grid dashboard-grid--equal">
+    <article class="panel-card glass-card" data-entrance>
+        <div class="panel-card__header">
+            <div>
+                <span class="panel-eyebrow">ATS Connectivity</span>
+                <h2 class="panel-card__title">Bridge Health</h2>
+            </div>
+        </div>
+
+        <div class="data-list">
+            <div class="data-list__item">
+                <div class="data-list__head">
+                    <span class="data-list__title">Last sync</span>
+                    <span class="data-list__value">{% if last_sync %}{{ last_sync.timestamp|date:"M d, H:i" }}{% else %}None{% endif %}</span>
+                </div>
+                <span class="table-meta">
+                    {% if last_sync %}
+                        {% if last_sync.is_success %}Latest push completed successfully.{% else %}Latest push requires follow-up.{% endif %}
+                    {% else %}
+                        Waiting for the first ATS exchange.
+                    {% endif %}
+                </span>
+            </div>
+            <div class="data-list__item">
+                <div class="data-list__head">
+                    <span class="data-list__title">Sentiment frames</span>
+                    <span class="data-list__value">{{ sentiment_count|default:0 }}</span>
+                </div>
+                <span class="table-meta">Captured records feeding the recruiter mood and confidence pulse.</span>
+            </div>
+        </div>
+    </article>
+
+    <article class="panel-card glass-card" data-entrance>
+        <div class="panel-card__header">
+            <div>
+                <span class="panel-eyebrow">Sync Ledger</span>
+                <h2 class="panel-card__title">Recent ATS Events</h2>
+            </div>
+        </div>
+        <div class="sync-list">
+            {% for sync in sync_logs %}
+            <div class="sync-entry">
+                <div class="sync-entry__copy">
+                    <strong>{{ sync.application.candidate.full_name }}</strong>
+                    <span>{{ sync.get_sync_type_display }} | Status {{ sync.status_code|default:"-" }} | Retry {{ sync.retry_count }}</span>
+                </div>
+                <span class="sync-entry__badge {% if sync.is_success %}sync-entry__badge--pass{% else %}sync-entry__badge--fail{% endif %}">
+                    {% if sync.is_success %}Pass{% else %}Fail{% endif %}
+                </span>
+            </div>
+            {% empty %}
+            <div class="empty-state">
+                <i class="fa-solid fa-arrows-rotate"></i>
+                <strong>No ATS events yet</strong>
+                <span>Bridge activity will populate once external sync starts moving data.</span>
+            </div>
+            {% endfor %}
+        </div>
+    </article>
+</section>
+{% endblock %}

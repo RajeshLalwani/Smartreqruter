@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Agentic Boardroom™ | AI Multi-Agent Debate | SmartRecruit{% endblock %}
+
+{% block content %}
+<style>
+    /* Z-INDEX SAFEGUARDS */
+    .modal { z-index: 2000 !important; }
+    .modal-backdrop { z-index: 1050 !important; }
+    .tracking-widest { letter-spacing: 0.15em; }
+    .x-small { font-size: 0.75rem; }
+    .xx-small { font-size: 0.65rem; }
+    .italic { font-style: italic; }
+
+    /* Pulse ring — consensus dot */
+    @keyframes pulse-ring {
+        0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(41,121,255,0.7); }
+        70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(41,121,255,0); }
+        100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(41,121,255,0); }
+    }
+    .pulse-ring { width: 12px; height: 12px; background: #2979FF; border-radius: 50%; animation: pulse-ring 2s infinite; }
+
+    /* Agent message bubble */
+    .agent-bubble { background: rgba(255,255,255,0.025); border: 1px solid rgba(255,255,255,0.08); border-radius: 1rem; padding: 1rem; transition: border-color 0.2s ease; }
+    .agent-bubble:hover { border-color: rgba(41,121,255,0.25); }
+
+    /* Radial bg deco */
+    .radial-deco { position: absolute; top: -20px; right: -20px; width: 150px; height: 150px; background: radial-gradient(circle, rgba(41,121,255,0.08) 0%, transparent 70%); pointer-events: none; }
+
+    .boardroom-chat { max-height: 600px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: rgba(41,121,255,0.3) transparent; }
+    .boardroom-chat::-webkit-scrollbar { width: 4px; }
+    .boardroom-chat::-webkit-scrollbar-thumb { background: rgba(41,121,255,0.3); border-radius: 4px; }
+</style>
+
+<div class="container-fluid px-4 mt-4 fade-up">
+
+    <!-- ─── Hero ─── -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-5 gap-3" data-aos="fade-down">
+        <div class="d-flex align-items-center gap-3">
+            <div class="rounded-circle d-flex align-items-center justify-content-center text-primary fw-bold flex-shrink-0" style="width: 56px; height: 56px; background: rgba(41,121,255,0.12); border: 1px solid rgba(41,121,255,0.25); font-size: 1.25rem;">
+                <i class="fas fa-users-gear"></i>
+            </div>
+            <div>
+                <div class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-3 py-1 rounded-pill tracking-widest text-uppercase x-small fw-bold mb-2">Autonomous Workforce v2.4</div>
+                <h1 class="display-6 fw-bold text-white mb-0" style="font-family: 'Space Grotesk', sans-serif;">Agentic Boardroom<sup class="fs-6">™</sup> <span style="background: linear-gradient(90deg, #2979FF, #7C4DFF); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">· AI Multi-Agent Debate</span></h1>
+                <p class="text-secondary mb-0 small mt-1"><i class="fas fa-microchip me-2 text-info"></i>Multi-agent consensus debate for: <strong class="text-white">{{ candidate.full_name }}</strong></p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- ─── Debate Workspace ─── -->
+        <div class="col-lg-8" data-aos="fade-right">
+            <div class="glass-panel p-4 h-100 shadow-lg rounded-4 border-secondary border-opacity-25">
+                <h6 class="fw-bold text-white mb-4 x-small tracking-widest text-uppercase border-bottom border-light border-opacity-10 pb-3"><i class="fas fa-comments text-primary me-2"></i>Live Boardroom Transcript</h6>
+                <div class="boardroom-chat d-flex flex-column gap-4 p-2">
+                    {% for agent in agents %}
+                    <div class="d-flex gap-3 align-items-start" data-aos="fade-up" data-aos-delay="{{ forloop.counter }}00">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="width: 48px; height: 48px; background: rgba(0,176,255,0.1); border: 1px solid rgba(0,176,255,0.2);">
+                            <i class="fas {{ agent.icon }} text-info"></i>
+                        </div>
+                        <div class="agent-bubble w-100">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="fw-bold text-white x-small">{{ agent.name }} — <span class="text-primary">{{ agent.role }}</span></span>
+                                <span class="xx-small text-secondary tracking-widest text-uppercase">Agentic Processing Complete</span>
+                            </div>
+                            <p class="text-secondary mb-0 x-small italic">"{{ agent.feedback }}"</p>
+                        </div>
+                    </div>
+                    {% endfor %}
+
+                    <!-- Consensus Node -->
+                    <div class="d-flex gap-3 align-items-center justify-content-center my-4 py-3 border-top border-bottom border-primary border-opacity-10" data-aos="zoom-in">
+                        <div class="pulse-ring"></div>
+                        <span class="text-primary fw-bold xx-small tracking-widest text-uppercase">Compiling Consensus Verdict...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ─── Verdict Card ─── -->
+        <div class="col-lg-4" data-aos="fade-left">
+            <div class="glass-panel p-4 h-100 shadow rounded-4 border-primary border-opacity-20 overflow-hidden position-relative">
+                <div class="radial-deco"></div>
+
+                <h6 class="fw-bold text-white mb-4 x-small tracking-widest text-uppercase border-bottom border-light border-opacity-10 pb-3"><i class="fas fa-gavel text-warning me-2"></i>Synthesis Verdict</h6>
+
+                <div class="text-center mb-4">
+                    <div class="fw-bold text-white mb-1" style="font-size: 3rem; font-family: 'Space Grotesk', sans-serif; line-height: 1;">{{ decision.composite_score }}%</div>
+                    <div class="xx-small text-secondary tracking-widest text-uppercase fw-bold mb-3">Consensus Score</div>
+                    <div class="badge rounded-pill {% if 'Hire' in decision.final_verdict %}bg-success{% else %}bg-warning{% endif %} bg-opacity-15 {% if 'Hire' in decision.final_verdict %}text-success border-success{% else %}text-warning border-warning{% endif %} border border-opacity-25 px-4 py-2 fw-bold" style="font-size: 0.9rem;">{{ decision.final_verdict }}</div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="xx-small tracking-widest text-uppercase fw-bold text-secondary mb-2 d-block">Executive Summary</label>
+                    <div class="p-3 rounded-4 x-small text-secondary italic" style="background: rgba(255,255,255,0.025); border: 1px solid rgba(255,255,255,0.06); line-height: 1.7;">{{ decision.consensus_summary }}</div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="xx-small tracking-widest text-uppercase fw-bold text-secondary mb-2 d-block">Onboarding Focus</label>
+                    <ul class="list-unstyled x-small text-secondary mb-0">
+                        <li><i class="fas fa-check-circle text-primary me-2"></i>{{ decision.onboarding_focus }}</li>
+                    </ul>
+                </div>
+
+                <a href="{% url 'application_details' application.id %}" class="btn btn-primary w-100 rounded-pill py-3 fw-bold shadow-sm x-small tracking-widest text-uppercase hover-scale">Approve &amp; Move to Offer</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,42 @@
+{% extends 'emails/base_email.html' %}
+
+{% block title %}Assessment Result - SmartRecruit{% endblock %}
+
+{% block content %}
+<h2>Assessment Result</h2>
+
+<p>Dear {{ candidate_name }},</p>
+
+<p>You have completed <strong>{{ test_type }}</strong> for the <strong>{{ job_title }}</strong> position.</p>
+
+<div class="info-box">
+    <p><strong>Your Results:</strong></p>
+    <p>Score: <strong style="font-size: 20px; color: {% if passed %}#28a745{% else %}#dc3545{% endif %};">{{ score }}%</strong></p>
+    <p>Passing Score: {{ passing_score }}%</p>
+    <p>Status: <strong style="color: {% if passed %}#28a745{% else %}#dc3545{% endif %};">{% if passed %}PASSED ✓{% else %}NOT PASSED{% endif %}</strong></p>
+</div>
+
+{% if passed %}
+<p>🎉 <strong>Congratulations!</strong> You have successfully passed this round.</p>
+
+<p><strong>Next Steps:</strong></p>
+<p>{{ next_steps }}</p>
+
+<center>
+    <a href="{{ dashboard_url }}" class="button">View Next Round</a>
+</center>
+{% else %}
+<p>Unfortunately, your score did not meet the minimum requirement for this position.</p>
+
+<p>We appreciate your time and effort in completing the assessment. We encourage you to apply for other positions that
+    match your skills.</p>
+
+<center>
+    <a href="{{ jobs_url }}" class="button">Browse Other Jobs</a>
+</center>
+{% endif %}
+
+<p>Best regards,<br>
+    <strong>The SmartRecruit Team</strong>
+</p>
+{% endblock %}

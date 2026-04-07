@@ -1,0 +1,113 @@
+{% extends 'base.html' %}{% load static %}
+{% block title %}Salary Calibrator | SmartRecruit{% endblock %}
+{% block content %}
+<div class="container-fluid px-4 mt-4">
+    <div class="glass-panel p-4 mb-4"
+        style="background:linear-gradient(135deg,rgba(0,200,83,0.08),rgba(255,109,0,0.08));border:1px solid rgba(0,200,83,0.25);">
+        <h2 class="fw-bold text-theme mb-1"><i class="fas fa-rupee-sign text-success me-2"></i>Salary Expectation
+            Calibrator</h2>
+        <p class="text-muted mb-0">Find your market-rate salary range based on skills, experience & location</p>
+    </div>
+    <div class="row g-4">
+        <div class="col-lg-4">
+            <div class="glass-panel p-4">
+                <form method="post">{% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label small text-muted">Target Role</label>
+                        <input name="role" class="form-control form-control-sm" placeholder="e.g. Data Scientist"
+                            style="background:rgba(255,255,255,0.05);color:var(--text-color);border:1px solid rgba(255,255,255,0.12);"
+                            value="{{ result.role|default:'' }}">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small text-muted">Years of Experience</label>
+                        <input name="experience" type="number" class="form-control form-control-sm"
+                            value="{{ result.experience|default:'2' }}" min="0" max="30" step="0.5"
+                            style="background:rgba(255,255,255,0.05);color:var(--text-color);border:1px solid rgba(255,255,255,0.12);">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small text-muted">Skills (comma-separated)</label>
+                        <textarea name="skills" class="form-control form-control-sm" rows="3"
+                            placeholder="Python, Machine Learning, AWS, SQL..."
+                            style="background:rgba(255,255,255,0.04);color:var(--text-color);border:1px solid rgba(255,255,255,0.1);resize:vertical;">{{ result.skills|join:', '|default:'' }}</textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small text-muted">Location</label>
+                        <input name="location" class="form-control form-control-sm"
+                            placeholder="e.g. Bangalore, Mumbai, India"
+                            style="background:rgba(255,255,255,0.05);color:var(--text-color);border:1px solid rgba(255,255,255,0.12);"
+                            value="{{ result.location|default:'India' }}">
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label small text-muted">Job Type</label>
+                        <select name="job_type" class="form-select form-select-sm"
+                            style="background:rgba(255,255,255,0.05);color:var(--text-color);border:1px solid rgba(255,255,255,0.12);">
+                            <option value="FULL_TIME">Full Time</option>
+                            <option value="INTERNSHIP">Internship</option>
+                            <option value="CONTRACT">Contract</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-success w-100 rounded-pill fw-bold"><i
+                            class="fas fa-calculator me-2"></i>Calculate My Market Rate</button>
+                </form>
+            </div>
+        </div>
+        <div class="col-lg-8">
+            {% if result %}
+            <div class="glass-panel p-4 text-center mb-4"
+                style="background:linear-gradient(135deg,rgba(0,200,83,0.08),rgba(0,0,0,0));border:2px solid rgba(0,200,83,0.2);">
+                <div class="row align-items-center">
+                    <div class="col-md-4 mb-3 mb-md-0">
+                        <div class="small text-muted mb-1">YOUR RANGE</div>
+                        <div class="fw-bold text-success" style="font-size:2rem;">₹{{ result.our_low }}–{{                             result.our_high }} LPA</div>
+                    </div>
+                    <div class="col-md-4 mb-3 mb-md-0">
+                        <div class="small text-muted mb-1">MARKET RANGE</div>
+                        <div class="fw-bold text-primary" style="font-size:2rem;">{{ result.salary_range }}</div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="small text-muted mb-1">DEMAND</div>
+                        <span class="badge rounded-pill px-3 py-2"
+                            style="font-size:1rem;background:{% if result.demand_level == 'Very High' or result.demand_level == 'High' %}rgba(0,200,83,0.2){% else %}rgba(255,152,0,0.2){% endif %};color:{% if result.demand_level == 'Very High' or result.demand_level == 'High' %}#69f0ae{% else %}#ffcc80{% endif %};">
+                            {{ result.demand_level }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <div class="glass-panel p-4 h-100">
+                        <h6 class="fw-bold text-theme mb-3"><i class="fas fa-building text-primary me-2"></i>Top Paying
+                            Employers</h6>
+                        {% for co in result.top_paying_companies %}
+                        <div class="d-flex gap-2 mb-2"><i class="fas fa-star text-warning flex-shrink-0 mt-1"
+                                style="font-size:0.8rem;"></i><span class="small text-theme">{{ co }}</span></div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="glass-panel p-4 h-100">
+                        <h6 class="fw-bold text-theme mb-3"><i
+                                class="fas fa-handshake text-success me-2"></i>Negotiation Tips</h6>
+                        {% for tip in result.negotiation_tips %}
+                        <div class="d-flex gap-2 mb-2"><i class="fas fa-arrow-right text-success flex-shrink-0 mt-1"
+                                style="font-size:0.8rem;"></i><span class="small text-theme">{{ tip }}</span></div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            <div class="glass-panel p-4" style="border-left:3px solid #00C853;">
+                <i class="fas fa-chart-line text-success me-2"></i>
+                <span class="text-theme small">{{ result.market_insight }}</span>
+            </div>
+            {% else %}
+            <div class="glass-panel p-5 text-center">
+                <i class="fas fa-rupee-sign fa-4x text-success mb-4 d-block" style="opacity:0.3;"></i>
+                <h5 class="text-theme">Know Your Worth</h5>
+                <p class="text-muted">Enter your role, skills, experience and location — our AI will calculate your
+                    market salary range and negotiation strategy.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

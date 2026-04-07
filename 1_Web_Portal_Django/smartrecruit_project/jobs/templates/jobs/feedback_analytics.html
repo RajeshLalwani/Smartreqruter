@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Feedback Analytics | SmartRecruit{% endblock %}
+
+{% block content %}
+<style>
+    /* Z-INDEX SAFEGUARDS */
+    .modal { z-index: 2000 !important; }
+    .modal-backdrop { z-index: 1050 !important; }
+    .tracking-widest { letter-spacing: 0.15em; }
+    .x-small { font-size: 0.75rem; }
+
+    /* Star rendering */
+    .star-filled { color: #FFD54F; }
+    .star-empty  { color: rgba(255,255,255,0.15); }
+
+    /* Feedback response row */
+    .fb-row {
+        background: rgba(255,255,255,0.025);
+        border: 1px solid rgba(255,255,255,0.06);
+        border-radius: 0.75rem;
+        padding: 0.85rem 1rem;
+        transition: border-color 0.2s ease;
+    }
+    .fb-row:hover { border-color: rgba(124,77,255,0.3); }
+</style>
+
+<div class="container-fluid px-4 mt-4 fade-up">
+
+    <!-- ─── Hero ─── -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-5 gap-3" data-aos="fade-down">
+        <div>
+            <div class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-3 py-2 rounded-pill mb-3 tracking-widest text-uppercase x-small fw-bold">
+                <i class="fas fa-chart-pie me-2" style="color: #7C4DFF;"></i>Candidate Voice
+            </div>
+            <h1 class="display-6 fw-bold text-white mb-2" style="font-family: 'Space Grotesk', sans-serif;">Feedback <span style="background: linear-gradient(90deg, #7C4DFF, #2979FF); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">Analytics</span></h1>
+            <p class="lead text-secondary mb-0">Aggregated anonymous feedback from candidates — improve your hiring process.</p>
+        </div>
+    </div>
+
+    <!-- ─── Stat Cards ─── -->
+    <div class="row g-3 mb-5" data-aos="fade-up">
+        <div class="col-md-4">
+            <div class="glass-panel p-4 text-center rounded-4 border-primary border-opacity-25 hover-scale">
+                <div class="fw-bold" style="font-size: 3rem; color: #7C4DFF; font-family: 'Space Grotesk', sans-serif;">{{ total_feedback }}</div>
+                <div class="x-small text-secondary fw-bold tracking-widest text-uppercase mt-1">Feedback Responses</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="glass-panel p-4 text-center rounded-4 border-warning border-opacity-25 hover-scale">
+                {% if avg_rating %}
+                <div class="fw-bold text-warning" style="font-size: 3rem; font-family: 'Space Grotesk', sans-serif;">{{ avg_rating }}<span class="fs-4">★</span></div>
+                {% else %}
+                <div class="fw-bold text-secondary" style="font-size: 3rem;">—</div>
+                {% endif %}
+                <div class="x-small text-secondary fw-bold tracking-widest text-uppercase mt-1">Average Rating</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="glass-panel p-4 rounded-4 border-secondary border-opacity-25">
+                <h6 class="fw-bold text-white x-small tracking-widest text-uppercase mb-3">Rating Breakdown</h6>
+                <canvas id="ratingChart" height="100"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- ─── Recent Feedback Responses ─── -->
+    {% if feedbacks %}
+    <div class="glass-panel p-4 rounded-4 border-secondary border-opacity-25 shadow-lg" data-aos="fade-up">
+        <h6 class="fw-bold text-white mb-4 x-small tracking-widest text-uppercase border-bottom border-light border-opacity-10 pb-3">
+            <i class="fas fa-comments text-primary me-2"></i>Recent Responses
+        </h6>
+        {% for fb in feedbacks %}
+        <div class="fb-row mb-2">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="badge rounded-pill px-2 x-small fw-bold" style="background: rgba(124,77,255,0.12); color: #ce93d8; border: 1px solid rgba(124,77,255,0.2);">{{ fb.category }}</span>
+                <div class="x-small text-warning">
+                    {% for i in "12345" %}{% if forloop.counter <= fb.rating %}<i class="fas fa-star star-filled"></i>{% else %}<i class="fas fa-star star-empty"></i>{% endif %}{% endfor %}
+                </div>
+            </div>
+            <div class="small text-secondary lh-base">{{ fb.text }}</div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="glass-panel p-5 text-center rounded-4 border-secondary border-opacity-25" data-aos="fade-up">
+        <div class="rounded-circle d-flex align-items-center justify-content-center bg-dark border border-secondary border-opacity-25 mx-auto mb-4" style="width: 72px; height: 72px;">
+            <i class="fas fa-comment-slash fa-2x text-secondary opacity-25"></i>
+        </div>
+        <h5 class="fw-bold text-white mb-2" style="font-family: 'Space Grotesk', sans-serif;">No Feedback Yet</h5>
+        <p class="text-secondary">Candidates will see a feedback option after their application outcome is decided.</p>
+    </div>
+    {% endif %}
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+Chart.defaults.color = '#94a3b8';
+const RDIST = {{ rating_dist_json|safe }};
+new Chart(document.getElementById('ratingChart'), {
+    type: 'bar',
+    data: {
+        labels: ['1★', '2★', '3★', '4★', '5★'],
+        datasets: [{
+            data: [RDIST['1'] || 0, RDIST['2'] || 0, RDIST['3'] || 0, RDIST['4'] || 0, RDIST['5'] || 0],
+            backgroundColor: ['rgba(255,82,82,0.65)', 'rgba(255,152,0,0.65)', 'rgba(255,193,7,0.65)', 'rgba(0,200,83,0.55)', 'rgba(0,200,83,0.85)'],
+            borderRadius: 5
+        }]
+    },
+    options: {
+        plugins: { legend: { display: false } },
+        scales: {
+            x: { grid: { display: false }, ticks: { color: '#64748b', font: { size: 10 } } },
+            y: { display: false }
+        }
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,98 @@
+<!-- Admin Sidebar Partial - included by all admin pages -->
+<aside id="admin-sidebar" style="
+  width:256px; min-width:256px;
+  background: rgba(10,11,16,0.97);
+  border-right: 1px solid rgba(255,255,255,0.07);
+  padding: 28px 0;
+  position: sticky;
+  top: 72px; height: calc(100vh - 72px);
+  overflow-y: auto;
+">
+  <div class="px-4 mb-4">
+    <span class="badge px-3 py-2" style="background:linear-gradient(135deg,#ef4444,#dc2626); font-size:.7rem; letter-spacing:.08em;">
+      <i class="fa-solid fa-shield-halved me-1"></i> SYSTEM ADMIN
+    </span>
+  </div>
+  <nav class="px-2">
+    <a href="{% url 'admin_dashboard' %}" class="admin-nav-item {% if active_section == 'dashboard' %}active{% endif %}">
+      <i class="fa-solid fa-chart-pie nav-icon"></i><span>Command Center</span>
+    </a>
+
+    <div class="admin-nav-label">ANALYTICS</div>
+    <a href="{% url 'admin_analytics' %}" class="admin-nav-item {% if active_section == 'analytics' %}active{% endif %}">
+      <i class="fa-solid fa-chart-line nav-icon"></i><span>Analytics & Reports</span>
+    </a>
+    <a href="{% url 'admin_recruiter_performance' %}" class="admin-nav-item {% if active_section == 'recruiters' %}active{% endif %}">
+      <i class="fa-solid fa-ranking-star nav-icon"></i><span>Recruiter Performance</span>
+    </a>
+
+    <div class="admin-nav-label">USER MANAGEMENT</div>
+    <a href="{% url 'admin_users' %}" class="admin-nav-item {% if active_section == 'users' %}active{% endif %}">
+      <i class="fa-solid fa-users-gear nav-icon"></i><span>User Directory</span>
+    </a>
+    <a href="{% url 'admin_broadcast' %}" class="admin-nav-item {% if active_section == 'broadcast' %}active{% endif %}">
+      <i class="fa-solid fa-bullhorn nav-icon"></i><span>Broadcast Notify</span>
+    </a>
+
+    <div class="admin-nav-label">CONTENT</div>
+    <a href="{% url 'admin_jobs' %}" class="admin-nav-item {% if active_section == 'jobs' %}active{% endif %}">
+      <i class="fa-solid fa-briefcase nav-icon"></i><span>Job Moderation</span>
+    </a>
+    <a href="{% url 'admin_applications' %}" class="admin-nav-item {% if active_section == 'applications' %}active{% endif %}">
+      <i class="fa-solid fa-layer-group nav-icon"></i><span>Applications</span>
+    </a>
+    <a href="{% url 'admin_question_bank' %}" class="admin-nav-item {% if active_section == 'question_bank' %}active{% endif %}">
+      <i class="fa-solid fa-database nav-icon"></i><span>Question Bank</span>
+    </a>
+
+    <div class="admin-nav-label">TRUST & GOVERNANCE</div>
+    <a href="{% url 'admin_proctoring_config' %}" class="admin-nav-item {% if active_section == 'proctoring_config' %}active{% endif %}">
+      <i class="fa-solid fa-sliders nav-icon"></i><span>Strictness Panel</span>
+    </a>
+    <a href="{% url 'admin_proctoring_review' %}" class="admin-nav-item {% if active_section == 'proctoring_review' %}active{% endif %}">
+      <i class="fa-solid fa-user-shield nav-icon"></i><span>Evidence Review</span>
+    </a>
+
+    <a href="{% url 'admin_interviews' %}" class="admin-nav-item {% if active_section == 'interviews' %}active{% endif %}">
+      <i class="fa-solid fa-video nav-icon"></i><span>Interviews</span>
+    </a>
+
+    <div class="admin-nav-label">SYSTEM</div>
+    <a href="{% url 'admin_system_log' %}" class="admin-nav-item {% if active_section == 'system_log' %}active{% endif %}">
+      <i class="fa-solid fa-scroll nav-icon"></i><span>Audit Log</span>
+    </a>
+    <a href="{% url 'admin_platform_settings' %}" class="admin-nav-item {% if active_section == 'settings' %}active{% endif %}">
+      <i class="fa-solid fa-sliders nav-icon"></i><span>Platform Settings</span>
+    </a>
+
+    <div class="admin-nav-label">PLATFORM</div>
+    <a href="/admin/" target="_blank" class="admin-nav-item">
+      <i class="fa-solid fa-database nav-icon"></i><span>Django Admin</span>
+      <i class="fa-solid fa-arrow-up-right-from-square ms-auto" style="font-size:.65rem; opacity:.5"></i>
+    </a>
+    <a href="{% url 'dashboard' %}" class="admin-nav-item mt-2" style="border-top:1px solid rgba(255,255,255,.07); padding-top:12px; margin-top:12px!important;">
+      <i class="fa-solid fa-arrow-left nav-icon"></i><span>Back to Portal</span>
+    </a>
+  </nav>
+</aside>
+
+<style>
+.admin-nav-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 16px; border-radius: 10px; margin: 2px 8px;
+  color: rgba(200,210,220,.7); text-decoration: none;
+  font-size: .88rem; font-weight: 500; transition: all .2s ease;
+  border: 1px solid transparent;
+}
+.admin-nav-item:hover { background: rgba(255,255,255,.06); color: #e0e0e0; }
+.admin-nav-item.active {
+  background: linear-gradient(135deg, rgba(239,68,68,.25), rgba(220,38,38,.15));
+  color: #f87171; border-color: rgba(239,68,68,.2);
+}
+.admin-nav-item.active .nav-icon { color: #f87171; }
+.nav-icon { width: 18px; text-align: center; color: rgba(200,210,220,.5); flex-shrink: 0; }
+.admin-nav-label {
+  font-size: .65rem; font-weight: 700; letter-spacing: .1em;
+  color: rgba(200,210,220,.3); padding: 16px 24px 6px; text-transform: uppercase;
+}
+</style>

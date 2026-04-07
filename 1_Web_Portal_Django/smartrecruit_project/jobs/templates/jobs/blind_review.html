@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}DEI Blind Review | SmartRecruit Enterprise{% endblock %}
+
+{% block content %}
+<style>
+    /* Z-INDEX SAFEGUARDS */
+    .modal { z-index: 2000 !important; }
+    .modal-backdrop { z-index: 1050 !important; }
+    .tracking-widest { letter-spacing: 0.15em; }
+    .x-small { font-size: 0.75rem; }
+    .xx-small { font-size: 0.65rem; }
+    .italic { font-style: italic; }
+    .line-height-relaxed { line-height: 1.8; }
+
+    /* Redacted field toggle */
+    .redacted-field { transition: all 0.3s ease; }
+
+    /* Skill badges in skill matrix */
+    .skill-pill { background: rgba(41,121,255,0.1); border: 1px solid rgba(41,121,255,0.25); color: #82b1ff; }
+</style>
+
+<div class="container-fluid px-4 mt-4 fade-up">
+
+    <!-- ─── Hero ─── -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-5 gap-3" data-aos="fade-down">
+        <div class="d-flex align-items-center gap-3">
+            <div class="rounded-circle d-flex align-items-center justify-content-center text-primary fw-bold flex-shrink-0" style="width: 56px; height: 56px; background: rgba(41,121,255,0.12); border: 1px solid rgba(41,121,255,0.25); font-size: 1.25rem;">
+                <i class="fas fa-eye-slash"></i>
+            </div>
+            <div>
+                <div class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-3 py-1 rounded-pill tracking-widest text-uppercase x-small fw-bold mb-2">PII Redacted · DEI Compliant</div>
+                <h1 class="display-6 fw-bold text-white mb-0" style="font-family: 'Space Grotesk', sans-serif;">DEI Blind Hiring <span style="background: linear-gradient(90deg, #00B8D4, #7C4DFF); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">Mode</span></h1>
+                <p class="text-secondary mb-0 small mt-1"><i class="fas fa-shield-halved me-2 text-info"></i>Personal Identifiable Information (PII) redacted for unbiased assessment.</p>
+            </div>
+        </div>
+        <div class="form-check form-switch d-inline-block">
+            <input class="form-check-input" type="checkbox" id="deiRedactToggle" checked onchange="toggleRedact()">
+            <label class="form-check-label text-secondary x-small tracking-widest text-uppercase fw-bold ms-2" for="deiRedactToggle">Blind Mode Active</label>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-5">
+        <!-- ─── Redacted Application Card ─── -->
+        <div class="col-lg-8" data-aos="zoom-in">
+            <div class="glass-panel p-5 shadow-lg rounded-4 border-primary border-opacity-10">
+                <!-- Redacted Profile Header -->
+                <div class="d-flex align-items-center gap-4 mb-5 border-bottom border-secondary border-opacity-10 pb-4">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center text-secondary fw-bold flex-shrink-0" style="width: 80px; height: 80px; background: rgba(255,255,255,0.04); border: 2px dashed rgba(255,255,255,0.12); font-size: 2rem;">?</div>
+                    <div>
+                        <h4 class="fw-bold text-white mb-1 redacted-field" data-value="{{ application.candidate.full_name }}" style="font-family: 'Space Grotesk', sans-serif;">[CANDIDATE NAME HIDDEN]</h4>
+                        <p class="text-secondary x-small mb-0">Applicant ID: SR-{{ application.id|stringformat:"05d" }} &middot; Applied {{ application.applied_at|timesince }} ago</p>
+                    </div>
+                </div>
+
+                <!-- Redacted Career Trajectory -->
+                <div class="mb-5">
+                    <h6 class="text-primary x-small tracking-widest text-uppercase fw-bold mb-3">Redacted Career Trajectory</h6>
+                    <div class="p-4 rounded-4 position-relative" style="background: rgba(255,255,255,0.025); border: 1px solid rgba(255,255,255,0.06);">
+                        <i class="fas fa-briefcase text-secondary opacity-10 position-absolute top-0 end-0 p-4 fa-2x"></i>
+                        <p class="text-secondary small line-height-relaxed mb-0">{{ redacted_history }}</p>
+                    </div>
+                </div>
+
+                <!-- Skill Matrix -->
+                <div>
+                    <h6 class="text-primary x-small tracking-widest text-uppercase fw-bold mb-3">Skill Matrix (Non-Redactable Impact)</h6>
+                    <div class="d-flex flex-wrap gap-2">
+                        {% for skill in application.candidate.skills_extracted_list %}
+                        <span class="badge rounded-pill skill-pill px-3 py-2 x-small fw-bold">{{ skill }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ─── Decision Panel ─── -->
+        <div class="col-lg-4" data-aos="fade-left">
+            <div class="glass-panel p-4 rounded-4 border-secondary border-opacity-25 sticky-top" style="top: 2rem;">
+                <h5 class="fw-bold text-white mb-4 x-small tracking-widest text-uppercase border-bottom border-light border-opacity-10 pb-3"><i class="fas fa-gavel text-info me-2"></i>Merit-Based Assessment</h5>
+
+                <div class="p-3 rounded-4 mb-4" style="background: rgba(0,176,255,0.06); border: 1px solid rgba(0,176,255,0.2);">
+                    <div class="text-secondary xx-small tracking-widest text-uppercase fw-bold mb-1">AI Objective Matching</div>
+                    <div class="fw-bold text-info mb-0" style="font-size: 1.75rem; font-family: 'Space Grotesk', sans-serif;">{{ application.ai_score }}%</div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="text-secondary x-small tracking-widest text-uppercase fw-bold mb-2 d-block">Screening Decision</label>
+                    <textarea class="form-control x-small p-3" rows="4" placeholder="Enter objective feedback based purely on skills and impact..." style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); color: #e2e8f0; border-radius: 0.75rem;"></textarea>
+                </div>
+
+                <div class="d-grid gap-2">
+                    <button class="btn btn-primary py-2 rounded-pill shadow fw-bold hover-scale">Shortlist for Interview</button>
+                    <button class="btn btn-outline-danger py-2 rounded-pill x-small fw-bold hover-scale">Reject (Objective Reason)</button>
+                </div>
+
+                <hr class="border-secondary border-opacity-10 my-4">
+                <p class="xx-small text-secondary text-center italic">Institutional Blind Hiring Policy v2.1 active. All actions logged for DEI auditing.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleRedact() {
+    const isChecked = document.getElementById('deiRedactToggle').checked;
+    document.querySelectorAll('.redacted-field').forEach(field => {
+        if (isChecked) {
+            field.innerText = '[CANDIDATE NAME HIDDEN]';
+            field.style.opacity = '0.5';
+        } else {
+            field.innerText = field.dataset.value;
+            field.style.opacity = '1';
+            alert('Warning: Manual PII exposure logged for audit.');
+        }
+    });
+}
+</script>
+{% endblock %}

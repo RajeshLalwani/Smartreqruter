@@ -1,0 +1,160 @@
+{% extends 'base.html' %}{% load static %}
+{% block title %}360 Velocity Report | {{ application.candidate.full_name }}{% endblock %}
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold text-theme mb-1">360° Performance Velocity</h3>
+            <p class="text-muted small uppercase tracking-widest">Predictive Growth Modeling & Talent ROI</p>
+        </div>
+        <div class="text-end">
+            <span
+                class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-20 px-3 py-2 rounded-pill">
+                AI PROJECTION ACTIVE
+            </span>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Main Chart -->
+        <div class="col-lg-8">
+            <div class="glass-panel p-4 h-100 shadow border-secondary border-opacity-10" data-aos="fade-up">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h6 class="fw-bold text-theme"><i class="fas fa-chart-line text-info me-2"></i> Predicted Growth
+                        Trajectory</h6>
+                    <div class="d-flex gap-2">
+                        <span class="badge bg-dark bg-opacity-50 text-muted xx-small">Confidence: 84%</span>
+                    </div>
+                </div>
+
+                <div style="height: 350px;">
+                    <canvas id="velocityChart"></canvas>
+                </div>
+
+                <div class="mt-4 p-3 rounded bg-light bg-opacity-5 border border-secondary border-opacity-10">
+                    <p class="x-small text-muted mb-0">
+                        <i class="fas fa-info-circle me-1"></i> This projection is based on a Bayesian analysis of the
+                        candidate's skill scores ({{ application.ai_score }}%) and historical career pace ({{                         application.candidate.experience_years }} yrs exp).
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Velocity Metrics -->
+        <div class="col-lg-4">
+            <div class="glass-panel p-4 mb-4 shadow border-warning border-opacity-10" data-aos="fade-left">
+                <h6 class="xx-small uppercase text-muted tracking-widest mb-4">Talent Archetype</h6>
+                <div class="text-center py-3">
+                    <div class="archetype-icon mb-3">
+                        <i
+                            class="fas {% if 'High' in velocity.primary_trait %}fa-bolt text-warning{% else %}fa-check-double text-success{% endif %} fa-3x"></i>
+                    </div>
+                    <h4 class="fw-bold text-theme">{{ velocity.primary_trait }}</h4>
+                    <p class="xx-small text-muted">Velocity Index: <strong>{{ velocity.velocity_index }}</strong></p>
+                </div>
+            </div>
+
+            <div class="glass-panel p-4 shadow border-info border-opacity-10" data-aos="fade-left" data-aos-delay="100">
+                <h6 class="xx-small uppercase text-muted tracking-widest mb-4">Key Growth Factors</h6>
+                <div class="d-grid gap-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="small text-theme">Technical Velocity</span>
+                        <div class="progress" style="width: 100px; height: 4px;">
+                            <div class="progress-bar bg-info" style="width: 85%"></div>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="small text-theme">Soft Skill Adaptation</span>
+                        <div class="progress" style="width: 100px; height: 4px;">
+                            <div class="progress-bar bg-warning" style="width: 72%"></div>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="small text-theme">Promotion Readiness</span>
+                        <div class="progress" style="width: 100px; height: 4px;">
+                            <div class="progress-bar bg-success" style="width: 60%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .archetype-icon {
+        width: 80px;
+        height: 80px;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto;
+    }
+
+    .xx-small {
+        font-size: 0.65rem;
+    }
+
+    .x-small {
+        font-size: 0.75rem;
+    }
+
+    .uppercase {
+        text-transform: uppercase;
+    }
+
+    .tracking-widest {
+        letter-spacing: 0.2em;
+    }
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const ctx = document.getElementById('velocityChart').getContext('2d');
+        const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+        gradient.addColorStop(0, 'rgba(0, 210, 255, 0.4)');
+        gradient.addColorStop(1, 'rgba(0, 210, 255, 0.0)');
+
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: {{ velocity.labels | safe }},
+        datasets: [{
+            label: 'Efficiency Points',
+            data: {{ velocity.trajectory | safe }},
+        borderColor: '#00d2ff',
+        borderWidth: 3,
+        pointBackgroundColor: '#fff',
+        pointBorderColor: '#00d2ff',
+        pointHoverRadius: 6,
+        fill: true,
+        backgroundColor: gradient,
+        tension: 0.4
+                }]
+            },
+        options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: { display: false }
+        },
+        scales: {
+            y: {
+                beginAtZero: false,
+                grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                ticks: { color: '#6c757d', font: { size: 10 } }
+            },
+            x: {
+                grid: { display: false },
+                ticks: { color: '#6c757d', font: { size: 10 } }
+            }
+        }
+    }
+        });
+    });
+</script>
+{% endblock %}

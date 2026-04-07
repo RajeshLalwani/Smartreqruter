@@ -1,0 +1,348 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load job_filters %}
+
+{% block title %}My Applications | SmartRecruit{% endblock %}
+
+{% block content %}
+<style>
+    /* Z-INDEX SAFEGUARDS & AESTHETICS */
+    .pulse-glow { animation: pulse-glow 2s infinite; box-shadow: 0 0 15px rgba(41, 121, 255, 0.4); }
+    @keyframes pulse-glow {
+        0% { box-shadow: 0 0 15px rgba(41, 121, 255, 0.4); }
+        50% { box-shadow: 0 0 25px rgba(41, 121, 255, 0.8), 0 0 10px rgba(41, 121, 255, 0.6) inset; }
+        100% { box-shadow: 0 0 15px rgba(41, 121, 255, 0.4); }
+    }
+    .tracking-widest { letter-spacing: 0.15em; }
+    
+    .application-card-enhanced {
+        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .application-card-enhanced:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.5), 0 0 30px rgba(41, 121, 255, 0.15) inset !important;
+        border-color: rgba(41, 121, 255, 0.4) !important;
+    }
+
+    /* Pipeline Step Logic */
+    .pipeline-step {
+        width: 40px; height: 40px;
+        display: flex; align-items: center; justify-content: center;
+        border-radius: 50%; font-size: 0.9rem; font-weight: bold;
+        transition: all 0.3s ease; position: relative; z-index: 2;
+    }
+    .pipeline-connector {
+        height: 3px; flex: 1; min-width: 40px;
+        transition: all 0.3s ease; position: relative; z-index: 1;
+        margin: 0 -5px;
+    }
+    
+    /* Active/Passed States */
+    .step-active { background: rgba(41, 121, 255, 0.2); border: 2px solid #2979FF; color: #82b1ff; box-shadow: 0 0 15px rgba(41, 121, 255, 0.3); }
+    .step-passed { background: rgba(25, 135, 84, 0.2); border: 2px solid #198754; color: #75b798; box-shadow: 0 0 15px rgba(25, 135, 84, 0.3); }
+    .step-failed { background: rgba(220, 53, 69, 0.2); border: 2px solid #dc3545; color: #ea868f; box-shadow: 0 0 15px rgba(220, 53, 69, 0.3); }
+    .step-pending { background: rgba(255, 255, 255, 0.05); border: 2px solid rgba(255, 255, 255, 0.1); color: #6c757d; }
+    
+    .conn-active { background: #2979FF; box-shadow: 0 0 10px #2979FF; }
+    .conn-passed { background: #198754; box-shadow: 0 0 10px #198754; }
+    .conn-pending { background: rgba(255, 255, 255, 0.1); }
+</style>
+
+<div class="container-fluid fade-up">
+
+    <!-- ── Hero Header ──────────────────────────────────────────────────── -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-5 gap-3" data-aos="fade-down">
+        <div>
+            <div class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-3 py-2 rounded-pill mb-3 text-uppercase tracking-widest small fw-bold">
+                <i class="fas fa-satellite-dish me-2"></i>Career Telemetry
+            </div>
+            <h1 class="display-6 fw-bold text-white mb-2 tracking-tight">Active <span class="text-transparent bg-clip-text bg-gradient-primary">Applications</span></h1>
+            <p class="lead text-secondary mb-0">Track your interview sequences and algorithm alignments in real-time.</p>
+        </div>
+        
+        <div class="d-flex gap-2">
+            <a href="{% url 'coding_arena' %}" class="btn btn-warning text-dark btn-lg rounded-pill px-4 shadow-sm fw-bold hover-scale shadow-lg">
+                <i class="fas fa-terminal me-2"></i> Access Arena
+            </a>
+            <a href="{% url 'job_list' %}" class="btn btn-outline-info btn-lg rounded-pill px-4 shadow-sm hover-scale fw-bold">
+                <i class="fas fa-search me-2"></i> Query Openings
+            </a>
+        </div>
+    </div>
+
+    <!-- ── Summary Stats ───────────────────────────────────────────── -->
+    <div class="row g-4 mb-5" data-aos="fade-up" data-aos-delay="100">
+        {% with total=applications.paginator.count %}
+        <div class="col-6 col-xl-3">
+            <div class="glass-panel p-4 text-center border-primary border-opacity-25 shadow-inner hover-scale h-100 rounded-4">
+                <div class="rounded-circle d-flex justify-content-center align-items-center bg-primary bg-opacity-10 border border-primary border-opacity-50 mx-auto mb-3" style="width: 50px; height: 50px;">
+                    <i class="fas fa-paper-plane text-primary fs-5"></i>
+                </div>
+                <div class="display-5 fw-bold text-white mb-0" style="font-family: 'Space Grotesk', sans-serif;">{{ total }}</div>
+                <div class="small tracking-widest text-uppercase text-secondary fw-bold mt-2">Packets Sent</div>
+            </div>
+        </div>
+        {% endwith %}
+        <div class="col-6 col-xl-3">
+            <div class="glass-panel p-4 text-center border-success border-opacity-25 shadow-inner hover-scale h-100 rounded-4">
+                <div class="rounded-circle d-flex justify-content-center align-items-center bg-success bg-opacity-10 border border-success border-opacity-50 mx-auto mb-3" style="width: 50px; height: 50px;">
+                    <i class="fas fa-exchange-alt text-success fs-5"></i>
+                </div>
+                <div class="display-5 fw-bold text-white mb-0" style="font-family: 'Space Grotesk', sans-serif;">{{ active_count|default:0 }}</div>
+                <div class="small tracking-widest text-uppercase text-secondary fw-bold mt-2">Active Sequences</div>
+            </div>
+        </div>
+        <div class="col-6 col-xl-3">
+            <div class="glass-panel p-4 text-center border-warning border-opacity-25 shadow-inner hover-scale h-100 rounded-4">
+                <div class="rounded-circle d-flex justify-content-center align-items-center bg-warning bg-opacity-10 border border-warning border-opacity-50 mx-auto mb-3" style="width: 50px; height: 50px;">
+                    <i class="fas fa-calendar-check text-warning fs-5"></i>
+                </div>
+                <div class="display-5 fw-bold text-white mb-0" style="font-family: 'Space Grotesk', sans-serif;">{{ interviews_count|default:0 }}</div>
+                <div class="small tracking-widest text-uppercase text-secondary fw-bold mt-2">Pending Interviews</div>
+            </div>
+        </div>
+        <div class="col-6 col-xl-3">
+            <div class="glass-panel p-4 text-center border-info border-opacity-25 shadow-inner hover-scale h-100 rounded-4">
+                 <div class="rounded-circle d-flex justify-content-center align-items-center bg-info bg-opacity-10 border border-info border-opacity-50 mx-auto mb-3 pulse-glow" style="width: 50px; height: 50px;">
+                    <i class="fas fa-brain text-info fs-5"></i>
+                </div>
+                <div class="display-5 fw-bold text-white mb-0" style="font-family: 'Space Grotesk', sans-serif;">{{ avg_score|default:"—" }}</div>
+                <div class="small tracking-widest text-uppercase text-secondary fw-bold mt-2">Avg Correlation</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Filter Module ─────────────────────────────────────────────────── -->
+    <div class="glass-panel p-4 mb-5 rounded-4 shadow-sm border-secondary border-opacity-25" data-aos="fade-up" data-aos-delay="200">
+        <form method="get" class="d-flex flex-wrap gap-4 align-items-end">
+            <div class="flex-grow-1" style="max-width: 300px;">
+                <label class="form-label small fw-bold text-muted tracking-widest text-uppercase mb-2"><i class="fas fa-filter me-2 text-primary"></i>Sequence State</label>
+                <div class="input-group input-group-lg shadow-inner border border-secondary border-opacity-50 rounded-pill overflow-hidden bg-dark bg-opacity-50">
+                    <select name="status" class="form-select bg-transparent border-0 text-white shadow-none" onchange="this.form.submit()">
+                        <option value="" class="bg-dark text-light">All Intercepts</option>
+                        <option value="RESUME_SCREENING" class="bg-dark text-light" {% if request.GET.status == 'RESUME_SCREENING' %}selected{% endif %}>Vector Screening</option>
+                        <option value="RESUME_SELECTED" class="bg-dark text-light" {% if request.GET.status == 'RESUME_SELECTED' %}selected{% endif %}>Vectors Matched</option>
+                        <option value="RESUME_REJECTED" class="bg-dark text-light" {% if request.GET.status == 'RESUME_REJECTED' %}selected{% endif %}>Vectors Rejected</option>
+                        <option value="ROUND_1_PASSED" class="bg-dark text-light" {% if request.GET.status == 'ROUND_1_PASSED' %}selected{% endif %}>Cognitive Cleared</option>
+                        <option value="ROUND_2_PASSED" class="bg-dark text-light" {% if request.GET.status == 'ROUND_2_PASSED' %}selected{% endif %}>Practical Cleared</option>
+                        <option value="HR_PASSED" class="bg-dark text-light" {% if request.GET.status == 'HR_PASSED' %}selected{% endif %}>Behavioral Cleared</option>
+                    </select>
+                </div>
+            </div>
+            <div class="flex-grow-1" style="max-width: 300px;">
+                <label class="form-label small fw-bold text-muted tracking-widest text-uppercase mb-2"><i class="fas fa-sort me-2 text-primary"></i>Sort Matrix</label>
+                <div class="input-group input-group-lg shadow-inner border border-secondary border-opacity-50 rounded-pill overflow-hidden bg-dark bg-opacity-50">
+                    <select name="sort" class="form-select bg-transparent border-0 text-white shadow-none" onchange="this.form.submit()">
+                        <option value="-applied_at" class="bg-dark text-light" {% if request.GET.sort == '-applied_at' %}selected{% endif %}>Chronological (Latest)</option>
+                        <option value="applied_at" class="bg-dark text-light" {% if request.GET.sort == 'applied_at' %}selected{% endif %}>Chronological (Oldest)</option>
+                        <option value="-ai_score" class="bg-dark text-light" {% if request.GET.sort == '-ai_score' %}selected{% endif %}>Neural Correlation (Highest)</option>
+                    </select>
+                </div>
+            </div>
+            {% if request.GET.status or request.GET.sort %}
+            <div class="mb-1">
+                <a href="{% url 'candidate_applications' %}" class="btn btn-outline-danger btn-lg rounded-pill px-4 hover-scale fw-bold shadow-sm">
+                    <i class="fas fa-times me-2"></i>Clear Params
+                </a>
+            </div>
+            {% endif %}
+        </form>
+    </div>
+
+    <!-- ── Applications List ───────────────────────────────────────── -->
+    {% if applications %}
+    <div class="row g-4" data-aos="fade-up" data-aos-delay="300">
+        {% for application in applications %}
+        <div class="col-12">
+            <div class="glass-panel p-0 rounded-4 overflow-hidden application-card-enhanced shadow-lg border-secondary border-opacity-25 border d-flex flex-column h-100" style="background: rgba(15, 15, 20, 0.6);">
+                
+                <!-- Card header -->
+                <div class="p-4 bg-dark bg-opacity-50 border-bottom border-light border-opacity-10 d-flex justify-content-between align-items-center flex-wrap gap-3">
+                    <div class="d-flex align-items-center gap-4">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center bg-primary bg-opacity-10 text-primary fw-bold shadow-inner border border-primary border-opacity-50" style="width: 60px; height: 60px; font-size: 1.5rem; font-family: 'Space Grotesk', sans-serif;">
+                            {{ application.job.title|slice:":1"|upper }}
+                        </div>
+                        <div>
+                            <h4 class="fw-bold text-white mb-1"><a href="{% url 'job_detail' application.job.id %}" class="text-white text-decoration-none hover-primary">{{ application.job.title }}</a></h4>
+                            <div class="d-flex flex-wrap align-items-center gap-2 text-secondary small mt-1">
+                                <span class="badge bg-secondary bg-opacity-25 text-light border border-secondary border-opacity-25 px-2 py-1"><i class="fas fa-building text-primary me-1"></i> {{ application.job.recruiter.get_full_name|default:application.job.recruiter.username }}</span>
+                                {% if application.job.location %}
+                                <span class="badge bg-secondary bg-opacity-25 text-light border border-secondary border-opacity-25 px-2 py-1"><i class="fas fa-map-marker-alt text-info me-1"></i> {{ application.job.location }}</span>
+                                {% endif %}
+                                {% if application.job.job_type %}
+                                <span class="badge bg-secondary bg-opacity-25 text-light border border-secondary border-opacity-25 px-2 py-1"><i class="fas fa-briefcase text-warning me-1"></i> {{ application.job.get_job_type_display }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="text-end">
+                        <span class="badge px-4 py-2 rounded-pill fs-6 fw-bold tracking-widest text-uppercase shadow-sm border
+                            {% if 'REJECTED' in application.status or 'FAILED' in application.status %}bg-danger bg-opacity-25 text-danger border-danger
+                            {% elif 'PASSED' in application.status or 'SELECTED' in application.status %}bg-success bg-opacity-25 text-success border-success
+                            {% elif 'HIRED' in application.status %}bg-warning bg-opacity-25 text-warning border-warning
+                            {% else %}bg-primary bg-opacity-25 text-primary border-primary{% endif %}">
+                            <i class="fas fa-satellite-dish me-2 opacity-50"></i>{{ application.get_status_display }}
+                        </span>
+                        <div class="small text-muted font-monospace mt-2">
+                            <i class="fas fa-clock me-1"></i> {{ application.applied_at|date:"M d, Y | H:i" }}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Score Matrix & Actions -->
+                <div class="p-4 d-flex justify-content-between align-items-center flex-wrap gap-4 flex-grow-1 position-relative">
+                    <div class="position-absolute top-50 start-50 translate-middle w-100 h-100 opacity-5 pointer-events-none d-flex justify-content-center align-items-center">
+                        <i class="fas fa-project-diagram fa-10x text-primary"></i>
+                    </div>
+                    <div class="row g-4 flex-grow-1 position-relative z-2">
+                        {% if application.ai_score > 0 %}
+                        <div class="col-sm-6 col-md-3">
+                            <div class="glass-panel p-3 rounded-3 bg-dark bg-opacity-50 border-info border-opacity-25 h-100">
+                                <span class="small fw-bold text-info tracking-widest text-uppercase mb-2 d-block"><i class="fas fa-brain me-2"></i>Neural Match</span>
+                                <div class="d-flex align-items-center gap-3">
+                                    <h4 class="fw-bold text-white mb-0">{{ application.ai_score }}%</h4>
+                                    <div class="progress flex-grow-1 bg-dark border border-secondary border-opacity-50 shadow-inner" style="height: 6px; border-radius: 3px;">
+                                        <div class="progress-bar {% if application.ai_score >= 70 %}bg-success{% elif application.ai_score >= 50 %}bg-warning{% else %}bg-danger{% endif %}" style="width: {{ application.ai_score }}%;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        {% if application.round1_score > 0 %}
+                        <div class="col-sm-6 col-md-3">
+                            <div class="glass-panel p-3 rounded-3 bg-dark bg-opacity-50 border-primary border-opacity-25 h-100">
+                                <span class="small fw-bold text-primary tracking-widest text-uppercase mb-2 d-block"><i class="fas fa-laptop-code me-2"></i>Aptitude Tech</span>
+                                <div class="d-flex align-items-center gap-3">
+                                    <h4 class="fw-bold text-white mb-0">{{ application.round1_score }}%</h4>
+                                    <div class="progress flex-grow-1 bg-dark border border-secondary border-opacity-50 shadow-inner" style="height: 6px; border-radius: 3px;">
+                                        <div class="progress-bar bg-primary" style="width: {{ application.round1_score }}%;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        {% if application.round2_score > 0 %}
+                        <div class="col-sm-6 col-md-3">
+                             <div class="glass-panel p-3 rounded-3 bg-dark bg-opacity-50 border-warning border-opacity-25 h-100">
+                                <span class="small fw-bold text-warning tracking-widest text-uppercase mb-2 d-block"><i class="fas fa-comments me-2"></i>Interview Node</span>
+                                <div class="d-flex align-items-center gap-3">
+                                    <h4 class="fw-bold text-white mb-0">{{ application.round2_score }}%</h4>
+                                    <div class="progress flex-grow-1 bg-dark border border-secondary border-opacity-50 shadow-inner" style="height: 6px; border-radius: 3px;">
+                                        <div class="progress-bar bg-warning" style="width: {{ application.round2_score }}%;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        {% if application.overall_score > 0 %}
+                         <div class="col-sm-6 col-md-3">
+                             <div class="glass-panel p-3 rounded-3 bg-dark bg-opacity-50 border-success border-opacity-25 h-100">
+                                <span class="small fw-bold text-success tracking-widest text-uppercase mb-2 d-block"><i class="fas fa-chart-line me-2"></i>Overall Median</span>
+                                <div class="d-flex align-items-center gap-3">
+                                    <h4 class="fw-bold text-white mb-0">{{ application.overall_score }}%</h4>
+                                    <div class="progress flex-grow-1 bg-dark border border-secondary border-opacity-50 shadow-inner" style="height: 6px; border-radius: 3px;">
+                                        <div class="progress-bar bg-success" style="width: {{ application.overall_score }}%;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Pipeline Sequence -->
+                <div class="px-4 py-3 bg-dark border-top border-light border-opacity-5">
+                    <div class="d-flex align-items-center justify-content-between overflow-hidden position-relative">
+                        <!-- Connecting Line Behind -->
+                        <div class="position-absolute top-50 start-0 w-100" style="height: 3px; background: rgba(255,255,255,0.05); transform: translateY(-50%); z-index: 1;"></div>
+                        
+                        {% with s=application.status %}
+                            <!-- Start Node -->
+                            <div class="d-flex flex-column align-items-center gap-2 position-relative z-2">
+                                <div class="rounded-circle d-flex align-items-center justify-content-center border shadow-inner 
+                                    {% if s == 'APPLIED' or 'RESUME_SCREENING' in s %}bg-primary bg-opacity-25 border-primary text-primary pulse-glow
+                                    {% elif 'REJECTED' not in s %}bg-success bg-opacity-25 border-success text-success{% else %}bg-secondary bg-opacity-25 border-secondary text-secondary{% endif %}"
+                                    style="width: 35px; height: 35px; background-color: #0b0c10;">
+                                    <i class="fas fa-file-upload small"></i>
+                                </div>
+                                <span class="tracking-widest fw-bold text-secondary" style="font-size: 0.6rem;">INGESTED</span>
+                            </div>
+
+                            <!-- Resume Screening Node -->
+                            <!-- Calculate if this node is passed. If status is beyond Resume Screening, it passed. If it is rejected, it failed here. -->
+                            <!-- Pipeline Order: APPLIED -> RESUME_SCREENING -> RESUME_SELECTED/REJECTED -> ROUND_1 -> ROUND_1_PASSED/FAILED -> ROUND_2 -> ROUND_2_PASSED/FAILED -> HR -> HR_PASSED/FAILED -> OFFER -> HIRED -->
+                            
+                            <!-- Simplified display based on current status string logic from original code. Using badges instead of complex connection line logic, but mapping them horizontally. -->
+                            
+                            {% for stage_key, stage_label, stage_icon in pipeline_stages %}
+                             <div class="d-flex flex-column align-items-center gap-2 position-relative z-2">
+                                <div class="rounded-circle d-flex align-items-center justify-content-center border shadow-inner 
+                                    {% if s == stage_key or stage_key in s %}bg-info bg-opacity-25 border-info text-info pulse-glow
+                                    {% elif 'REJECTED' in s or 'FAILED' in s %}bg-danger bg-opacity-25 border-danger text-danger
+                                    {% else %}bg-secondary bg-opacity-25 border-secondary text-secondary{% endif %}"
+                                    style="width: 35px; height: 35px; background-color: #0b0c10;">
+                                    <i class="{{ stage_icon }} small"></i>
+                                </div>
+                                <span class="tracking-widest fw-bold text-secondary text-center" style="font-size: 0.6rem; max-width: 60px;">{{ stage_label|upper }}</span>
+                            </div>
+                            {% endfor %}
+                            
+                        {% endwith %}
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if applications.has_other_pages %}
+    <nav class="d-flex justify-content-center mt-5" data-aos="fade-up">
+        <ul class="pagination gap-2 mb-0">
+            {% if applications.has_previous %}
+            <li class="page-item">
+                <a class="page-link rounded-pill px-3 bg-dark text-info border-info border-opacity-50 hover-scale shadow-sm"
+                    href="?page={{ applications.previous_page_number }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}">
+                    <i class="fas fa-chevron-left"></i>
+                </a>
+            </li>
+            {% endif %}
+            <li class="page-item active">
+                <span class="page-link rounded-pill px-4 bg-info text-dark border-info fw-bold shadow-lg">{{ applications.number }} / {{ applications.paginator.num_pages }}</span>
+            </li>
+            {% if applications.has_next %}
+            <li class="page-item">
+                <a class="page-link rounded-pill px-3 bg-dark text-info border-info border-opacity-50 hover-scale shadow-sm"
+                    href="?page={{ applications.next_page_number }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}">
+                    <i class="fas fa-chevron-right"></i>
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+
+    {% else %}
+    <!-- Empty State -->
+    <div class="glass-panel p-5 text-center mt-4 border-secondary border-opacity-25 shadow-lg rounded-4" data-aos="zoom-in">
+        <div class="rounded-circle d-flex justify-content-center align-items-center bg-dark border border-secondary border-opacity-50 mx-auto mb-4" style="width: 100px; height: 100px;">
+            <i class="fas fa-satellite fa-3x text-secondary opacity-50 pulse-animation-slow"></i>
+        </div>
+        <h3 class="fw-bold text-white mb-2 tracking-tight">Zero Signals Detected</h3>
+        <p class="text-secondary mb-4">
+            {% if request.GET.status %}No profiles match your specific orbital filter parameters.
+            {% else %}Initialize your career matrix by executing your first application vector.{% endif %}
+        </p>
+        <a href="{% url 'job_list' %}" class="btn btn-primary btn-lg rounded-pill px-5 fw-bold hover-scale shadow-lg">
+            <i class="fas fa-search me-2"></i> Query Open Positions
+        </a>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

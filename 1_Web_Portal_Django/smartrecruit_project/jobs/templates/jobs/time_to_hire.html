@@ -1,0 +1,106 @@
+{% extends 'base.html' %}{% load static %}
+{% block title %}Time-to-Hire Predictor | SmartRecruit{% endblock %}
+{% block content %}
+<div class="container-fluid px-4 mt-4">
+    <div class="glass-panel p-4 mb-4"
+        style="background:linear-gradient(135deg,rgba(255,109,0,0.08),rgba(41,121,255,0.08));border:1px solid rgba(255,109,0,0.25);">
+        <h2 class="fw-bold text-theme mb-1"><i class="fas fa-stopwatch text-warning me-2"></i>Time-to-Hire Predictor
+        </h2>
+        <p class="text-muted mb-0">AI-powered estimate of how long it will take to fill any role</p>
+    </div>
+    <div class="row g-4">
+        <div class="col-lg-4">
+            <div class="glass-panel p-4">
+                <h6 class="fw-bold text-theme mb-3"><i class="fas fa-sliders-h text-primary me-2"></i>Role Parameters
+                </h6>
+                <form method="post">{% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label small text-muted">Job Type</label>
+                        <select name="job_type" class="form-select form-select-sm"
+                            style="background:rgba(255,255,255,0.05);color:var(--text-color);border:1px solid rgba(255,255,255,0.12);">
+                            <option value="FULL_TIME">Full Time</option>
+                            <option value="PART_TIME">Part Time</option>
+                            <option value="INTERNSHIP">Internship</option>
+                            <option value="CONTRACT">Contract</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small text-muted">Min Experience Required (years)</label>
+                        <input type="number" name="exp_required" class="form-control form-control-sm" value="2" min="0"
+                            max="15" step="0.5"
+                            style="background:rgba(255,255,255,0.05);color:var(--text-color);border:1px solid rgba(255,255,255,0.12);">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small text-muted">Number of Required Skills</label>
+                        <input type="number" name="skill_count" class="form-control form-control-sm" value="5" min="1"
+                            max="20"
+                            style="background:rgba(255,255,255,0.05);color:var(--text-color);border:1px solid rgba(255,255,255,0.12);">
+                    </div>
+                    {% if hist_avg %}
+                    <div class="glass-panel p-3 mb-3" style="border-left:3px solid #00C853;">
+                        <div class="small text-muted">Your historical average</div>
+                        <div class="fw-bold text-success">{{ hist_avg }} days</div>
+                    </div>
+                    {% endif %}
+                    <button type="submit" class="btn btn-warning w-100 rounded-pill fw-bold text-dark"><i
+                            class="fas fa-calculator me-2"></i>Predict Time-to-Hire</button>
+                </form>
+            </div>
+        </div>
+        <div class="col-lg-8">
+            {% if prediction %}
+            <div class="glass-panel p-4 mb-4 text-center"
+                style="background:linear-gradient(135deg,rgba(255,109,0,0.08),rgba(0,0,0,0));border:1px solid rgba(255,109,0,0.2);">
+                <div class="row align-items-center">
+                    <div class="col-md-4">
+                        <div class="fw-bold text-warning" style="font-size:3.5rem;">{{ prediction.days }}</div>
+                        <div class="text-muted">days estimated</div>
+                        <div class="small text-muted mt-1">Range: {{ prediction.low }}–{{ prediction.high }} days</div>
+                    </div>
+                    <div class="col-md-8 text-start">
+                        <div class="p-3 rounded-3" style="background:rgba(255,255,255,0.04);">
+                            <i class="fas fa-lightbulb text-warning me-2"></i>
+                            <span class="text-theme small">{{ prediction.tip }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="glass-panel p-4 mb-4">
+                <h6 class="fw-bold text-theme mb-3"><i class="fas fa-tasks text-info me-2"></i>Stage-by-Stage Breakdown
+                </h6>
+                {% for stage, days in prediction.stages %}
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span class="small text-theme">{{ stage }}</span>
+                        <span class="small fw-bold text-warning">~{{ days }} days</span>
+                    </div>
+                    <div class="progress" style="height:10px;border-radius:6px;background:rgba(255,255,255,0.05);">
+                        <div class="progress-bar"
+                            style="width:{% widthratio days prediction.days 100 %}%;background:linear-gradient(90deg,rgba(255,109,0,0.7),rgba(255,193,7,0.7));border-radius:6px;">
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            <div class="glass-panel p-4">
+                <h6 class="fw-bold text-theme mb-3"><i class="fas fa-chart-bar text-primary me-2"></i>Stage Duration
+                    Chart</h6>
+                <canvas id="stageChart" height="140"></canvas>
+            </div>
+            <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+            <script>
+                const STAGES = {{ prediction.stages_json| safe }};
+                new Chart(document.getElementById('stageChart'), { type: 'bar', data: { labels: STAGES.map(s => s.stage), datasets: [{ label: 'Days', data: STAGES.map(s => s.days), backgroundColor: 'rgba(255,109,0,0.6)', borderRadius: 6 }] }, options: { indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#888' } }, y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#888', font: { size: 11 } } } } } });
+            </script>
+            {% else %}
+            <div class="glass-panel p-5 text-center">
+                <i class="fas fa-stopwatch fa-4x text-warning mb-4 d-block" style="opacity:0.3;"></i>
+                <h5 class="text-theme">Configure role parameters and predict hiring timeline</h5>
+                <p class="text-muted">Our model uses your historical data + role complexity to estimate time-to-hire
+                    across each stage.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

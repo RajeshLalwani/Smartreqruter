@@ -1,0 +1,146 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}AI Email Drafter | SmartRecruit{% endblock %}
+
+{% block content %}
+<style>
+    /* Z-INDEX SAFEGUARDS */
+    .modal { z-index: 2000 !important; }
+    .modal-backdrop { z-index: 1050 !important; }
+    .tracking-widest { letter-spacing: 0.15em; }
+    .x-small { font-size: 0.75rem; }
+    .xx-small { font-size: 0.65rem; }
+
+    /* Email type picker */
+    .email-type-btn { cursor: pointer; border: 1px solid rgba(255,255,255,0.08); border-radius: 0.75rem; padding: 0.75rem 0.5rem; text-align: center; transition: border-color 0.2s ease; }
+    .email-type-btn:hover { border-color: rgba(0,176,255,0.4); }
+    .email-type-btn.active { border-color: rgba(0,176,255,0.6); background: rgba(0,176,255,0.06); }
+
+    /* Form inputs */
+    .sv-input { background: rgba(255,255,255,0.04) !important; color: var(--text-color, #e2e8f0) !important; border: 1px solid rgba(255,255,255,0.1) !important; border-radius: 0.75rem; }
+    .sv-input:focus { border-color: rgba(0,176,255,0.5) !important; box-shadow: 0 0 0 3px rgba(0,176,255,0.1) !important; outline: none; }
+
+    /* Email output sections */
+    .email-subject-box { background: rgba(0,176,255,0.05); border: 1px solid rgba(0,176,255,0.15); border-radius: 0.75rem; padding: 0.85rem 1rem; }
+    .email-body-box { background: rgba(255,255,255,0.025); border: 1px solid rgba(255,255,255,0.07); border-radius: 0.75rem; padding: 1rem; }
+</style>
+
+<div class="container-fluid px-4 mt-4 fade-up">
+
+    <!-- ─── Hero ─── -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-5 gap-3" data-aos="fade-down">
+        <div>
+            <div class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25 px-3 py-2 rounded-pill mb-3 tracking-widest text-uppercase x-small fw-bold">
+                <i class="fas fa-envelope-open-text me-2"></i>Pipeline Communications
+            </div>
+            <h1 class="display-6 fw-bold text-white mb-2" style="font-family: 'Space Grotesk', sans-serif;">AI Email <span style="background: linear-gradient(90deg, #00B0FF, #2979FF); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">Drafter</span></h1>
+            <p class="lead text-secondary mb-0">Generate professional, personalised emails for every stage of the hiring pipeline.</p>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- ─── Compose Form ─── -->
+        <div class="col-lg-4" data-aos="fade-right">
+            <div class="glass-panel p-4 rounded-4 border-secondary border-opacity-25">
+                <form method="post">{% csrf_token %}
+                    <h6 class="fw-bold text-white mb-3 x-small tracking-widest text-uppercase border-bottom border-light border-opacity-10 pb-3">Email Type</h6>
+                    <div class="row g-2 mb-4">
+                        {% for value, label, icon, color in email_types %}
+                        <div class="col-6">
+                            <label class="w-100">
+                                <input type="radio" name="email_type" value="{{ value }}" class="d-none" {% if forloop.first %}checked{% endif %}>
+                                <div class="email-type-btn" onclick="selectEmailType(this, '{{ value }}')">
+                                    <i class="{{ icon }} text-{{ color }} d-block mb-1 fa-lg"></i>
+                                    <div class="xx-small text-white fw-semibold">{{ label }}</div>
+                                </div>
+                            </label>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label x-small text-secondary fw-bold tracking-widest text-uppercase mb-2">Select Candidate</label>
+                        <select name="application_id" class="form-select sv-input x-small">
+                            <option value="">— Choose Candidate —</option>
+                            {% for app in applications %}
+                            <option value="{{ app.id }}">{{ app.candidate.full_name }} — {{ app.job.title }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label x-small text-secondary fw-bold tracking-widest text-uppercase mb-2">Custom Note (optional)</label>
+                        <textarea name="custom_note" class="form-control sv-input x-small" rows="3" placeholder="Add a personal note or specific information..." style="resize: vertical;"></textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-info w-100 rounded-pill fw-bold text-dark hover-scale"><i class="fas fa-magic me-2"></i>Draft Email</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- ─── Result Panel ─── -->
+        <div class="col-lg-8" data-aos="fade-up">
+            {% if result %}
+            <div class="glass-panel p-4 mb-4 rounded-4 border-info border-opacity-25">
+                <div class="d-flex justify-content-between align-items-start mb-4 border-bottom border-light border-opacity-10 pb-3">
+                    <div>
+                        <h5 class="fw-bold text-white mb-1" style="font-family: 'Space Grotesk', sans-serif;">{{ result.email_type|title }} Email</h5>
+                        <span class="text-secondary x-small">For <strong class="text-primary">{{ result.candidate_name }}</strong> &mdash; {{ result.job_title }}</span>
+                    </div>
+                    <button onclick="copyEmail()" class="btn btn-outline-info btn-sm rounded-pill x-small fw-bold hover-scale"><i class="fas fa-copy me-1"></i>Copy</button>
+                </div>
+
+                <div class="email-subject-box mb-3">
+                    <div class="xx-small text-secondary tracking-widest text-uppercase fw-bold mb-1">Subject</div>
+                    <div class="fw-semibold text-white x-small" id="emailSubject">{{ result.subject }}</div>
+                </div>
+
+                <div class="email-body-box mb-3">
+                    <div class="xx-small text-secondary tracking-widest text-uppercase fw-bold mb-2">Body</div>
+                    <div class="text-secondary x-small" id="emailBody" style="white-space: pre-wrap; line-height: 1.8;">{{ result.body }}</div>
+                </div>
+
+                <div class="d-flex gap-2 flex-wrap">
+                    <span class="badge rounded-pill px-3 py-2 x-small fw-bold" style="background: rgba(0,176,255,0.12); color: #80d8ff; border: 1px solid rgba(0,176,255,0.2);">{{ result.tone }}</span>
+                    {% if result.word_count %}<span class="badge rounded-pill px-3 py-2 x-small fw-bold bg-secondary bg-opacity-20 text-secondary">~{{ result.word_count }} words</span>{% endif %}
+                </div>
+            </div>
+            {% else %}
+            <div class="glass-panel p-5 text-center rounded-4 border-secondary border-opacity-25">
+                <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto mb-4" style="width: 72px; height: 72px; background: rgba(0,176,255,0.08); border: 1px solid rgba(0,176,255,0.2);">
+                    <i class="fas fa-envelope-open-text text-info fa-2x" style="opacity: 0.5;"></i>
+                </div>
+                <h5 class="fw-bold text-white mb-2" style="font-family: 'Space Grotesk', sans-serif;">AI-Powered Email Drafting</h5>
+                <p class="text-secondary x-small mb-4">Select an email type and candidate — AI will generate professional, personalised emails in seconds.</p>
+                <div class="row g-3 mt-2 justify-content-center">
+                    {% for value, label, icon, color in email_types %}
+                    <div class="col-4 col-md-2">
+                        <div class="glass-panel p-3 text-center rounded-3 border-secondary border-opacity-25">
+                            <i class="{{ icon }} text-{{ color }} fa-lg mb-1 d-block"></i>
+                            <div class="xx-small text-secondary">{{ label }}</div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+function selectEmailType(el, val) {
+    document.querySelectorAll('.email-type-btn').forEach(b => b.classList.remove('active'));
+    el.classList.add('active');
+    document.querySelector('input[name="email_type"][value="' + val + '"]').checked = true;
+}
+function copyEmail() {
+    const subj = document.getElementById('emailSubject')?.innerText || '';
+    const body = document.getElementById('emailBody')?.innerText || '';
+    navigator.clipboard.writeText('Subject: ' + subj + '\n\n' + body);
+    const btn = event.target.closest('button');
+    btn.innerHTML = '<i class="fas fa-check me-1"></i>Copied!';
+    setTimeout(() => btn.innerHTML = '<i class="fas fa-copy me-1"></i>Copy', 2000);
+}
+</script>
+{% endblock %}

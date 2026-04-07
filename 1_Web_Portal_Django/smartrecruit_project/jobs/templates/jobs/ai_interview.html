@@ -1,0 +1,778 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Job Interview | SmartRecruit{% endblock %}
+
+{% block content %}
+<style>
+    /* Z-INDEX SAFEGUARDS */
+    .modal { z-index: 2000 !important; }
+    .modal-backdrop { z-index: 1050 !important; }
+
+    /* Interview HUD Specific Styles */
+    .video-feed-container {
+        border: 1px solid rgba(99, 102, 241, 0.3);
+        box-shadow: 0 0 50px rgba(0, 0, 0, 0.6), 0 0 30px rgba(99, 102, 241, 0.1) inset;
+        border-radius: 1rem;
+        overflow: hidden;
+        position: relative;
+    }
+    .scanline {
+        width: 100%; height: 2px;
+        background: rgba(99, 102, 241, 0.3);
+        position: absolute; top: 0; z-index: 12;
+        animation: scan 4s linear infinite;
+        box-shadow: 0 0 12px rgba(99, 102, 241, 0.6);
+        pointer-events: none;
+    }
+    @keyframes scan { to { top: 100%; } }
+    
+    .pulse-red {
+        width: 10px; height: 10px; background: #ef4444;
+        border-radius: 50%; animation: blink 1s step-end infinite;
+        box-shadow: 0 0 8px rgba(239, 68, 68, 0.8);
+    }
+    @keyframes blink { 50% { opacity: 0; } }
+    
+    .ai-avatar-container { position: relative; display: inline-block; }
+    
+    #ai-avatar-img {
+        width: 140px; height: 140px; border-radius: 50%;
+        border: 4px solid var(--accent-primary, #6366f1);
+        object-fit: cover;
+        box-shadow: 0 0 30px rgba(99, 102, 241, 0.5);
+        position: relative; z-index: 2;
+        transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    #ai-avatar-img:hover { transform: scale(1.08) rotate(3deg); box-shadow: 0 0 50px rgba(99, 102, 241, 0.8) !important; }
+    
+    #ai-tech-ring {
+        position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+        border-radius: 50%; pointer-events: none;
+        background: radial-gradient(circle, rgba(99, 102, 241, 0.1) 0%, rgba(0,0,0,0) 70%);
+        border: 2px dashed rgba(99, 102, 241, 0.5);
+        animation: spin-slow 10s linear infinite;
+        transition: all 0.3s ease;
+    }
+    @keyframes spin-slow { to { transform: rotate(360deg); } }
+    
+    .glass-input {
+        background: rgba(10, 10, 20, 0.6) !important;
+        border: 1px solid rgba(99, 102, 241, 0.25) !important;
+        color: white !important;
+        backdrop-filter: blur(10px);
+        border-radius: 0.75rem;
+        padding: 1rem 1.25rem;
+        resize: none;
+        transition: all 0.3s ease;
+    }
+    .glass-input:focus {
+        background: rgba(10, 10, 20, 0.8) !important;
+        border-color: rgba(99, 102, 241, 0.6) !important;
+        box-shadow: 0 0 20px rgba(99, 102, 241, 0.2) inset !important;
+    }
+
+    /* Sentiment Floating Bubble Styles */
+    @keyframes float-bubble {
+        0%, 100% { transform: translateY(0); }
+        50%      { transform: translateY(-8px); }
+    }
+    
+    @keyframes bubble-pulse {
+        50% { opacity: 0.7; transform: scale(1.05) translateY(-4px); }
+    }
+
+    /* 🔱 THE ADVANCED SENTINEL SUITE 🔱 */
+    .sentinel-bubble {
+        position: absolute;
+        bottom: 15px;
+        left: 15px;
+        z-index: 1000;
+        width: 250px;
+        background: rgba(10, 11, 20, 0.85); /* Midnight Glass */
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(0, 242, 255, 0.4);
+        border-radius: 12px;
+        padding: 15px;
+        box-shadow: 0 0 40px rgba(0, 0, 0, 0.8), 0 0 20px rgba(0, 242, 255, 0.1) inset;
+        font-family: 'JetBrains Mono', 'Space Grotesk', monospace;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        animation: float-bubble 4s ease-in-out infinite;
+        overflow: hidden;
+    }
+
+    .sentinel-header {
+        font-size: 0.65rem;
+        font-weight: 800;
+        letter-spacing: 0.2em;
+        color: rgba(0, 242, 255, 0.8);
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        padding-bottom: 8px;
+    }
+
+    .pulse-dot {
+        width: 6px; height: 6px;
+        background: #00f2ff;
+        border-radius: 50%;
+        animation: blink 1s step-end infinite;
+        box-shadow: 0 0 8px #00f2ff;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+    }
+
+    .stat-item { display: flex; flex-direction: column; gap: 4px; }
+    .stat-item .label { font-size: 0.55rem; color: rgba(255,255,255,0.4); text-transform: uppercase; font-weight: bold; }
+    .stat-item .value { font-size: 0.8rem; font-weight: 700; color: #fff; }
+
+    .sentinel-progress {
+        height: 4px;
+        background: rgba(255,255,255,0.1);
+        border-radius: 2px;
+        width: 100%;
+        margin-top: 4px;
+        overflow: hidden;
+    }
+    .sentinel-bar {
+        height: 100%;
+        background: #00f2ff;
+        transition: width 0.8s ease;
+        box-shadow: 0 0 8px rgba(0, 242, 255, 0.5);
+    }
+
+    .sentinel-alert {
+        margin-top: 15px;
+        background: rgba(255, 49, 49, 0.15);
+        border: 1px solid #ff3131;
+        color: #ff3131;
+        padding: 8px;
+        border-radius: 6px;
+        font-size: 0.65rem;
+        font-weight: 900;
+        text-align: center;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        animation: flash 0.6s infinite;
+        display: none;
+    }
+
+    .vision-toggle {
+        background: rgba(10, 11, 20, 0.9);
+        border: 1px solid rgba(0, 242, 255, 0.4);
+        color: #00f2ff;
+        border-radius: 50px;
+        padding: 8px 18px;
+        font-size: 0.7rem;
+        font-weight: 800;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.5), 0 0 10px rgba(0, 242, 255, 0.1) inset;
+    }
+    .vision-toggle.off {
+        border-color: rgba(255, 255, 255, 0.1);
+        color: rgba(255, 255, 255, 0.4);
+    }
+    .vision-toggle:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 25px rgba(0, 242, 255, 0.3);
+    }
+
+    @keyframes flash { 50% { opacity: 0.4; transform: scale(0.98); } }
+
+    .sentinel-bubble.cheating { border-color: #ff3131; box-shadow: 0 0 30px rgba(255, 49, 49, 0.3); }
+
+    .tracking-widest { letter-spacing: 0.15em; }
+    .x-small { font-size: 0.75rem; }
+    .xx-small { font-size: 0.65rem; }
+
+    .tracking-widest { letter-spacing: 0.15em; }
+    .x-small { font-size: 0.75rem; }
+    .xx-small { font-size: 0.65rem; }
+</style>
+
+<div class="container-fluid fade-up">
+    <div class="row justify-content-center g-4">
+        <div class="col-xl-10">
+
+            <!-- ────────── HUD HEADER ────────── -->
+            <div class="glass-panel p-3 px-4 mb-4 border-danger border-opacity-50 d-flex justify-content-between align-items-center flex-wrap gap-3 rounded-4" style="background: rgba(15,15,25,0.8);" data-aos="fade-down">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="pulse-red"></div>
+                    <h5 class="fw-bold text-white mb-0 tracking-widest text-uppercase" style="letter-spacing: 0.1em; font-size: 0.9rem;">
+                        <i class="fas fa-robot text-primary me-2"></i>Live Interview
+                    </h5>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-3 py-2 rounded-pill x-small fw-bold tracking-widest">SECURITY: ON</span>
+                    <span id="gaze-eye-hud" class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2 py-2 rounded-circle x-small fw-bold" title="Gaze Tracking">
+                        <i class="fas fa-eye"></i>
+                    </span>
+                    <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-3 py-2 rounded-pill x-small fw-bold tracking-widest">SECURE CONNECTION</span>
+                </div>
+            </div>
+
+            <div class="row g-4">
+
+                <!-- ────────── LEFT: WEBCAM FEED ────────── -->
+                <div class="col-lg-5" data-aos="fade-right">
+                    <div class="glass-panel p-3 rounded-4 border-secondary border-opacity-25 shadow-lg h-100 d-flex flex-column gap-3">
+                        <h6 class="fw-bold text-secondary mb-0 tracking-widest text-uppercase x-small border-bottom border-light border-opacity-10 pb-2">
+                            <i class="fas fa-video text-danger me-2"></i>Your Camera
+                        </h6>
+
+                        <!-- VIDEO CONTAINER -->
+                        <div class="video-feed-container ratio ratio-4x3 position-relative flex-grow-1">
+                            <video id="webcam" autoplay playsinline muted class="video-feed w-100 h-100 object-fit-cover" style="filter: contrast(1.1) brightness(1.05);"></video>
+                            <div class="scanline"></div>
+                            
+                            <!-- CANVAS: Detection Overlay -->
+                            <canvas id="detection-overlay" class="position-absolute top-0 start-0 w-100 h-100" style="z-index: 11; pointer-events: none;"></canvas>
+
+                            <!-- AI HUD OVERLAY (SVG) -->
+                            <svg class="position-absolute top-0 start-0 w-100 h-100" style="pointer-events: none; z-index: 10;">
+                                <defs>
+                                    <linearGradient id="neural-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                        <stop offset="0%" style="stop-color:#6366f1;stop-opacity:0.15" />
+                                        <stop offset="100%" style="stop-color:#a855f7;stop-opacity:0.15" />
+                                    </linearGradient>
+                                </defs>
+                                <rect width="100%" height="100%" fill="url(#neural-grad)" />
+                                <circle cx="50%" cy="50%" r="40%" fill="none" stroke="rgba(99, 102, 241, 0.08)" stroke-width="1" />
+                            </svg>
+                            
+                            <!-- 🔱 SENTINEL AI PROCTORING HUD 🔱 -->
+                            <div id="ai-sentinel" class="sentinel-bubble neutral-glow">
+                                <div class="sentinel-header">
+                                    <span class="pulse-dot"></span> AI VIEW
+                                </div>
+                                
+                                <div class="stats-grid">
+                                    <div class="stat-item">
+                                        <span class="label">Emotion</span>
+                                        <span id="stat-emotion" class="value text-info">Balancing...</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <span class="label">Confidence</span>
+                                        <div class="sentinel-progress"><div id="bar-confidence" class="sentinel-bar" style="width: 0%"></div></div>
+                                    </div>
+                                    <div class="stat-item">
+                                        <span class="label">Attention</span>
+                                        <span id="stat-attention" class="value text-success">HIGH</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <span class="label">Stress</span>
+                                        <span id="stat-stress" class="value text-warning">LOW</span>
+                                    </div>
+                                </div>
+
+                                <div id="sentinel-alert" class="sentinel-alert">
+                                    <i class="fas fa-biohazard me-2"></i><span id="alert-msg">MOBILE DETECTED</span>
+                                </div>
+                            </div>
+
+                            <!-- AI VISION TOGGLE -->
+                            <div class="position-absolute bottom-0 start-0 m-4" style="z-index: 100;">
+                                <button id="vision-toggle-btn" class="vision-toggle" onclick="toggleVision()">
+                                    <i id="vision-icon" class="fas fa-video"></i>
+                                    <span id="vision-text">AI CAMERA: ON</span>
+                                </button>
+                            </div>
+
+                            <!-- NEON SOUNDWAVE CANVAS -->
+                            <canvas id="soundwave-canvas" class="position-absolute bottom-0 start-0 w-100" style="height: 60px; z-index: 10; opacity: 0.8; pointer-events: none;"></canvas>
+
+                            <!-- Object Alert Top-Right -->
+                            <div class="position-absolute top-0 end-0 m-3 d-none" id="object-alert" style="z-index: 12;">
+                                <div class="badge bg-danger border border-danger px-3 py-2 rounded-pill fw-bold x-small tracking-widest">
+                                    <i class="fas fa-exclamation-triangle me-1"></i>ANOMALY DETECTED
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- AI INSIGHT TICKER -->
+                        <div class="glass-panel p-3 bg-dark bg-opacity-50 border-primary border-opacity-25 rounded-3 d-flex align-items-center gap-3 shadow-inner">
+                            <div class="rounded-circle bg-primary bg-opacity-10 border border-primary border-opacity-25 d-flex justify-content-center align-items-center flex-shrink-0" style="width: 36px; height: 36px;">
+                                <i class="fas fa-microchip text-primary"></i>
+                            </div>
+                            <div class="flex-grow-1 overflow-hidden">
+                                <p class="text-secondary xx-small mb-0 fw-bold tracking-widest text-uppercase">Live Intelligence</p>
+                                <div id="ai-insight-line" class="text-light x-small fw-bold text-truncate">AI is checking your answers...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ────────── RIGHT: INTERVIEW AREA ────────── -->
+                <div class="col-lg-7" data-aos="fade-left">
+                    <div class="glass-panel p-4 p-lg-5 rounded-4 border-primary border-opacity-25 shadow-lg h-100 d-flex flex-column position-relative overflow-hidden">
+                        <div class="position-absolute top-0 end-0 p-4 opacity-5 pointer-events-none"><i class="fas fa-brain fa-8x text-primary"></i></div>
+
+                        <!-- AI Interviewer Avatar -->
+                        <div class="text-center mb-4 position-relative z-2">
+                            <div class="ai-avatar-container">
+                                <img src="{% static 'img/ai_raj_final.png' %}" alt="Raj — AI Technical Interviewer" id="ai-avatar-img">
+                                <div id="ai-tech-ring"></div>
+                            </div>
+                            <p class="text-secondary fw-bold x-small mt-3 mb-0 tracking-widest text-uppercase">
+                                <i class="fas fa-robot text-primary me-2"></i>Raj — AI Interviewer
+                            </p>
+                        </div>
+
+                        <!-- Question Panel -->
+                        <div class="glass-panel p-4 bg-dark bg-opacity-75 rounded-4 border-info border-opacity-25 shadow-inner mb-4 position-relative z-2">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <span class="text-info fw-bold tracking-widest text-uppercase xx-small"><i class="fas fa-question-circle me-2"></i>Question</span>
+                                <button type="button" class="btn btn-sm btn-outline-info rounded-pill px-3 hover-scale" onclick="document.getElementById('ai-voice-player').play()">
+                                    <i class="fas fa-volume-up me-1"></i> Play
+                                </button>
+                            </div>
+                            <p class="lead text-white fw-bold mb-0 lh-base" id="question-text" style="font-family: 'Space Grotesk', sans-serif;">"{{ question.text }}"</p>
+                        </div>
+
+                        <!-- Answer Form -->
+                        <form method="POST" id="interview-form" class="d-flex flex-column gap-4 flex-grow-1 position-relative z-2">
+                            {% csrf_token %}
+                            <input type="hidden" name="question_topic" value="{{ question.topic }}">
+
+                            <div>
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <label for="answer" class="small fw-bold text-secondary tracking-widest text-uppercase mb-0"><i class="fas fa-keyboard me-2 text-primary"></i>Your Response</label>
+                                    <button type="button" id="mic-btn" class="btn btn-sm btn-outline-danger rounded-pill px-3 hover-scale" onclick="toggleRecording()">
+                                        <i class="fas fa-microphone me-1"></i><span id="mic-text">Speak</span>
+                                    </button>
+                                </div>
+                                <textarea class="glass-input form-control w-100" id="answer" name="answer" rows="5" placeholder="Type your response or use the microphone..." required></textarea>
+                            </div>
+
+                            <div class="d-flex justify-content-between align-items-center pt-3 border-top border-light border-opacity-10">
+                                <div class="badge bg-dark text-warning border border-warning border-opacity-25 px-3 py-2 rounded-pill fw-bold x-small tracking-widest">
+                                    <i class="fas fa-stopwatch me-1"></i><span id="timer-display">04:00</span>
+                                </div>
+                                <button type="submit" class="btn btn-primary btn-lg rounded-pill px-5 fw-bold shadow-lg hover-scale border-0" id="submit-btn">
+                                    <i class="fas fa-paper-plane me-2"></i>Submit Answer
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- TTS Audio Player (Hidden) -->
+<audio id="ai-voice-player" src="{{ audio_url }}" autoplay></audio>
+
+<!-- External Libraries -->
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"></script>
+<script src="{% static 'js/proctoring.js' %}"></script>
+<script src="{% static 'js/voice_agent.js' %}"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+
+    // ─── Init Proctoring System ───
+    new ProctoringSystem({ maxWarnings: 5 });
+
+    // ─── AI Audio Visualizer ───
+    const audio = document.getElementById('ai-voice-player');
+    const techRing = document.getElementById('ai-tech-ring');
+    const avatarImg = document.getElementById('ai-avatar-img');
+
+    function activateVisualizer() {
+        techRing.style.border = '4px dashed rgba(37, 99, 235, 1)';
+        techRing.style.background = 'radial-gradient(circle, rgba(37, 99, 235, 0.4) 0%, rgba(0,0,0,0) 70%)';
+        techRing.style.animationDuration = '2s';
+        avatarImg.style.boxShadow = '0 0 50px rgba(37, 99, 235, 0.8)';
+        avatarImg.style.transform = 'scale(1.05)';
+    }
+    function deactivateVisualizer() {
+        techRing.style.border = '2px dashed rgba(99, 102, 241, 0.5)';
+        techRing.style.background = 'radial-gradient(circle, rgba(99, 102, 241, 0.1) 0%, rgba(0,0,0,0) 70%)';
+        techRing.style.animationDuration = '10s';
+        avatarImg.style.boxShadow = '0 0 30px rgba(99, 102, 241, 0.5)';
+        avatarImg.style.transform = 'scale(1)';
+    }
+
+    if (audio) {
+        audio.addEventListener('play', activateVisualizer);
+        audio.addEventListener('pause', deactivateVisualizer);
+        audio.addEventListener('ended', deactivateVisualizer);
+        audio.play().catch(() => console.log("Autoplay blocked. User interaction needed."));
+    }
+
+    // ─── Webcam Access ───
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+            .then(stream => { document.getElementById('webcam').srcObject = stream; })
+            .catch(err => console.error("Camera access denied:", err));
+    }
+
+    // ─── COCO-SSD Vision AI ───
+    const video = document.getElementById('webcam');
+    const canvas = document.getElementById('detection-overlay');
+    const ctx = canvas.getContext('2d');
+    const emotionTag = document.getElementById('emotion-tag');
+    const objectAlert = document.getElementById('object-alert');
+    const aiInsightLine = document.getElementById('ai-insight-line');
+    let detectorModel;
+
+    async function initVisionAI() {
+        try {
+            detectorModel = await cocoSsd.load();
+            setInterval(runDetection, 2500);
+        } catch(e) { console.error("Vision AI Init Error:", e); }
+    }
+
+    let isVisionOn = true;
+    function toggleVision() {
+        isVisionOn = !isVisionOn;
+        const btn = document.getElementById('vision-toggle-btn');
+        const icon = document.getElementById('vision-icon');
+        const text = document.getElementById('vision-text');
+        if (isVisionOn) {
+            btn.classList.remove('off');
+            icon.className = 'fas fa-video';
+            text.innerText = 'AI CAMERA: ON';
+            canvas.style.display = 'block';
+        } else {
+            btn.classList.add('off');
+            icon.className = 'fas fa-video-slash';
+            text.innerText = 'AI CAMERA: OFF';
+            canvas.style.display = 'none';
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+    }
+
+    async function runDetection() {
+        if (!isVisionOn || !detectorModel || video.readyState !== 4) return;
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const predictions = await detectorModel.detect(video);
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        let suspicious = false;
+
+        predictions.forEach(p => {
+            const suspects = ['cell phone', 'book', 'laptop'];
+            if (suspects.includes(p.class)) {
+                suspicious = true;
+                ctx.strokeStyle = '#ef4444'; ctx.lineWidth = 3;
+                ctx.strokeRect(...p.bbox);
+                ctx.fillStyle = '#ef4444'; ctx.font = 'bold 14px Inter';
+                ctx.fillText(`${p.class.toUpperCase()} ${Math.round(p.score * 100)}%`, p.bbox[0], p.bbox[1] > 20 ? p.bbox[1] - 5 : 20);
+            }
+        });
+
+        if (suspicious) {
+            objectAlert.classList.remove('d-none');
+            triggerSentinelAlert("MOBILE DETECTED", "CRITICAL");
+        } else {
+            objectAlert.classList.add('d-none');
+            clearSentinelAlert();
+            
+            // Random behavioral observations
+            const insights = ["Analysis: Direct Gaze", "Environmental integrity: Verified", "Calibrating Stress..."];
+            if (!Math.floor(Math.random() * 8)) aiInsightLine.innerText = insights[Math.floor(Math.random() * insights.length)];
+        }
+    }
+    initVisionAI();
+
+    // ─── Real-time Vocal Confidence Tracking (Upgraded Step 5) ───
+    const sentimentTag = document.getElementById('emotion-tag');
+    const sentimentText = document.getElementById('emotion-text');
+    const sentimentTooltip = document.getElementById('emotion-tooltip');
+    
+    let audioRecorder;
+    let audioChunks = [];
+
+    async function initSentimentAI() {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            audioRecorder = new MediaRecorder(stream);
+            
+            audioRecorder.ondataavailable = async (e) => {
+                if (e.data.size > 0) {
+                    audioChunks.push(e.data);
+                    
+                    // Pulse UI during processing
+                    sentimentTag.className = 'sentiment-bubble loading';
+                    
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                    audioChunks = []; // reset for next chunk
+                    
+                    const answerBox = document.getElementById('answer');
+                    const answerText = answerBox.value || "Candidate is listening/thinking...";
+                    
+                    try {
+                        const response = await fetch("{% url 'analyze_vocal_confidence' %}", {
+                            method: 'POST',
+                            headers: {
+                                'X-Interview-Id': "{{ application.id }}",
+                                'X-Transcript': answerText,
+                                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                            },
+                            body: audioBlob
+                        });
+                        
+                        const data = await response.json();
+                        
+                        if (data.status === 'success') {
+                            const emotion = (data.sentiment || 'neutral').toLowerCase();
+                            const confScore = Math.round(data.vocal_confidence || 80);
+                            const stress = Math.round(data.stress_level || 20);
+                            const energy = Math.round(data.energy || 80);
+                            
+                            let bgClass = 'neutral';
+                            let iconClass = 'fa-brain';
+                            let textClr = 'text-info';
+                            let barClr = 'bg-info';
+                            
+                            if (emotion === 'positive') { 
+                                bgClass = 'positive'; iconClass = 'fa-smile-beam'; textClr = 'text-success'; barClr = 'bg-success'; 
+                            } else if (emotion === 'negative') { 
+                                bgClass = 'negative'; iconClass = 'fa-exclamation-circle'; textClr = 'text-danger'; barClr = 'bg-danger'; 
+                            }
+                            
+                            sentimentTag.className = `sentiment-bubble ${bgClass}`;
+                            sentimentTooltip.textContent = data.insight || 'Neural analysis active.';
+                            
+                            sentimentText.className = `sentiment-text ${textClr}`;
+                            sentimentText.innerHTML = `<i class="fas ${iconClass} me-2"></i>NEURAL: ${confScore}%`;
+                            
+                            // Update advanced metrics
+                            document.getElementById('conf-progress').style.width = `${confScore}%`;
+                            document.getElementById('conf-progress').className = `progress-bar ${barClr}`;
+                            document.getElementById('stress-label').innerText = `STRESS: ${stress}%`;
+                            document.getElementById('energy-label').innerText = `NRG: ${energy}%`;
+
+                            if (data.insight && !Math.floor(Math.random() * 3)) {
+                                aiInsightLine.innerText = data.insight;
+                            }
+                        } else {
+                            sentimentTag.className = 'sentiment-bubble neutral';
+                            sentimentText.className = 'sentiment-text text-info';
+                            sentimentText.innerHTML = '<i class="fas fa-brain me-2"></i>CALIBRATING...';
+                        }
+                    } catch (err) {
+                        console.warn("Vocal Confidence analysis pulse missed.", err);
+                        sentimentTag.className = 'sentiment-bubble neutral';
+                        sentimentTooltip.textContent = 'Monitoring...';
+                        sentimentText.className = 'sentiment-text text-info';
+                        sentimentText.innerHTML = '<i class="fas fa-eye me-2"></i>MONITORING...';
+                    }
+                }
+            };
+            
+            // Collect and dispatch chunks every 3.5 seconds for real-time pulsing
+            audioRecorder.start(3500);
+
+            // ─── NEON SOUNDWAVE VISUALIZER ───
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const analyser = audioCtx.createAnalyser();
+            const source = audioCtx.createMediaStreamSource(stream);
+            source.connect(analyser);
+            
+            analyser.fftSize = 64;
+            const bufferLength = analyser.frequencyBinCount;
+            const dataArray = new Uint8Array(bufferLength);
+            
+            const swCanvas = document.getElementById('soundwave-canvas');
+            const swCtx = swCanvas.getContext('2d');
+            
+            function drawSoundwave() {
+                requestAnimationFrame(drawSoundwave);
+                
+                swCanvas.width = swCanvas.offsetWidth;
+                swCanvas.height = swCanvas.offsetHeight;
+                
+                analyser.getByteFrequencyData(dataArray);
+                
+                swCtx.clearRect(0, 0, swCanvas.width, swCanvas.height);
+                
+                const barWidth = (swCanvas.width / bufferLength) * 1.5;
+                let barHeight;
+                let x = 0;
+                
+                for(let i = 0; i < bufferLength; i++) {
+                    barHeight = dataArray[i] / 4; // Scale down to fit 60px height
+                    
+                    // Neon Cyan Gradient
+                    const grad = swCtx.createLinearGradient(0, swCanvas.height, 0, swCanvas.height - barHeight);
+                    grad.addColorStop(0, "rgba(0, 242, 255, 0.1)");
+                    grad.addColorStop(1, "rgba(0, 242, 255, 0.9)");
+                    
+                    swCtx.fillStyle = grad;
+                    
+                    // Center the bars vertically at the bottom
+                    swCtx.fillRect(x, swCanvas.height - barHeight, barWidth - 1, barHeight);
+                    
+                    x += barWidth;
+                }
+            }
+            drawSoundwave();
+            
+        } catch (e) {
+            console.error("Microphone access needed for Vocal Confidence:", e);
+            sentimentTag.className = 'sentiment-bubble negative';
+            sentimentTooltip.textContent = 'Mic Required';
+            sentimentText.className = 'sentiment-text text-danger';
+            sentimentText.innerHTML = '<i class="fas fa-microphone-slash me-2"></i>MIC ERROR';
+        }
+    }
+    initSentimentAI();
+
+    // ─── Blur / Tab Switch Anti-Cheat ───
+    let blurWarnings = 0;
+    
+    async function reportViolation(type) {
+        const formData = new FormData();
+        formData.append('application_id', "{{ application.id }}");
+        formData.append('violation_type', type);
+        formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+        await fetch("{% url 'log_proctoring_violation_api' %}", { method: 'POST', body: formData });
+    }
+
+    window.addEventListener('blur', () => {
+        blurWarnings++;
+        reportViolation('TAB_SWITCH');
+        
+        const warningModal = new bootstrap.Modal(document.getElementById('securityWarningModal'));
+        document.getElementById('security-warning-text').innerText = `Warning: Tab switching is strictly prohibited. Incident ${blurWarnings}/3 logged.`;
+        warningModal.show();
+        
+        if (blurWarnings >= 3) {
+            setTimeout(() => { document.getElementById('interview-form').submit(); }, 3000);
+        }
+    });
+
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+            reportViolation('TAB_HIDDEN');
+        }
+    });
+
+    // ─── Countdown Timer ───
+    let timeLeft = 240; // 4 minutes
+    const timerDisplay = document.getElementById('timer-display');
+    const timerInterval = setInterval(() => {
+        timeLeft--;
+        const m = String(Math.floor(timeLeft / 60)).padStart(2, '0');
+        const s = String(timeLeft % 60).padStart(2, '0');
+        timerDisplay.innerText = `${m}:${s}`;
+        if (timeLeft <= 30) timerDisplay.classList.add('text-danger');
+        if (timeLeft <= 0) { clearInterval(timerInterval); document.getElementById('interview-form').submit(); }
+    }, 1000);
+
+});
+
+// ─── AJAX Interview Form Submit ───
+let interactionCount = 0;
+const aiAudioPlayer = document.getElementById('ai-voice-player');
+const submitBtn = document.getElementById('submit-btn');
+
+document.getElementById('interview-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    const videoElement = document.getElementById('webcam');
+    if (!videoElement.srcObject || !videoElement.srcObject.active) {
+        alert("STRICT ERROR: Camera feed is required to submit your answer.");
+        return;
+    }
+
+    const answerText = document.getElementById('answer').value;
+    const questionText = document.getElementById('question-text').innerText.replace(/"/g, '');
+    const appId = "{{ application.id }}";
+
+    if (!answerText.trim()) { alert("Please provide an answer."); return; }
+
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-circle-notch fa-spin me-2"></i>Processing...';
+
+    try {
+        const formData = new FormData();
+        formData.append('application_id', appId);
+        formData.append('question_text', questionText);
+        formData.append('candidate_answer', answerText);
+        formData.append('interaction_count', interactionCount);
+        formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+
+        const response = await fetch("{% url 'process_interview_answer_api' %}", { method: 'POST', body: formData });
+        const data = await response.json();
+
+        if (data.error) {
+            alert("Error: " + data.error);
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-paper-plane me-2"></i>Transmit Response';
+            return;
+        }
+
+        if (data.is_complete) {
+            window.location.href = data.redirect_url;
+        } else {
+            interactionCount = data.interaction_count;
+            document.getElementById('question-text').innerText = '"' + data.question_text + '"';
+            document.getElementById('answer').value = '';
+
+            if (data.audio_url) {
+                aiAudioPlayer.src = data.audio_url;
+                aiAudioPlayer.play();
+            } else {
+                aiAudioPlayer.removeAttribute('src');
+                speakAI(data.question_text, 'female');
+                // Simulate ring for native speech
+                const techRing = document.getElementById('ai-tech-ring');
+                const avatarImg = document.getElementById('ai-avatar-img');
+                techRing.style.border = '4px dashed rgba(37, 99, 235, 1)';
+                techRing.style.animationDuration = '2s';
+                avatarImg.style.boxShadow = '0 0 50px rgba(37, 99, 235, 0.8)';
+                avatarImg.style.transform = 'scale(1.05)';
+                const wordCount = data.question_text.split(" ").length;
+                const speakDurationMs = (wordCount / 2.5) * 1000;
+                setTimeout(() => {
+                    techRing.style.border = '2px dashed rgba(99, 102, 241, 0.5)';
+                    techRing.style.animationDuration = '10s';
+                    avatarImg.style.boxShadow = '0 0 30px rgba(99, 102, 241, 0.5)';
+                    avatarImg.style.transform = 'scale(1)';
+                }, speakDurationMs);
+            }
+
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-paper-plane me-2"></i>Transmit Response';
+        }
+    } catch (error) {
+        console.error("Submit error:", error);
+        alert("A network error occurred. Please try again.");
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="fas fa-paper-plane me-2"></i>Transmit Response';
+    }
+});
+
+// ─── Voice Recording Toggle ───
+const micBtn = document.getElementById('mic-btn');
+const micText = document.getElementById('mic-text');
+const answerBox = document.getElementById('answer');
+let isRecording = false;
+
+function toggleRecording() {
+    if (isRecording) return;
+    aiVoice.listen(
+        (text) => { answerBox.value += (answerBox.value ? ' ' : '') + text; micBtn.classList.remove('btn-danger'); micBtn.classList.add('btn-outline-danger'); micText.innerText = "Speak"; isRecording = false; },
+        () => { isRecording = true; micBtn.classList.remove('btn-outline-danger'); micBtn.classList.add('btn-danger'); micText.innerText = "Listening..."; answerBox.placeholder = "Listening..."; },
+        () => { isRecording = false; micBtn.classList.remove('btn-danger'); micBtn.classList.add('btn-outline-danger'); micText.innerText = "Speak"; answerBox.placeholder = "Type your answer here or use the microphone..."; }
+    );
+}
+</script>
+{% endblock %}

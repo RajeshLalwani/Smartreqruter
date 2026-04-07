@@ -1,0 +1,119 @@
+{% block extra_head %}
+<!-- React and React Flow CDN (UMD) -->
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@xyflow/react@11.10.4/dist/react-flow.min.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/@xyflow/react@11.10.4/dist/style.css">
+<style>
+    .react-flow__node {
+        background: rgba(17, 25, 40, 0.9);
+        border: 1px solid rgba(0, 255, 255, 0.3);
+        border-radius: 10px;
+        padding: 5px;
+        color: #fff;
+        text-align: center;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+        pointer-events: none !important;
+    }
+    .react-flow__edge-path {
+        stroke: #00e5ff !important;
+        stroke-width: 2 !important;
+    }
+    .react-flow__handle { display: none !important; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4 midnight-nebula min-vh-100">
+    <div class="row justify-content-center">
+        <div class="col-lg-11">
+            <div class="glass-panel p-4 rounded-4 shadow-lg mb-4 border-primary border-opacity-10">
+                <div class="d-flex align-items-center justify-content-between mb-4">
+                    <div>
+                        <h1 class="display-6 fw-bold text-white mb-0 tracking-tight">Architectural Deep Dive</h1>
+                        <p class="text-info small fw-bold text-uppercase tracking-widest mt-1">
+                            <i class="fas fa-microchip me-1"></i> Neural Assessment Engine | {{ application.candidate.full_name }}
+                        </p>
+                    </div>
+                    <div class="d-flex gap-3 align-items-center">
+                        <div class="text-end me-3">
+                            <div class="x-small text-theme-secondary text-uppercase fw-bold">Design Score</div>
+                            <div class="h3 mb-0 text-info fw-black">{{ assessment.ai_score }}%</div>
+                        </div>
+                        <a href="{% url 'application_details' application.id %}" class="btn btn-glass btn-outline-light rounded-pill px-4">
+                            <i class="fas fa-arrow-left me-2"></i> Return to Terminal
+                        </a>
+                    </div>
+                </div>
+
+                <div class="row g-4">
+                    <!-- Visual Canvas -->
+                    <div class="col-lg-8">
+                        <div id="reactflow-preview" class="glass-panel overflow-hidden border-primary border-opacity-10" style="height: 600px; background: rgba(0,0,0,0.3);">
+                            <div id="reactflow-container" style="width: 100%; height: 100%;"></div>
+                        </div>
+                    </div>
+
+                    <!-- AI Intelligence Panel -->
+                    <div class="col-lg-4">
+                        <div class="ai-report-panel h-100 p-4 rounded-4 border border-info border-opacity-20 d-flex flex-column" style="background: linear-gradient(135deg, rgba(13, 110, 253, 0.05) 0%, rgba(0, 229, 255, 0.05) 100%);">
+                            <h5 class="text-cyan mb-4 d-flex align-items-center gap-2">
+                                <i class="fas fa-brain fa-lg"></i>
+                                <span>AI Evaluation Summary</span>
+                            </h5>
+                            
+                            <div class="flex-grow-1 overflow-y-auto mb-4 pe-2 custom-scrollbar" style="max-height: 400px;">
+                                <div class="text-light leading-relaxed small opacity-90">
+                                    {{ assessment.ai_analysis|linebreaks }}
+                                </div>
+                            </div>
+
+                            <div class="mt-auto">
+                                <div class="p-3 rounded-4 border border-success border-opacity-20 bg-success bg-opacity-10">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <div class="rounded-circle bg-success bg-opacity-20 p-2">
+                                            <i class="fas fa-check-shield text-success"></i>
+                                        </div>
+                                        <div>
+                                            <div class="small fw-bold text-success text-uppercase">Best Practices Check</div>
+                                            <div class="x-small text-white opacity-75">Schema validated against RAG best practices.</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{ assessment.diagram_json|json_script:"diagram-data" }}
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const diagramData = JSON.parse(document.getElementById('diagram-data').textContent);
+        
+        const { ReactFlow: Flow, Background, Controls, ReactFlowProvider } = ReactFlow;
+        
+        const ArchitecturePreview = () => {
+            return React.createElement(Flow, {
+                nodes: diagramData.nodes || [],
+                edges: diagramData.edges || [],
+                fitView: true,
+                nodesDraggable: false,
+                nodesConnectable: false,
+                elementsSelectable: false,
+                style: { width: '100%', height: '100%' }
+            }, 
+                React.createElement(Background, { color: '#00e5ff', gap: 20, opacity: 0.1 }),
+                React.createElement(Controls, { showInteractive: false })
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('reactflow-container'));
+        root.render(React.createElement(ReactFlowProvider, null, React.createElement(ArchitecturePreview)));
+    });
+</script>
+{% endblock %}

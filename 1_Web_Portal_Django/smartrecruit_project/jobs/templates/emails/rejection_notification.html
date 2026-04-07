@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+        }
+
+        .header {
+            background-color: #6c757d;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            border-radius: 8px 8px 0 0;
+        }
+
+        .content {
+            padding: 20px;
+            background-color: #ffffff;
+        }
+
+        .footer {
+            text-align: center;
+            font-size: 12px;
+            color: #888;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h2>Application Update</h2>
+        </div>
+        <div class="content">
+            <p>Dear {{ candidate_name }},</p>
+            <p>Thank you for your interest in the <strong>{{ job_title }}</strong> position at IR Info Tech Pvt Ltd
+            </p>
+
+            <p>However, we noticed that you have not scheduled your interview/assessment within the required timeframe.
+            </p>
+
+            <p>As a result, your application has been automatically closed. We encourage you to apply for future
+                openings that match your skills and experience.</p>
+
+            <p>We wish you the best in your career search.</p>
+
+            <p>Best Regards,<br>Talent Acquisition Team</p>
+        </div>
+        <div class="footer">
+            <p>&copy; 2026 IR Info Tech Pvt Ltd All rights reserved.</p>
+        </div>
+    </div>
+</body>
+
+</html>

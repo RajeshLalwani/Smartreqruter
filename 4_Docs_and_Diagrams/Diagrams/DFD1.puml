@@ -1,0 +1,40 @@
+@startuml
+skinparam backgroundColor white
+skinparam rectangle {
+    BackgroundColor white
+    BorderColor black
+}
+skinparam node {
+    BackgroundColor white
+    BorderColor black
+}
+skinparam storage {
+    BackgroundColor white
+    BorderColor black
+    Shape folder
+}
+
+rectangle "Candidate" as C
+rectangle "Recruiter" as R
+
+node "1.0\nUser Management" as P1
+node "2.0\nJob Matching" as P2
+node "3.0\nAI Resume Parser" as P3
+node "4.0\nInterview Analysis" as P4
+
+storage "User DB" as D1
+storage "Job DB" as D2
+storage "Application DB" as D3
+
+C --> P1 : Credentials
+P1 --> D1 : Store User
+C --> P2 : Search Filters
+P2 <-- D2 : Return Listings
+C --> P3 : Upload Resume
+P3 --> D3 : Store Parsed Data
+R --> P2 : Post Job
+P2 --> D2 : Save Job
+R <-- D3 : View Rankings
+C --> P4 : Session Video/Audio
+P4 --> D3 : Save Score
+@enduml

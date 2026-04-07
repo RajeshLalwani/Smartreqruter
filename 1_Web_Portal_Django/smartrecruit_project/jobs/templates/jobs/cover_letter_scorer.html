@@ -1,0 +1,174 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}AI Cover Letter Scorer | SmartRecruit{% endblock %}
+{% block content %}
+<style>
+    /* Z-INDEX SAFEGUARDS */
+    .modal { z-index: 2000 !important; }
+    .modal-backdrop { z-index: 1050 !important; }
+    .tracking-widest { letter-spacing: 0.15em; }
+    .x-small { font-size: 0.75rem; }
+    .xx-small { font-size: 0.65rem; }
+    .italic { font-style: italic; }
+
+    /* Form inputs */
+    .sv-input { background: rgba(255,255,255,0.04) !important; color: var(--text-color, #e2e8f0) !important; border: 1px solid rgba(255,255,255,0.1) !important; border-radius: 0.75rem; }
+    .sv-input:focus { border-color: rgba(103,58,183,0.5) !important; box-shadow: 0 0 0 3px rgba(103,58,183,0.12) !important; outline: none; }
+
+    /* Score ring glow */
+    .score-ring circle:last-child { filter: drop-shadow(0 0 8px currentColor); }
+
+    /* Keyword badges */
+    .kw-found { background: rgba(0,200,83,0.12); border: 1px solid rgba(0,200,83,0.3); color: #69f0ae; }
+    .kw-missing { background: rgba(255,82,82,0.12); border: 1px solid rgba(255,82,82,0.3); color: #ff8a80; }
+
+    /* AI suggestion left-border */
+    .ai-suggestion { border-left: 3px solid #7C4DFF; background: rgba(124,77,255,0.04); border-radius: 0 0.75rem 0.75rem 0; }
+</style>
+
+<div class="container-fluid px-4 mt-4 fade-up">
+
+    <!-- ─── Hero ─── -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-5 gap-3" data-aos="fade-down">
+        <div>
+            <div class="badge px-3 py-2 rounded-pill mb-3 tracking-widest text-uppercase x-small fw-bold" style="background: rgba(124,77,255,0.12); color: #ce93d8; border: 1px solid rgba(124,77,255,0.3);">
+                <i class="fas fa-file-contract me-2"></i>ATS Intelligence Engine
+            </div>
+            <h1 class="display-6 fw-bold text-white mb-2" style="font-family: 'Space Grotesk', sans-serif;">AI Cover Letter <span style="background: linear-gradient(90deg, #7C4DFF, #2979FF); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">Scorer</span></h1>
+            <p class="lead text-secondary mb-0">Get instant AI feedback on your cover letter — scored against the job description.</p>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- ─── Input Form ─── -->
+        <div class="col-lg-5" data-aos="fade-right">
+            <div class="glass-panel p-4 h-100 rounded-4 border-secondary border-opacity-25">
+                <form method="post">
+                    {% csrf_token %}
+                    <h6 class="fw-bold text-white mb-3 x-small tracking-widest text-uppercase border-bottom border-light border-opacity-10 pb-3"><i class="fas fa-briefcase text-primary me-2"></i>Target Role</h6>
+
+                    <div class="mb-3">
+                        <label class="form-label x-small text-secondary fw-bold tracking-widest text-uppercase mb-2">Select an Open Job (optional)</label>
+                        <select name="job_id" class="form-select sv-input x-small">
+                            <option value="">— Enter job title manually —</option>
+                            {% for job in jobs %}
+                            <option value="{{ job.id }}" {% if result and result.job_title == job.title %}selected{% endif %}>{{ job.title }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label x-small text-secondary fw-bold tracking-widest text-uppercase mb-2">Or enter Job Title</label>
+                        <input type="text" name="job_title" class="form-control sv-input x-small" placeholder="e.g. Data Scientist">
+                    </div>
+
+                    <h6 class="fw-bold text-white mb-3 x-small tracking-widest text-uppercase border-bottom border-light border-opacity-10 pb-3"><i class="fas fa-pen-fancy text-warning me-2"></i>Your Cover Letter</h6>
+                    <textarea name="cover_letter" class="form-control sv-input" rows="12" placeholder="Paste your cover letter here..." style="resize: vertical; font-size: 0.88rem;">{% if result %}{{ result.cover_letter }}{% endif %}</textarea>
+                    <div class="text-secondary xx-small mt-1">Min 100 characters for best results</div>
+
+                    <button type="submit" class="btn btn-primary w-100 mt-4 rounded-pill fw-bold hover-scale">
+                        <i class="fas fa-magic me-2"></i>Score My Cover Letter
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- ─── Results Panel ─── -->
+        <div class="col-lg-7" data-aos="fade-up">
+            {% if result %}
+            <!-- Score Banner -->
+            <div class="glass-panel p-4 mb-4 rounded-4 {% if result.overall_score >= 75 %}border-success{% elif result.overall_score >= 50 %}border-warning{% else %}border-danger{% endif %} border-opacity-25 shadow-sm">
+                <div class="row align-items-center g-4">
+                    <div class="col-md-4 text-center">
+                        <div class="position-relative d-inline-flex align-items-center justify-content-center">
+                            <svg class="score-ring" width="120" height="120" viewBox="0 0 120 120">
+                                <circle cx="60" cy="60" r="50" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="10"/>
+                                <circle cx="60" cy="60" r="50" fill="none" stroke="{% if result.overall_score >= 75 %}#00C853{% elif result.overall_score >= 50 %}#FF6D00{% else %}#FF4444{% endif %}" stroke-width="10" stroke-dasharray="{{ result.overall_score }} 100" stroke-linecap="round" transform="rotate(-90 60 60)"/>
+                            </svg>
+                            <div class="position-absolute text-center">
+                                <div class="fw-bold text-white" style="font-size: 1.8rem; font-family: 'Space Grotesk', sans-serif;">{{ result.overall_score }}</div>
+                                <div class="xx-small text-secondary">/100</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-8">
+                        <h4 class="fw-bold text-white mb-1" style="font-family: 'Space Grotesk', sans-serif;">{{ result.verdict }}</h4>
+                        <p class="text-secondary x-small mb-3">for <strong class="text-primary">{{ result.job_title }}</strong></p>
+                        <div class="d-flex flex-wrap gap-2">
+                            <span class="badge rounded-pill px-3 py-2 x-small fw-bold" style="background: rgba(41,121,255,0.15); color: #82b1ff;">Relevance: {{ result.relevance_score }}/100</span>
+                            <span class="badge rounded-pill px-3 py-2 x-small fw-bold" style="background: rgba(0,200,83,0.15); color: #69f0ae;">Tone: {{ result.tone_score }}/100</span>
+                            <span class="badge rounded-pill px-3 py-2 x-small fw-bold" style="background: rgba(255,152,0,0.15); color: #ffd54f;">Specificity: {{ result.specificity_score }}/100</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Keywords -->
+            <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                    <div class="glass-panel p-3 h-100 rounded-4 border-success border-opacity-25">
+                        <h6 class="fw-bold text-success mb-2 x-small tracking-widest text-uppercase"><i class="fas fa-check-circle me-2"></i>Keywords Found</h6>
+                        <div class="d-flex flex-wrap gap-1">
+                            {% for kw in result.ats_keywords_found %}<span class="badge rounded-pill px-2 x-small kw-found">{{ kw }}</span>
+                            {% empty %}<span class="text-secondary x-small">None detected</span>{% endfor %}
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="glass-panel p-3 h-100 rounded-4 border-danger border-opacity-25">
+                        <h6 class="fw-bold text-danger mb-2 x-small tracking-widest text-uppercase"><i class="fas fa-times-circle me-2"></i>Keywords Missing</h6>
+                        <div class="d-flex flex-wrap gap-1">
+                            {% for kw in result.missing_keywords %}<span class="badge rounded-pill px-2 x-small kw-missing">{{ kw }}</span>
+                            {% empty %}<span class="text-secondary x-small">None missing 🎉</span>{% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Strengths & Improvements -->
+            <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                    <div class="glass-panel p-3 h-100 rounded-4 border-warning border-opacity-25">
+                        <h6 class="fw-bold text-warning mb-2 x-small tracking-widest text-uppercase"><i class="fas fa-star me-2"></i>Strengths</h6>
+                        {% for s in result.strengths %}
+                        <div class="d-flex gap-2 mb-2">
+                            <i class="fas fa-check text-success mt-1 flex-shrink-0" style="font-size: 0.7rem;"></i>
+                            <span class="x-small text-secondary">{{ s }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="glass-panel p-3 h-100 rounded-4 border-info border-opacity-25">
+                        <h6 class="fw-bold text-info mb-2 x-small tracking-widest text-uppercase"><i class="fas fa-lightbulb me-2"></i>Improvements</h6>
+                        {% for s in result.improvements %}
+                        <div class="d-flex gap-2 mb-2">
+                            <i class="fas fa-arrow-right text-info mt-1 flex-shrink-0" style="font-size: 0.7rem;"></i>
+                            <span class="x-small text-secondary">{{ s }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI Rewritten Opening -->
+            {% if result.rewritten_opening %}
+            <div class="ai-suggestion p-3 rounded-4">
+                <h6 class="fw-bold text-white mb-2 x-small tracking-widest text-uppercase"><i class="fas fa-robot me-2" style="color: #7C4DFF;"></i>AI-Suggested Opening</h6>
+                <p class="text-secondary x-small mb-0 italic">"{{ result.rewritten_opening }}"</p>
+            </div>
+            {% endif %}
+
+            {% else %}
+            <div class="glass-panel p-5 text-center rounded-4 border-secondary border-opacity-25">
+                <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto mb-4" style="width: 72px; height: 72px; background: rgba(124,77,255,0.08); border: 1px solid rgba(124,77,255,0.2);">
+                    <i class="fas fa-file-contract fa-2x" style="color: #7C4DFF; opacity: 0.5;"></i>
+                </div>
+                <h5 class="fw-bold text-white mb-2" style="font-family: 'Space Grotesk', sans-serif;">Get Instant AI Feedback</h5>
+                <p class="text-secondary x-small">Paste your cover letter on the left and select a job to get a detailed AI score.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

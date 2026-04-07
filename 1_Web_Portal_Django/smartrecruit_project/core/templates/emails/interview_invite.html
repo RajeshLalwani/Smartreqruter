@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+    body { background-color: #050508; color: #fdfcfb; font-family: 'Inter', Arial, sans-serif; margin: 0; padding: 0; }
+    .container { max-width: 600px; margin: 0 auto; padding: 40px 20px; }
+    .glass-card { background: rgba(15, 15, 20, 0.8); border: 1px solid rgba(0, 230, 118, 0.2); border-radius: 16px; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+    .header { text-align: center; margin-bottom: 30px; }
+    .logo { color: #00e676; font-weight: bold; font-size: 24px; letter-spacing: -0.5px; }
+    h2 { color: #fff; text-align: center; margin-bottom: 20px; }
+    p { color: #b0bec5; line-height: 1.6; }
+    .btn { display: inline-block; padding: 12px 24px; background: linear-gradient(135deg, #0d6efd, #00e676); color: #fff; text-decoration: none; border-radius: 30px; font-weight: bold; margin-top: 20px; text-align: center; box-shadow: 0 0 15px rgba(0, 230, 118, 0.4); }
+    .pill { display: inline-block; padding: 5px 15px; border-radius: 20px; background: rgba(255,255,255,0.1); font-size: 14px; margin: 10px 0; }
+    .footer { text-align: center; margin-top: 40px; color: #455a64; font-size: 12px; }
+</style>
+</head>
+<body>
+<div class="container">
+    <div class="glass-card">
+        <div class="header">
+            <div class="logo">⚡ SmartRecruit AI</div>
+        </div>
+        <h2>Neural Link Requested</h2>
+        <p>Dear {{ user.first_name|default:user.username }},</p>
+        <p>You have been flagged for a high-priority technical assessment by the AI engine.</p>
+        <div class="pill"><strong>Target Sector:</strong> {{ job_title }}</div>
+        <div class="pill"><strong>Algorithm Selected:</strong> {{ mode }} Mode</div>
+        <p>Your calendar directive (.ics) is attached to this transmission. Please initiate the session via your secure dashboard portal before the timeline expires.</p>
+        <div style="text-align: center;">
+            <a href="{{ interview_url }}" class="btn">ACCESS SESSION PORTAL</a>
+        </div>
+    </div>
+    <div class="footer">
+        &copy; 2026 SmartRecruit Systems. Strict proctoring protocols will be active.
+    </div>
+</div>
+</body>
+</html>

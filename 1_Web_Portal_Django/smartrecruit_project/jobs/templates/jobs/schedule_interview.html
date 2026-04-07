@@ -1,0 +1,473 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Schedule Interview | SmartRecruit{% endblock %}
+
+{% block extra_head %}
+<link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css' rel='stylesheet' />
+<style>
+    /* ─── Color Palette ─── */
+    :root {
+        --neon-cyan: #00f2ff;
+        --neon-purple: #bc13fe;
+        --glass-bg: rgba(255, 255, 255, 0.05);
+        --glass-border: rgba(255, 255, 255, 0.1);
+        --text-light: #f8f9fa;
+    }
+
+    /* ─── Main Container ─── */
+    .glass-container {
+        background: var(--glass-bg);
+        backdrop-filter: blur(15px);
+        -webkit-backdrop-filter: blur(15px);
+        border: 1px solid var(--glass-border);
+        border-radius: 20px;
+        padding: 35px;
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8), 0 0 30px rgba(0, 242, 255, 0.05);
+        color: var(--text-light);
+        animation: fadeIn 0.8s ease-in-out;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .glass-container::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 2px;
+        background: linear-gradient(90deg, transparent, var(--neon-cyan), var(--neon-purple), transparent);
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .calendar-header { margin-bottom: 28px; }
+    
+    .thunder-text {
+        background: linear-gradient(90deg, var(--neon-cyan), var(--neon-purple));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        font-weight: 800;
+        font-size: 2rem;
+        letter-spacing: 1px;
+        margin-bottom: 8px;
+    }
+
+    .calendar-header p {
+        color: rgba(255,255,255,0.55);
+        font-size: 15px;
+    }
+
+    /* ─── FullCalendar Overrides ─── */
+    .fc {
+        --fc-border-color: rgba(255, 255, 255, 0.07);
+        --fc-page-bg-color: transparent;
+        --fc-neutral-bg-color: transparent;
+        --fc-today-bg-color: rgba(0, 242, 255, 0.07);
+    }
+
+    .fc-col-header-cell {
+        font-size: 0.7rem;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: rgba(255,255,255,0.4) !important;
+    }
+
+    .fc-col-header-cell a { color: rgba(255,255,255,0.4) !important; text-decoration: none; }
+
+    .fc-daygrid-day-number {
+        color: rgba(255,255,255,0.6);
+        text-decoration: none;
+        font-size: 0.82rem;
+    }
+
+    .fc-daygrid-day:hover {
+        background: rgba(0, 242, 255, 0.08) !important;
+        cursor: pointer;
+        transition: 0.3s;
+    }
+
+    .fc-day-today .fc-daygrid-day-number {
+        color: var(--neon-cyan) !important;
+        font-weight: 800;
+    }
+
+    .fc-event {
+        background: linear-gradient(45deg, var(--neon-cyan), var(--neon-purple)) !important;
+        border: none !important;
+        border-radius: 5px !important;
+        font-size: 0.73rem !important;
+        font-weight: 600 !important;
+        box-shadow: 0 0 8px rgba(0, 242, 255, 0.3) !important;
+    }
+
+    .fc-button-primary {
+        background: rgba(0, 242, 255, 0.1) !important;
+        border: 1px solid rgba(0, 242, 255, 0.3) !important;
+        color: var(--neon-cyan) !important;
+        border-radius: 8px !important;
+        font-weight: 700 !important;
+        font-size: 0.75rem !important;
+        transition: all 0.2s ease !important;
+    }
+    .fc-button-primary:hover, .fc-button-active {
+        background: rgba(0, 242, 255, 0.2) !important;
+        box-shadow: 0 0 15px rgba(0, 242, 255, 0.25) !important;
+    }
+    .fc-toolbar-title {
+        font-size: 1.1rem !important;
+        font-weight: 800 !important;
+        color: #fff !important;
+    }
+
+    /* ─── Glass Modal ─── */
+    .glass-modal {
+        display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        background: rgba(0, 0, 0, 0.75);
+        backdrop-filter: blur(8px);
+        align-items: center;
+        justify-content: center;
+        animation: fadeIn 0.3s ease;
+    }
+
+    .glass-modal.active { display: flex; }
+
+    .modal-inner {
+        background: rgba(10, 11, 16, 0.92);
+        border: 1px solid rgba(0, 242, 255, 0.25);
+        border-radius: 20px;
+        padding: 36px;
+        width: 90%;
+        max-width: 480px;
+        box-shadow: 0 0 60px rgba(0, 242, 255, 0.1);
+        position: relative;
+    }
+
+    .modal-inner::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 2px;
+        background: linear-gradient(90deg, transparent, var(--neon-cyan), var(--neon-purple), transparent);
+        border-radius: 20px 20px 0 0;
+    }
+
+    .modal-title {
+        font-size: 1.15rem;
+        font-weight: 700;
+        color: #fff;
+        margin-bottom: 6px;
+    }
+
+    .modal-subtitle {
+        font-size: 13px;
+        color: rgba(255,255,255,0.45);
+        margin-bottom: 24px;
+    }
+
+    /* ─── Slot Buttons ─── */
+    .slots-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+
+    .slot-btn {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--neon-cyan);
+        color: #fff;
+        padding: 12px 8px;
+        border-radius: 10px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.25s ease;
+        text-align: center;
+    }
+
+    .slot-btn:hover {
+        background: var(--neon-cyan);
+        box-shadow: 0 0 20px rgba(0, 242, 255, 0.6);
+        color: #000;
+        transform: translateY(-3px);
+    }
+
+    .slot-btn.selected {
+        background: linear-gradient(135deg, var(--neon-cyan), var(--neon-purple));
+        color: #000;
+        box-shadow: 0 0 20px rgba(188, 19, 254, 0.4);
+        transform: scale(1.03);
+    }
+
+    .slot-btn:disabled {
+        opacity: 0.35;
+        cursor: not-allowed;
+        transform: none;
+        border-color: rgba(255,255,255,0.15);
+    }
+
+    .btn-close-modal {
+        position: absolute;
+        top: 16px; right: 20px;
+        background: transparent;
+        border: none;
+        color: rgba(255,255,255,0.4);
+        font-size: 20px;
+        cursor: pointer;
+        line-height: 1;
+        transition: color 0.2s;
+    }
+    .btn-close-modal:hover { color: var(--neon-cyan); }
+
+    .btn-confirm {
+        width: 100%;
+        background: linear-gradient(135deg, var(--neon-cyan), var(--neon-purple));
+        color: #000;
+        font-weight: 800;
+        padding: 13px;
+        border: none;
+        border-radius: 12px;
+        font-size: 15px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 25px rgba(0, 242, 255, 0.3);
+    }
+
+    .btn-confirm:hover { box-shadow: 0 4px 40px rgba(0, 242, 255, 0.5); transform: translateY(-2px); }
+    .btn-confirm:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    .scheduler-shell {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 30px 20px;
+    }
+
+    /* ─── Thunder Preloader Overlay ─── */
+    #thunder-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 99999;
+        background: rgba(0,0,0,0.9);
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        gap: 16px;
+    }
+    #thunder-overlay.active { display: flex; }
+    #thunder-overlay .bolt {
+        font-size: 60px;
+        animation: pulse-bolt 0.8s infinite alternate;
+    }
+    @keyframes pulse-bolt {
+        from { transform: scale(0.9); filter: drop-shadow(0 0 15px #00f2ff); }
+        to { transform: scale(1.1); filter: drop-shadow(0 0 40px #bc13fe); }
+    }
+    #thunder-overlay p {
+        color: #fff;
+        font-size: 18px;
+        font-weight: 700;
+        letter-spacing: 1px;
+    }
+</style>
+{% endblock %}
+
+{% block sidebar %}
+    {% if user.is_recruiter %}
+        {% include 'jobs/_recruiter_sidebar.html' %}
+    {% else %}
+        {% include 'jobs/_candidate_sidebar.html' %}
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="candidate-wrapper d-flex flex-grow-1" style="background: #0a0b10; min-height: 100vh;">
+    <div class="main-content flex-grow-1 p-4" style="max-height: 100vh; overflow-y: auto; scrollbar-width: none;">
+
+<!-- Thunder Preloader Overlay -->
+<div id="thunder-overlay">
+    <div class="bolt">⚡</div>
+    <p>Processing Booking...</p>
+</div>
+
+<!-- Slot Selection Modal -->
+<div id="slotModal" class="glass-modal">
+    <div class="modal-inner">
+        <button class="btn-close-modal" onclick="closeModal()" title="Close (Esc)">&times;</button>
+        <div class="modal-title">Available Slots</div>
+        <div class="modal-subtitle" id="selected-date-label">Loading...</div>
+        <div class="slots-grid" id="slots-container">
+            <p style="color:rgba(255,255,255,0.4); font-size:13px;">Loading slots...</p>
+        </div>
+        <button class="btn-confirm" id="confirm-btn" disabled onclick="confirmSlot()">
+            ⚡ Confirm Interview Slot
+        </button>
+    </div>
+</div>
+
+<!-- Main Scheduler -->
+<div class="scheduler-shell">
+    <div class="glass-container">
+        <div class="calendar-header">
+            <h2 class="thunder-text">⚡ Schedule Your AI Interview</h2>
+            <p>Select a date and time slot that fits your multiverse schedule. Click any highlighted date to see available slots.</p>
+            <div class="mt-2" style="font-size:13px; color:rgba(255,255,255,0.35);">
+                <i class="fa-solid fa-briefcase me-1"></i>
+                Applying for: <strong style="color:rgba(255,255,255,0.7);">{{ application.job.title }}</strong>
+            </div>
+        </div>
+        <div id="calendar"></div>
+    </div>
+</div>
+
+<!-- Hidden CSRF form for AJAX -->
+<form id="csrf-form" style="display:none;">{% csrf_token %}</form>
+
+<script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js'></script>
+<script>
+    const APPLICATION_ID = {{ application.id }};
+    const RECRUITER_ID   = {{ application.job.recruiter.id }};
+    let selectedSlotId   = null;
+    let allSlotsMap      = {};  // date string -> [{id, start_time, end_time}]
+
+    function getCsrf() {
+        return document.querySelector('[name=csrfmiddlewaretoken]').value;
+    }
+
+    // ─── Load all recruiter slots from API ───
+    async function loadAllSlots() {
+        const res = await fetch(`/jobs/api/recruiter-slots/${RECRUITER_ID}/`);
+        const data = await res.json();
+        allSlotsMap = {};
+        data.slots.forEach(slot => {
+            if (!allSlotsMap[slot.date]) allSlotsMap[slot.date] = [];
+            allSlotsMap[slot.date].push(slot);
+        });
+
+        // Return FullCalendar background events for available days
+        return Object.keys(allSlotsMap).map(dateStr => ({
+            start: dateStr,
+            display: 'background',
+            color: 'rgba(0, 242, 255, 0.18)',
+        }));
+    }
+
+    // ─── Open Day Modal ───
+    function openSlotModal(dateStr) {
+        const daySlots = allSlotsMap[dateStr];
+        const label = new Date(dateStr + 'T00:00:00').toLocaleDateString('en-IN', {
+            weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+        });
+
+        document.getElementById('selected-date-label').textContent = label;
+        document.getElementById('confirm-btn').disabled = true;
+        selectedSlotId = null;
+
+        const container = document.getElementById('slots-container');
+
+        if (!daySlots || daySlots.length === 0) {
+            container.innerHTML = `<p style="color:rgba(255,255,255,0.4); font-size:13px; grid-column:1/-1;">No slots available on this day.</p>`;
+        } else {
+            container.innerHTML = daySlots.map(s => `
+                <button class="slot-btn" onclick="selectSlot(this, ${s.id})" data-id="${s.id}">
+                    ${s.start_time} – ${s.end_time}
+                </button>
+            `).join('');
+        }
+
+        document.getElementById('slotModal').classList.add('active');
+    }
+
+    function selectSlot(el, slotId) {
+        document.querySelectorAll('.slot-btn').forEach(b => b.classList.remove('selected'));
+        el.classList.add('selected');
+        selectedSlotId = slotId;
+        document.getElementById('confirm-btn').disabled = false;
+    }
+
+    function closeModal() {
+        document.getElementById('slotModal').classList.remove('active');
+        selectedSlotId = null;
+    }
+
+    // ─── Escape Key Listener ───
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') closeModal();
+    });
+
+    // ─── Confirm and Book Slot ───
+    async function confirmSlot() {
+        if (!selectedSlotId) return;
+
+        // Show Thunder Preloader
+        document.getElementById('thunder-overlay').classList.add('active');
+        document.getElementById('confirm-btn').disabled = true;
+
+        try {
+            const res = await fetch('/jobs/api/book-slot/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCsrf()
+                },
+                body: JSON.stringify({ slot_id: selectedSlotId, application_id: APPLICATION_ID })
+            });
+            const data = await res.json();
+
+            // Hide Preloader
+            document.getElementById('thunder-overlay').classList.remove('active');
+
+            if (data.status === 'success') {
+                closeModal();
+                Swal.fire({
+                    icon: 'success',
+                    title: '⚡ Thunder Strike!',
+                    html: 'Interview confirmed! A <strong>.ics calendar invite</strong> has been sent to your email.',
+                    background: 'rgba(10, 11, 16, 0.97)',
+                    color: '#ffffff',
+                    confirmButtonColor: '#00f2ff',
+                    confirmButtonText: 'Back to Dashboard →',
+                    customClass: { popup: 'glass-container', confirmButton: 'btn-confirm' }
+                }).then(() => window.location.href = '/dashboard/');
+            } else {
+                Swal.fire({ icon: 'error', title: 'Booking Failed', text: data.message, background: 'rgba(10,11,16,0.95)', color: '#fff', confirmButtonColor: '#bc13fe' });
+                document.getElementById('confirm-btn').disabled = false;
+            }
+        } catch (err) {
+            document.getElementById('thunder-overlay').classList.remove('active');
+            Swal.fire({ icon: 'error', title: 'Network Error', text: 'Please try again.', background: 'rgba(10,11,16,0.95)', color: '#fff' });
+            document.getElementById('confirm-btn').disabled = false;
+        }
+    }
+
+    // ─── Initialize FullCalendar ───
+    document.addEventListener('DOMContentLoaded', async function () {
+        const events = await loadAllSlots();
+
+        const calendarEl = document.getElementById('calendar');
+        const calendar = new FullCalendar.Calendar(calendarEl, {
+            initialView: 'dayGridMonth',
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,timeGridWeek'
+            },
+            events: events,
+            dateClick: function(info) {
+                openSlotModal(info.dateStr);
+            },
+            height: 'auto'
+        });
+        calendar.render();
+    });
+</script>
+    </div>
+</div>
+{% endblock %}

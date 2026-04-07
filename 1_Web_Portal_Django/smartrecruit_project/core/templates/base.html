@@ -1,0 +1,808 @@
+{% load static i18n job_filters %}
+<!DOCTYPE html>
+{% get_current_language as LANGUAGE_CODE %}
+<html lang="{{ LANGUAGE_CODE|default:'en' }}" data-theme="midnight">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}SmartRecruit{% endblock %}</title>
+    <meta name="theme-color" content="#0a0b10">
+    <meta name="color-scheme" content="dark light">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/aos@2.3.1/dist/aos.css">
+    <script>
+        (function () {
+            var storageKey = "smartrecruit-theme";
+            var root = document.documentElement;
+            var metaTheme = document.querySelector('meta[name="theme-color"]');
+            var storedTheme = null;
+
+            // Ensure preloader runs on every page load for consistent application rendering
+            var shouldPreload = true;
+            root.classList.add("preloader-active");
+
+            try {
+                storedTheme = window.localStorage.getItem(storageKey);
+            } catch (error) {
+                storedTheme = null;
+            }
+
+            var theme = storedTheme;
+            if (theme !== "midnight" && theme !== "clean") {
+                theme = window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches ? "clean" : "midnight";
+            }
+
+            root.setAttribute("data-theme", theme);
+            // Sync Bootstrap's theme system so all BS components respect dark/light
+            root.setAttribute("data-bs-theme", theme === "clean" ? "light" : "dark");
+            if (metaTheme) {
+                metaTheme.setAttribute("content", theme === "clean" ? "#f0f2f5" : "#0a0b10");
+            }
+
+            var storedEye = null;
+            try { storedEye = window.localStorage.getItem('smartrecruit-eye-protection'); } catch(e) {}
+            if (storedEye === 'on') { root.setAttribute("data-eye-protection", 'on'); }
+
+            if (shouldPreload) {
+                window.addEventListener('load', function () {
+                    setTimeout(function () {
+                        root.classList.remove("preloader-active");
+                    }, 400);
+                });
+                
+                window.__smartRecruitBootFallback = window.setTimeout(function () {
+                    root.classList.remove("preloader-active");
+                }, 3500);
+            }
+        })();
+    </script>
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}?v={% now 'U' %}">
+    <link rel="stylesheet" href="{% static 'css/thunder_style.css' %}">
+    <script src="{% static 'js/voice_agent.js' %}"></script>
+    <link rel="manifest" href="{% static 'manifest.json' %}">
+    <link rel="apple-touch-icon" href="{% static 'images/pwa-icon-192.png' %}">
+    <style>
+        /* THUNDER STANDARD GLOW & SMART GLASS ARCHITECTURE */
+        :root[data-theme="midnight"] {
+            --bg-color: #0a0b10;
+            --glass-bg: rgba(10, 11, 16, 0.65);
+            --neon-border: rgba(0, 255, 255, 0.5);
+            --text-main: #ffffff;
+        }
+        :root[data-theme="clean"] {
+            --bg-color: #f0f2f5;
+            --glass-bg: rgba(255, 255, 255, 0.65);
+            --neon-border: rgba(0, 120, 255, 0.5);
+            --text-main: #111111;
+        }
+        body {
+            background-color: var(--bg-color) !important;
+            color: var(--text-main) !important;
+            font-family: 'Inter', 'Poppins', sans-serif !important;
+        }
+        .glass-card, .glass-modal, .glass-dropdown, .form-control, .card, .modal-content, .message-chip {
+            background: var(--glass-bg) !important;
+            backdrop-filter: blur(20px) !important;
+            -webkit-backdrop-filter: blur(20px) !important;
+            border: 1px solid var(--neon-border) !important;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1) !important;
+            color: var(--text-main) !important;
+        }
+        .form-control:focus {
+            border-color: #00ffff !important;
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.6) !important;
+        }
+        .thunder-preloader__bolt {
+            filter: drop-shadow(0 0 12px rgba(0, 255, 255, 0.9));
+        }
+        .btn-primary, .thunder-btn {
+            background: linear-gradient(90deg, #001f3f, #0076a3) !important;
+            border: 1px solid #00ffff !important;
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.2) !important;
+            color: #fff !important;
+        }
+        .btn-primary:hover, .thunder-btn:hover {
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.8) !important;
+        }
+        /* THUNDER TOAST CUSTOM SWEETALERT STYLES */
+        .swal2-toast.thunder-toast-custom {
+            background: var(--glass-bg) !important;
+            backdrop-filter: blur(15px) !important;
+            -webkit-backdrop-filter: blur(15px) !important;
+            color: var(--text-main) !important;
+            border-radius: 12px !important;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3) !important;
+        }
+        .swal2-toast.thunder-toast-custom.neon-green {
+            border: 1px solid rgba(0, 255, 128, 0.8) !important;
+            box-shadow: 0 0 20px rgba(0, 255, 128, 0.4) !important;
+        }
+        .swal2-toast.thunder-toast-custom.neon-red {
+            border: 1px solid rgba(255, 0, 80, 0.8) !important;
+            box-shadow: 0 0 20px rgba(255, 0, 80, 0.4) !important;
+        }
+        .swal2-toast.thunder-toast-custom.electric-cyan {
+            border: 1px solid rgba(0, 255, 255, 0.8) !important;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.4) !important;
+        }
+        .swal2-toast.thunder-toast-custom.neon-purple {
+            border: 1px solid rgba(180, 0, 255, 0.8) !important;
+            box-shadow: 0 0 20px rgba(180, 0, 255, 0.4) !important;
+        }
+        .lightning-flash-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: white;
+            z-index: 99999;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.1s ease-out;
+        }
+        .lightning-flash-overlay.flash {
+            opacity: 0.8;
+            transition: opacity 0.05s ease-in;
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="page-shell {% block body_class %}{% endblock %}">
+    <a href="#main-content" class="skip-link">Skip to content</a>
+
+    <div id="thunder-preloader" class="thunder-preloader" role="status" aria-live="polite" aria-label="Loading SmartRecruit">
+        <div class="thunder-preloader__backdrop"></div>
+        <div class="thunder-preloader__shockwave"></div>
+        <div class="thunder-preloader__panel">
+            <div class="thunder-preloader__bolt-wrap" aria-hidden="true">
+                <svg viewBox="0 0 140 200" class="thunder-preloader__bolt">
+                    <defs>
+                        <linearGradient id="thunder-preloader-gradient" x1="10%" y1="0%" x2="90%" y2="100%">
+                            <stop offset="0%" style="stop-color: var(--accent-primary);"></stop>
+                            <stop offset="55%" style="stop-color: var(--accent-secondary);"></stop>
+                            <stop offset="100%" style="stop-color: var(--accent-primary-strong);"></stop>
+                        </linearGradient>
+                    </defs>
+                    <path d="M84 6L34 98h37l-15 96 62-111H80L84 6z"></path>
+                </svg>
+            </div>
+            <div class="thunder-preloader__copy">
+                <p class="thunder-preloader__eyebrow typewriter-glow">Loading SmartRecruit</p>
+                <p class="thunder-preloader__title">SmartRecruit</p>
+                <p id="preloader-status" class="thunder-preloader__status">Getting things ready...</p>
+            </div>
+            <div class="thunder-preloader__meter">
+                <div class="thunder-preloader__track">
+                    <span id="thunder-progress-bar" class="thunder-preloader__bar"></span>
+                </div>
+                <span id="thunder-progress-value" class="thunder-preloader__value">0%</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="site-ambient" aria-hidden="true">
+        <span class="site-ambient__orb site-ambient__orb--primary"></span>
+        <span class="site-ambient__orb site-ambient__orb--secondary"></span>
+        <span class="site-ambient__grid"></span>
+    </div>
+
+    <div class="app-shell">
+        <header class="app-topbar">
+            <div class="container-fluid app-topbar__inner">
+                <a href="{% url 'dashboard' %}" class="brand-lockup" aria-label="SmartRecruit dashboard">
+                    <span class="brand-lockup__mark">
+                        <i class="fa-solid fa-bolt"></i>
+                    </span>
+                    <span class="brand-lockup__copy">
+                        <strong class="brand-lockup__title">SmartRecruit</strong>
+                        <span class="brand-lockup__subtitle">Smart Hiring Platform</span>
+                    </span>
+                </a>
+
+                {% if user.is_authenticated %}
+                <div class="app-breadcrumb d-none d-lg-flex align-items-center ms-4">
+                    <span class="text-theme-secondary opacity-50 small">Main Menu</span>
+                    <i class="fa-solid fa-chevron-right mx-2 x-small opacity-25"></i>
+                    <span class="text-theme fw-bold small">{% block breadcrumb %}{{ request.resolver_match.url_name|title|replace:"_, " }}{% endblock %}</span>
+                </div>
+                {% endif %}
+
+                <div class="topbar-actions">
+                    <button id="theme-toggle" class="theme-toggle" type="button" aria-pressed="false" aria-label="Activate clean light mode">
+                        <span class="theme-toggle__track" aria-hidden="true">
+                            <span class="theme-toggle__icon theme-toggle__icon--moon"><i class="fa-solid fa-moon"></i></span>
+                            <span class="theme-toggle__icon theme-toggle__icon--sun"><i class="fa-solid fa-sun"></i></span>
+                            <span class="theme-toggle__thumb"></span>
+                        </span>
+                        <span class="theme-toggle__copy">
+                            <strong class="theme-toggle__title">Theme</strong>
+                            <small class="theme-toggle__state">Midnight Dark</small>
+                        </span>
+                    </button>
+
+                    <button id="eye-protection-toggle" class="btn btn-outline-secondary position-relative rounded-circle p-2 mx-1 d-flex align-items-center justify-content-center" title="Eye Protection Mode" style="width: 45px; height: 45px; border-color: rgba(255,255,255,0.1); background: rgba(0,0,0,0.2);">
+                        <i class="fa-solid fa-eye fs-5 text-theme-secondary hover-scale"></i>
+                    </button>
+
+                    {% if user.is_authenticated %}
+                    
+                    <div class="dropdown me-2">
+                        <button class="btn btn-outline-secondary position-relative rounded-circle p-2 d-flex align-items-center justify-content-center" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="width: 45px; height: 45px; border-color: rgba(255,255,255,0.1); background: rgba(0,0,0,0.2);">
+                            <i class="fa-solid fa-bell fs-5 text-theme-secondary hover-scale"></i>
+                            {% if user.notifications.count > 0 %}
+                            <span class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-dark rounded-circle" style="transform: translate(-30%, 30%) !important;">
+                                <span class="visually-hidden">New alerts</span>
+                            </span>
+                            {% endif %}
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end glass-dropdown p-0 border-theme border-opacity-25 overflow-hidden" style="width: 320px; box-shadow: 0 10px 40px rgba(0,0,0,0.8); z-index: 1050;">
+                            <li class="bg-dark bg-opacity-75 p-3 border-bottom border-theme border-opacity-10 d-flex justify-content-between align-items-center">
+                                <strong class="text-theme m-0"><i class="fa-solid fa-satellite-dish text-info me-2"></i> Alerts</strong>
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="badge bg-primary bg-opacity-25 text-primary border border-primary border-opacity-50 rounded-pill">{{ user.notifications.count }}</span>
+                                    <button class="btn btn-link btn-sm text-theme-secondary p-0 text-decoration-none hover-glow" onclick="markAllNotificationsRead()" title="Mark all as read">
+                                        <i class="fa-solid fa-check-double"></i>
+                                    </button>
+                                </div>
+                            </li>
+                            <div class="overflow-auto" style="max-height: 300px;">
+                            {% for notif in user.notifications.all|dictsortreversed:"id"|slice:":5" %}
+                            <li>
+                                <a class="dropdown-item p-3 border-bottom border-theme border-opacity-5 {% if not notif.is_read %}bg-primary bg-opacity-10{% endif %}" href="{{ notif.link|default:'#' }}">
+                                    <div class="d-flex w-100 justify-content-between mb-1">
+                                        <h6 class="mb-1 small fw-bold text-theme"><i class="fa-solid {% if notif.type == 'SUCCESS' %}fa-check-circle text-success{% elif notif.type == 'ERROR' %}fa-circle-xmark text-danger{% elif notif.type == 'WARNING' %}fa-exclamation-triangle text-warning{% else %}fa-info-circle text-info{% endif %} me-2"></i>{{ notif.title }}</h6>
+                                    </div>
+                                    <p class="mb-1 x-small text-theme-secondary text-wrap" style="font-size: 0.75rem;">{{ notif.message }}</p>
+                                </a>
+                            </li>
+                            {% empty %}
+                            <li class="p-4 text-center text-theme-secondary small">
+                                <i class="fa-solid fa-check-double fs-4 mb-2 opacity-50"></i><br>All communication channels clear.
+                            </li>
+                            {% endfor %}
+                            </div>
+                        </ul>
+                    </div>
+
+                    <div class="dropdown">
+                        <button class="profile-chip dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <span class="profile-chip__avatar">{{ user.first_name|default:user.username|slice:":1"|upper }}</span>
+                            <span class="profile-chip__text">
+                                <strong>{{ user.get_full_name|default:user.username }}</strong>
+                                <small>{% if user.is_superuser %}Administrator{% elif user.is_recruiter %}Recruiter{% elif user.is_candidate %}Candidate{% else %}Operator{% endif %}</small>
+                            </span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end glass-dropdown">
+                            <li><a class="dropdown-item" href="{% url 'dashboard' %}"><i class="fa-solid fa-table-cells-large me-2"></i>Dashboard</a></li>
+                            <li><a class="dropdown-item" href="{% url 'settings' %}"><i class="fa-solid fa-sliders me-2"></i>Settings</a></li>
+                            {% if user.is_recruiter %}
+                            <li><a class="dropdown-item" href="{% url 'post_job' %}"><i class="fa-solid fa-plus me-2"></i>Post Role</a></li>
+                            {% endif %}
+                            {% if user.is_superuser %}
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{% url 'admin_dashboard' %}"><i class="fa-solid fa-shield-halved me-2"></i>Admin Dashboard</a></li>
+                            <li><a class="dropdown-item" href="{% url 'admin_users' %}"><i class="fa-solid fa-users-gear me-2"></i>User Mgmt</a></li>
+                            {% endif %}
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <form action="{% url 'logout' %}" method="post" class="m-0">
+                                    {% csrf_token %}
+                                    <button type="submit" class="dropdown-item text-danger">
+                                        <i class="fa-solid fa-right-from-bracket me-2"></i>Logout
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
+                    </div>
+                    {% else %}
+                    <a href="{% url 'login' %}" class="btn thunder-btn thunder-btn--ghost">Sign In</a>
+                    {% endif %}
+                </div>
+            </div>
+        </header>
+
+        <div class="container-fluid app-layout">
+            {% if user.is_authenticated %}
+            <aside class="app-sidebar">
+                {% block sidebar %}{% endblock %}
+            </aside>
+            {% endif %}
+
+            <main id="main-content" class="app-main">
+                <!-- Messages handled by Thunder Toast via SweetAlert2 -->
+
+                {% block content %}{% endblock %}
+            </main>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script src="{% static 'js/theme_engine.js' %}"></script>
+    <script src="{% static 'js/thunder_preloader.js' %}"></script>
+    
+    <script>
+    // Project Zenith: Neural Context Hook
+    window.SMART_CONTEXT = "{% block smart_context %}{{ request.resolver_match.url_name|default:'Platform Home' }}{% endblock %}";
+
+    // Initialize AOS Animations
+    document.addEventListener('DOMContentLoaded', function() {
+        if (typeof AOS !== 'undefined') {
+            AOS.init({
+                duration: 700,
+                easing: 'ease-out-cubic',
+                once: true,
+                offset: 50
+            });
+        }
+        
+        // Thunder Page Transition: show preloader on internal navigation
+        document.querySelectorAll('a[href]').forEach(link => {
+            const href = link.getAttribute('href');
+            if (href && !href.startsWith('#') && !href.startsWith('javascript') && !href.startsWith('mailto') && !link.getAttribute('target')) {
+                link.addEventListener('click', function(e) {
+                    // Don't intercept dropdown toggles
+                    if (link.getAttribute('data-bs-toggle')) return;
+                    const preloader = document.getElementById('thunder-preloader');
+                    if (preloader) {
+                        document.documentElement.classList.add('preloader-active');
+                    }
+                });
+            }
+        });
+    });
+    </script>
+    
+    <div id="lightning-overlay" class="lightning-flash-overlay"></div>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const Toast = Swal.mixin({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 5000,
+                timerProgressBar: true,
+                customClass: {
+                    popup: 'thunder-toast-custom'
+                },
+                didOpen: (toast) => {
+                    toast.addEventListener('mouseenter', Swal.stopTimer)
+                    toast.addEventListener('mouseleave', Swal.resumeTimer)
+                }
+            });
+
+            window.triggerLightningFlash = function() {
+                const overlay = document.getElementById('lightning-overlay');
+                if (overlay) {
+                    overlay.classList.add('flash');
+                    setTimeout(() => overlay.classList.remove('flash'), 50);
+                    setTimeout(() => overlay.classList.add('flash'), 100);
+                    setTimeout(() => overlay.classList.remove('flash'), 150);
+                }
+            };
+            
+            // Reusable global toast function
+            window.showThunderToast = function(text, tags) {
+                let iconType = 'info';
+                let customColorClass = '';
+                
+                if (tags.includes('error')) iconType = 'error';
+                if (tags.includes('success')) iconType = 'success';
+                if (tags.includes('warning')) iconType = 'warning';
+                
+                if (tags.includes('neon-green')) customColorClass = 'neon-green';
+                if (tags.includes('neon-red')) customColorClass = 'neon-red';
+                if (tags.includes('electric-cyan')) customColorClass = 'electric-cyan';
+                if (tags.includes('neon-purple')) customColorClass = 'neon-purple';
+
+                if (tags.includes('thunder-toast')) {
+                    window.triggerLightningFlash();
+                }
+
+                Toast.fire({
+                    icon: iconType,
+                    title: text,
+                    customClass: {
+                        popup: 'thunder-toast-custom ' + customColorClass
+                    }
+                });
+            };
+        });
+    </script>
+
+    {% if messages %}
+    <script id="django-messages-data" type="application/json">
+        [
+            {% for message in messages %}
+            {
+                "text": "{{ message|escapejs }}",
+                "tags": "{{ message.tags|escapejs }}"
+            }{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        ]
+    </script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const messagesDataElement = document.getElementById('django-messages-data');
+            if (messagesDataElement) {
+                try {
+                    const messagesArr = JSON.parse(messagesDataElement.textContent);
+                    messagesArr.forEach((msg, index) => {
+                        setTimeout(() => {
+                            if (window.showThunderToast) {
+                                window.showThunderToast(msg.text, msg.tags);
+                            }
+                        }, index * 1000);
+                    });
+                } catch (e) {
+                    console.error("Error parsing django messages", e);
+                }
+            }
+        });
+    </script>
+    {% endif %}
+
+    
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/sw.js').then(function(registration) {
+                    // New SW will self-unregister and clear caches
+                }, function(err) {
+                    console.warn('SW registration failed: ', err);
+                });
+            });
+        }
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+
+    <!-- Global Neural Sentiment Bubble -->
+    {% if user.is_authenticated %}
+    <style>
+        @keyframes global-float-bubble {
+            0%, 100% { transform: translateY(0); }
+            50%      { transform: translateY(-8px); }
+        }
+
+        @keyframes bubble-pulse {
+            50% { opacity: 0.7; transform: scale(1.05) translateY(-4px); }
+        }
+        
+        .global-sentiment-bubble {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 9999;
+            background: rgba(15, 20, 35, 0.65);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50px;
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            cursor: pointer;
+            pointer-events: auto;
+        }
+
+        .global-sentiment-bubble.active-float {
+            animation: global-float-bubble 3s ease-in-out infinite;
+        }
+
+        .global-sentiment-bubble.loading {
+            border-color: #00e5ff;
+            animation: global-float-bubble 3s ease-in-out infinite, bubble-pulse 1.2s ease-in-out infinite;
+        }
+
+        .global-sentiment-bubble.positive {
+            border-color: #00e676;
+            box-shadow: 0 0 20px 4px rgba(0, 230, 118, 0.4), 0 0 40px 6px rgba(0, 230, 118, 0.2);
+        }
+
+        .global-sentiment-bubble.neutral {
+            border-color: #00e5ff;
+            box-shadow: 0 0 20px 4px rgba(0, 229, 255, 0.4), 0 0 40px 6px rgba(0, 229, 255, 0.2);
+        }
+
+        .global-sentiment-bubble.negative {
+            border-color: #ff1744;
+            box-shadow: 0 0 20px 4px rgba(255, 23, 68, 0.4), 0 0 40px 6px rgba(255, 23, 68, 0.2);
+        }
+
+        .global-sentiment-bubble .bubble-tooltip {
+            position: absolute;
+            top: -40px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.85);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            border: 1px solid var(--neon-border);
+        }
+
+        .global-sentiment-bubble:hover .bubble-tooltip {
+            opacity: 1;
+        }
+
+        .global-sentiment-text {
+            font-weight: 700;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            pointer-events: none;
+        }
+    </style>
+    <div id="global-sentiment-bubble" class="global-sentiment-bubble neutral" onclick="toggleGlobalSentiment()">
+        <div id="global-emotion-tooltip" class="bubble-tooltip">Global AI Monitor: Click to Start Live Analysis</div>
+        <canvas id="global-webcam" style="display:none; width: 40px; height: 40px; border-radius: 50%; object-fit: cover;"></canvas>
+        <div id="global-emotion-text" class="global-sentiment-text text-info">
+            <i class="fas fa-video-slash me-2"></i>AI VISION: OFF
+        </div>
+    </div>
+    {% endif %}
+
+
+    <script src="{% static 'js/voice_agent.js' %}"></script>
+    <script>
+        // Chatbot Functionality
+        const getDOMCsrfToken = () => {
+            const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
+            return csrfInput ? csrfInput.value : '';
+        };
+
+        function sendChatMessage() {
+            const input = document.getElementById('chatbot-input');
+            const tb = document.getElementById('chatbot-messages');
+            const msg = input.value.trim();
+            if(!msg) return;
+
+            const userDiv = document.createElement('div');
+            userDiv.className = "d-flex align-items-start gap-2 justify-content-end";
+            userDiv.innerHTML = `
+                <div class="bg-primary text-white p-2 rounded-3 small shadow-sm" style="max-width: 85%;">
+                    ${msg}
+                </div>
+                <div class="bg-secondary bg-opacity-50 rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; flex-shrink: 0;">
+                    <i class="fa-solid fa-user text-white small"></i>
+                </div>
+            `;
+            tb.appendChild(userDiv);
+            input.value = '';
+            tb.scrollTop = tb.scrollHeight;
+
+            const loadDiv = document.createElement('div');
+            loadDiv.id = "chat-loading";
+            loadDiv.className = "d-flex align-items-start gap-2";
+            loadDiv.innerHTML = `
+                <div class="bg-primary bg-opacity-25 rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; flex-shrink: 0;">
+                    <i class="fa-solid fa-robot text-primary small"></i>
+                </div>
+                <div class="bg-dark bg-opacity-50 p-2 rounded-3 border border-theme border-opacity-25 text-theme small shadow-sm">
+                    <i class="fa-solid fa-ellipsis fa-bounce"></i>
+                </div>
+            `;
+            tb.appendChild(loadDiv);
+            tb.scrollTop = tb.scrollHeight;
+
+            fetch('/jobs/api/faq-bot/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getDOMCsrfToken()
+                },
+                body: JSON.stringify({ 
+                    question: msg,
+                    context: window.SMART_CONTEXT || document.title
+                })
+            })
+            .then(r => r.json())
+            .then(data => {
+                const loader = document.getElementById('chat-loading');
+                if (loader) loader.remove();
+                const reply = data.answer || "I couldn't process that.";
+                const botDiv = document.createElement('div');
+                botDiv.className = "d-flex align-items-start gap-2";
+                botDiv.innerHTML = `
+                    <div class="bg-primary bg-opacity-25 rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; flex-shrink: 0;">
+                        <i class="fa-solid fa-robot text-primary small"></i>
+                    </div>
+                    <div class="bg-dark bg-opacity-50 p-2 rounded-3 border border-theme border-opacity-25 text-theme small shadow-sm" style="max-width: 85%;">
+                        ${reply.replace(/\n/g, '<br>')}
+                    </div>
+                `;
+                tb.appendChild(botDiv);
+                tb.scrollTop = tb.scrollHeight;
+            })
+            .catch(err => {
+                const loader = document.getElementById('chat-loading');
+                if (loader) loader.remove();
+                console.error(err);
+            });
+        }
+
+        // Voice Assistant Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            const vb = document.getElementById('floating-voice-assistant');
+            if(vb) {
+                vb.addEventListener('click', () => {
+                     const icon = vb.querySelector('i');
+                     if(typeof aiVoice === 'undefined') {
+                         console.warn("Voice agent not loaded");
+                         return;
+                     }
+                     aiVoice.listen(
+                         (transcript) => {
+                             icon.className = "fa-solid fa-microphone fs-5";
+                             vb.classList.remove('bg-danger');
+                             vb.classList.add('bg-info');
+                             
+                             fetch('/jobs/api/faq-bot/', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRFToken': getDOMCsrfToken()
+                                },
+                                body: JSON.stringify({ 
+                                    question: transcript,
+                                    context: (window.SMART_CONTEXT || document.title) + " (Voice Input)"
+                                })
+                             })
+                             .then(r => r.json())
+                             .then(data => {
+                                 const reply = data.answer || "Sorry, I am not sure.";
+                                 speakAI(reply, 'female');
+                             });
+                         },
+                         () => {
+                             icon.className = "fa-solid fa-microphone-lines fa-fade fs-5";
+                             vb.classList.remove('bg-info');
+                             vb.classList.add('bg-danger');
+                         },
+                         () => {
+                             icon.className = "fa-solid fa-microphone fs-5";
+                             vb.classList.remove('bg-danger');
+                             vb.classList.add('bg-info');
+                         }
+                     );
+                });
+            }
+        });
+
+        let isGlobalVisionActive = false;
+        let globalVideo = null;
+        let globalStream = null;
+        let globalSentimentInterval = null;
+
+        async function toggleGlobalSentiment() {
+            const gb = document.getElementById('global-sentiment-bubble');
+            const tooltip = document.getElementById('global-emotion-tooltip');
+            const text = document.getElementById('global-emotion-text');
+            globalVideo = document.getElementById('global-webcam');
+            
+            if (isGlobalVisionActive) {
+                // Turn OFF
+                isGlobalVisionActive = false;
+                clearInterval(globalSentimentInterval);
+                if (globalStream) {
+                    globalStream.getTracks().forEach(track => track.stop());
+                }
+                globalVideo.style.display = 'none';
+                globalVideo.srcObject = null;
+                gb.className = 'global-sentiment-bubble neutral';
+                tooltip.textContent = 'Global AI Monitor: Click to Start Live Analysis';
+                text.className = 'global-sentiment-text text-info';
+                text.innerHTML = '<i class="fas fa-video-slash me-2"></i>AI VISION: OFF';
+                return;
+            }
+
+            // Turn ON
+            try {
+                globalStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+                globalVideo.srcObject = globalStream;
+                globalVideo.style.display = 'block';
+                isGlobalVisionActive = true;
+                
+                gb.className = 'global-sentiment-bubble active-float loading';
+                tooltip.textContent = 'Initializing Camera...';
+                text.className = 'global-sentiment-text text-info';
+                text.innerHTML = '<i class="fas fa-circle-notch fa-spin me-2"></i>CONNECTING...';
+
+                globalSentimentInterval = setInterval(async () => {
+                    if (globalVideo.readyState !== 4 || !isGlobalVisionActive) return;
+                    
+                    gb.classList.add('loading');
+                    
+                    const sCanvas = document.createElement('canvas');
+                    sCanvas.width = globalVideo.videoWidth;
+                    sCanvas.height = globalVideo.videoHeight;
+                    sCanvas.getContext('2d').drawImage(globalVideo, 0, 0, sCanvas.width, sCanvas.height);
+                    const frameBase64 = sCanvas.toDataURL('image/jpeg', 0.6);
+                    
+                    try {
+                        const response = await fetch("/jobs/api/global-sentiment-stream/", {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ frame_base64: frameBase64 })
+                        });
+                        
+                        const data = await response.json();
+                        
+                        if (isGlobalVisionActive && data.status === 'success' && data.emotion) {
+                            gb.classList.remove('loading');
+                            const liveEmo = data.emotion.toLowerCase();
+                            const emotionMap = {
+                                'happy': { i: 'fa-smile', c: 'positive', textClr: 'text-success' },
+                                'sad': { i: 'fa-frown', c: 'negative', textClr: 'text-danger' },
+                                'angry': { i: 'fa-angry', c: 'negative', textClr: 'text-danger' },
+                                'fear': { i: 'fa-flushed', c: 'negative', textClr: 'text-danger' },
+                                'fearful': { i: 'fa-flushed', c: 'negative', textClr: 'text-danger' },
+                                'disgust': { i: 'fa-grimace', c: 'negative', textClr: 'text-danger' },
+                                'surprise': { i: 'fa-surprise', c: 'neutral', textClr: 'text-info' },
+                                'neutral': { i: 'fa-meh', c: 'neutral', textClr: 'text-info' },
+                                'no_face': { i: 'fa-user-slash', c: 'negative', textClr: 'text-danger', label: 'FACE NOT FOUND' },
+                                'multiple_faces': { i: 'fa-user-friends', c: 'negative', textClr: 'text-warning', label: 'MULTIPLE FACES' },
+                                'mobile_phone': { i: 'fa-mobile-alt', c: 'negative', textClr: 'text-danger', label: 'PHONE DETECTED' }
+                            };
+                            const mapped = emotionMap[liveEmo] || emotionMap['neutral'];
+                            
+                            gb.className = `global-sentiment-bubble active-float ${mapped.c}`;
+                            const displayLabel = mapped.label ? mapped.label : liveEmo.toUpperCase();
+                            tooltip.textContent = `Live Sentiment: ${displayLabel} (${data.score}%) | Click to Stop`;
+                            text.className = `global-sentiment-text ${mapped.textClr}`;
+                            text.innerHTML = `<i class="fas ${mapped.i} me-2"></i>${displayLabel}`;
+                        }
+                    } catch (err) {
+                        console.warn('Global sentiment check failed', err);
+                        if (isGlobalVisionActive) {
+                            gb.classList.remove('loading');
+                            gb.className = 'global-sentiment-bubble active-float neutral';
+                            text.innerHTML = '<i class="fas fa-eye me-2"></i>MONITORING...';
+                        }
+                    }
+                }, 3500);
+
+            } catch (err) {
+                console.error("Camera access denied", err);
+                alert("Camera access is required for Global Live Sentiment Analysis.");
+                gb.className = 'global-sentiment-bubble negative';
+                tooltip.textContent = 'Camera Blocked';
+                text.className = 'global-sentiment-text text-danger';
+                text.innerHTML = '<i class="fas fa-video-slash me-2"></i>ERROR';
+            }
+        }
+
+        async function markAllNotificationsRead() {
+            try {
+                const response = await fetch('/jobs/api/notifications/read/all/', {
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': getDOMCsrfToken() }
+                });
+                if (response.ok) {
+                    location.reload();
+                }
+            } catch (err) {
+                console.error("Failed to mark notifications as read", err);
+            }
+        }
+    </script>
+    {% include '_neural_assistant.html' %}
+</body>
+</html>

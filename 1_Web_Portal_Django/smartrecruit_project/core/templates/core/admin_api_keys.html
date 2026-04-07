@@ -1,0 +1,143 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}API Key Vault | SmartRecruit Admin{% endblock %}
+
+{% block extra_head %}
+<style>
+  .vault-key-card {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 1.5rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .vault-key-card::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; width: 4px; height: 100%;
+    background: linear-gradient(to bottom, #00d2ff, #3a7bd5);
+  }
+  .key-value-box {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px dashed rgba(255, 255, 255, 0.2);
+    padding: 10px 15px;
+    border-radius: 6px;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 0.9rem;
+    color: #00d2ff;
+  }
+  .input-vault {
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #fff;
+    border-radius: 8px;
+    padding: 12px 20px;
+    width: 100%;
+  }
+  .input-vault:focus {
+    border-color: #00d2ff;
+    outline: none;
+    box-shadow: 0 0 15px rgba(0, 210, 255, 0.2);
+  }
+  .btn-rotate {
+    background: linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%);
+    border: none;
+    color: #fff;
+    padding: 10px 25px;
+    border-radius: 8px;
+    font-weight: 700;
+    transition: all 0.3s ease;
+  }
+  .btn-rotate:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 210, 255, 0.4);
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex" style="min-height:calc(100vh - 72px)">
+  {% include 'core/_admin_sidebar.html' %}
+  <main class="flex-grow-1 p-4 p-lg-5" style="overflow-y: auto;">
+    
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-5">
+      <div>
+        <h1 class="glow-text mb-1" style="font-size:2rem;"><i class="fa-solid fa-key me-2" style="color:#00d2ff;"></i>Secure Key Vault</h1>
+        <p class="text-theme-secondary mb-0">Hardware-Level Encryption • Secure Key Rotation Hub</p>
+      </div>
+    </div>
+
+    <div class="row g-5">
+      <!-- Vault Items -->
+      <div class="col-12 col-xl-7">
+        <h5 class="text-white fw-bold mb-4"><i class="fa-solid fa-lock me-2 text-success"></i>Encrypted Environment Credentials</h5>
+        
+        {% for item in vault_items %}
+        <div class="vault-key-card">
+          <div class="d-flex justify-content-between align-items-start mb-3">
+            <div>
+              <h6 class="text-white fw-bold mb-0">{{ item.service }}</h6>
+              <small class="text-muted">{{ item.desc|default:"Critical dependency for platform modules" }}</small>
+            </div>
+            <span class="badge bg-dark border border-white border-opacity-10 text-theme-secondary px-3 py-2">
+              <i class="fa-solid fa-clock-rotate-left me-1"></i> Rotated: {{ item.last_rotated|date:"M d, Y" }}
+            </span>
+          </div>
+          <div class="d-flex align-items-center gap-3">
+            <div class="key-value-box flex-grow-1">
+              {{ item.masked_key }}
+            </div>
+            <i class="fa-solid fa-shield-halved text-success" title="Encrypted at Database Level"></i>
+          </div>
+        </div>
+        {% empty %}
+        <div class="text-center py-5 text-muted">The vault is currently empty. Initialize keys below.</div>
+        {% endfor %}
+      </div>
+
+      <!-- Rotation Form -->
+      <div class="col-12 col-xl-5">
+        <div class="glass-card p-4 sticky-top" style="top: 20px;">
+          <h5 class="text-white fw-bold mb-4"><i class="fa-solid fa-arrows-rotate me-2 text-warning"></i>Key Rotation Module</h5>
+          
+          <form method="POST">
+            {% csrf_token %}
+            <div class="mb-4">
+              <label class="form-label text-theme-secondary small text-uppercase letter-spacing-1">Service Identifier</label>
+              <select name="service_name" class="input-vault">
+                <option value="TWILIO_AUTH_TOKEN">Twilio Messaging API</option>
+                <option value="SENDGRID_API_KEY">SendGrid Email Relay</option>
+                <option value="GEMINI_API_KEY">Google Gemini AI Engine</option>
+                <option value="STRIPE_SECRET_KEY">Stripe Payments Vault</option>
+                <option value="N8N_WEBHOOK_SECRET">n8n Workflow Secret</option>
+              </select>
+            </div>
+
+            <div class="mb-4">
+              <label class="form-label text-theme-secondary small text-uppercase letter-spacing-1">New API Secret / Key</label>
+              <input type="password" name="api_key" class="input-vault" placeholder="Paste sensitive value here..." required>
+              <small class="text-muted mt-2 d-block"><i class="fa-solid fa-info-circle me-1"></i> Value will be encrypted using Fernet before storage.</small>
+            </div>
+
+            <div class="mb-4">
+              <label class="form-label text-theme-secondary small text-uppercase letter-spacing-1">Description (Optional)</label>
+              <input type="text" name="description" class="input-vault" placeholder="e.g. Master Production Key (Q3 Update)">
+            </div>
+
+            <button type="submit" class="btn-rotate w-100">
+              <i class="fa-solid fa-shield-keyhole me-2"></i>Encrypt & Commit to Vault
+            </button>
+          </form>
+
+          <div class="mt-4 p-3 rounded" style="background: rgba(220, 53, 69, 0.05); border: 1px dashed rgba(220, 53, 69, 0.2);">
+            <p class="small text-danger mb-0"><i class="fa-solid fa-triangle-exclamation me-1"></i> <strong>Critical:</strong> Rotating keys will immediately affect all live candidate pipelines. Ensure the new keys are verified before committing.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+{% endblock %}

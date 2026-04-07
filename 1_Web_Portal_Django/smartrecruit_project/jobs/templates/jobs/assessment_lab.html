@@ -1,0 +1,197 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}AI Assessment Lab | {{ lab.lab_id }}{% endblock %}
+
+{% block content %}
+<style>
+    /* Z-INDEX SAFEGUARDS */
+    .modal { z-index: 2000 !important; }
+    .modal-backdrop { z-index: 1050 !important; }
+
+    .tracking-widest { letter-spacing: 0.15em; }
+    .x-small { font-size: 0.72rem; }
+    .xx-small { font-size: 0.6rem; }
+    .uppercase { text-transform: uppercase; }
+    .italic { font-style: italic; }
+
+    /* Hexagon Icon */
+    .lab-hex-icon {
+        width: 64px; height: 64px;
+        background: rgba(0, 210, 255, 0.1);
+        clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+        border: 1px solid rgba(0, 210, 255, 0.2);
+        flex-shrink: 0;
+    }
+
+    /* Mac-style Window Dots */
+    .dot { width: 10px; height: 10px; border-radius: 50%; }
+    .dot-red { background: #ff5f57; }
+    .dot-yellow { background: #ffbd2e; }
+    .dot-green { background: #27c93f; }
+
+    /* Countdown Timer */
+    #countdown {
+        font-family: 'JetBrains Mono', 'Space Grotesk', monospace;
+        background: linear-gradient(90deg, #0dcaf0, #2979FF);
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        background-clip: text;
+        font-size: 2rem; line-height: 1;
+    }
+    #countdown.danger { background: linear-gradient(90deg, #ff5252, #ff1744); }
+
+    /* Scenario Box — dark glass, NOT light */
+    .scenario-box {
+        background: rgba(13, 202, 240, 0.06);
+        border-left: 3px solid rgba(13, 202, 240, 0.4);
+        border-radius: 0.75rem;
+        padding: 1rem 1.25rem;
+    }
+
+    /* Task Panel */
+    .task-panel {
+        background: rgba(15, 15, 20, 0.6);
+        backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+        border: 1px solid rgba(255,255,255,0.06);
+        border-radius: 1rem;
+    }
+
+    /* Submit Button */
+    .submit-lab-btn {
+        background: linear-gradient(135deg, #0dcaf0, #2979FF);
+        border: none; color: white; font-weight: 700;
+        border-radius: 50rem; padding: 0.75rem 1.5rem;
+        width: 100%;
+        box-shadow: 0 4px 20px rgba(13, 202, 240, 0.3);
+        transition: all 0.25s ease;
+    }
+    .submit-lab-btn:hover { box-shadow: 0 6px 30px rgba(13, 202, 240, 0.5); transform: translateY(-2px); }
+    .submit-lab-btn:disabled { opacity: 0.5; transform: none; }
+</style>
+
+<div class="container-fluid py-4 px-5 fade-up">
+    <!-- ─── Lab Header ─── -->
+    <div class="glass-panel p-4 mb-5 border-info border-opacity-25 shadow-lg" data-aos="fade-down">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-4">
+            <div class="d-flex align-items-center gap-4">
+                <div class="lab-hex-icon d-flex align-items-center justify-content-center">
+                    <i class="fas fa-flask text-info fs-3"></i>
+                </div>
+                <div>
+                    <div class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25 rounded-pill x-small fw-bold tracking-widest uppercase px-3 py-2 mb-2">
+                        <i class="fas fa-circle text-success me-1" style="font-size: 0.5rem; vertical-align: middle;"></i>DYNAMISM: ACTIVE
+                    </div>
+                    <h4 class="fw-bold text-white mb-1" style="font-family: 'Space Grotesk', sans-serif;">Assessment Lab: {{ lab.title }}</h4>
+                    <p class="text-secondary x-small mb-0 uppercase tracking-widest">Session ID: <code class="text-info">{{ lab.lab_id }}</code></p>
+                </div>
+            </div>
+            <div class="text-end">
+                <div id="countdown">45:00</div>
+                <div class="xx-small text-secondary uppercase tracking-widest mt-1"><i class="fas fa-shield-alt me-1 text-success"></i>Safe Environment Active</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ─── Main Split ─── -->
+    <div class="row g-4">
+        <!-- Task Panel (Left) -->
+        <div class="col-lg-4" data-aos="fade-right">
+            <div class="task-panel p-4 h-100 shadow-lg d-flex flex-column">
+                <h6 class="fw-bold text-white mb-4 x-small tracking-widest uppercase border-bottom border-light border-opacity-10 pb-3">
+                    <i class="fas fa-microscope text-warning me-2"></i>Mission Scenario
+                </h6>
+                
+                <!-- Scenario Quote (dark glass, not alert-light) -->
+                <div class="scenario-box mb-4">
+                    <p class="small text-light italic mb-0">"{{ lab.scenario }}"</p>
+                </div>
+
+                <h6 class="fw-bold text-white mb-2 x-small tracking-widest uppercase">Objective:</h6>
+                <p class="small text-secondary mb-4 lh-base">{{ lab.task }}</p>
+
+                <h6 class="fw-bold text-white mb-3 x-small tracking-widest uppercase">Acceptance Criteria:</h6>
+                <ul class="list-unstyled mb-4">
+                    {% for criteria in lab.test_cases %}
+                    <li class="small text-secondary mb-3 d-flex align-items-start gap-2">
+                        <i class="fas fa-check-circle text-info mt-1 flex-shrink-0"></i>
+                        <span>{{ criteria }}</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+
+                <div class="mt-auto pt-4 border-top border-light border-opacity-10">
+                    <button id="submitBtn" class="submit-lab-btn" onclick="handleSubmit()">
+                        <i class="fas fa-paper-plane me-2"></i>Finalize & Submit Lab
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Monaco Editor (Right) -->
+        <div class="col-lg-8" data-aos="fade-up">
+            <div class="glass-panel p-0 h-100 shadow-lg border-info border-opacity-15 overflow-hidden d-flex flex-column" style="border-radius: 1rem;">
+                <!-- Editor Topbar -->
+                <div class="p-3 px-4 border-bottom border-light border-opacity-5 d-flex justify-content-between align-items-center" style="background: rgba(5, 8, 15, 0.9);">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="d-flex gap-1">
+                            <span class="dot dot-red"></span>
+                            <span class="dot dot-yellow"></span>
+                            <span class="dot dot-green"></span>
+                        </div>
+                        <span class="x-small text-muted fw-bold font-monospace">lab_solution.py</span>
+                    </div>
+                    <div class="d-flex align-items-center gap-3">
+                        <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25 rounded-pill x-small fw-bold px-2">Python 3.11</span>
+                        <span class="badge bg-dark border border-secondary border-opacity-25 text-secondary rounded-pill x-small px-2">Monaco Editor</span>
+                    </div>
+                </div>
+                <div id="editor-container" class="flex-grow-1" style="min-height: 580px;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.36.1/min/vs/loader.min.js"></script>
+<script>
+let editor;
+require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.36.1/min/vs' } });
+require(['vs/editor/editor.main'], function () {
+    editor = monaco.editor.create(document.getElementById('editor-container'), {
+        value: `{{ lab.starting_code|safe }}`,
+        language: 'python',
+        theme: 'vs-dark',
+        automaticLayout: true,
+        fontSize: 14,
+        fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
+        fontLigatures: true,
+        minimap: { enabled: false },
+        lineNumbers: 'on',
+        padding: { top: 16 },
+        roundedSelection: true,
+        smoothScrolling: true,
+        cursorBlinking: 'smooth',
+    });
+});
+
+function handleSubmit() {
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-pulse me-2"></i>Encrypting solution...';
+    setTimeout(() => {
+        alert('Lab solution submitted! AI grading in progress.');
+        window.location.href = "{% url 'dashboard' %}";
+    }, 2000);
+}
+
+// Countdown Timer with danger state at 5 minutes
+let timeLeft = 45 * 60;
+const timerEl = document.getElementById('countdown');
+const timerInterval = setInterval(() => {
+    if (timeLeft <= 0) { clearInterval(timerInterval); timerEl.innerText = '00:00'; return; }
+    timeLeft--;
+    const mins = Math.floor(timeLeft / 60);
+    const secs = timeLeft % 60;
+    timerEl.innerText = `${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}`;
+    if (timeLeft <= 300) timerEl.classList.add('danger'); // red at 5 mins
+}, 1000);
+</script>
+{% endblock %}

@@ -1,0 +1,89 @@
+<!-- Dependencies for 3D Graph -->
+<script src="https://unpkg.com/3d-force-graph"></script>
+<script src="https://unpkg.com/three-spritetext"></script>
+
+<div class="container-fluid px-4 mt-4">
+    <!-- ... (rest of the HTML remains same) ... -->
+    <div class="row g-4 mb-4">
+        <!-- Sidebar Controls -->
+        <!-- ... -->
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const gData = {
+            nodes: {{ nodes_json| safe
+    }},
+        links: {{ links_json| safe }}
+        };
+
+    if (!gData.nodes || gData.nodes.length === 0) {
+        document.getElementById('3d-graph').innerHTML = `
+                <div class="d-flex flex-column align-items-center justify-content-center h-100 text-secondary">
+                    <h4 class="fw-bold text-theme mb-1"><i class="fas fa-atom text-info me-2"></i>Skill Universe</h4>
+                    <p>Mapping your professional DNA...</p>
+                    <small class="opacity-50 text-center px-4">Apply for more jobs or update your profile to expand the universe.</small>
+                </div>
+            `;
+        return;
+    }
+
+    const Graph = ForceGraph3D()(document.getElementById('3d-graph'))
+        .graphData(gData)
+        .nodeLabel('id')
+        .nodeAutoColorBy('group')
+        .linkOpacity(0.3)
+        .linkDirectionalParticles(2)
+        .linkDirectionalParticleSpeed(d => Math.random() * 0.01)
+        .backgroundColor('#020205')
+        .nodeThreeObject(node => {
+            const sprite = new SpriteText(node.id);
+            sprite.color = node.group === 0 ? '#ff007b' : '#00d2ff';
+            sprite.textHeight = 8;
+            return sprite;
+        })
+        .onNodeClick(node => {
+            openPanel(node);
+        });
+
+    // Auto-rotate
+    let angle = 0;
+    setInterval(() => {
+        Graph.cameraPosition({
+            x: 400 * Math.sin(angle),
+            z: 400 * Math.cos(angle)
+        });
+        angle += Math.PI / 1200;
+    }, 30);
+    });
+
+    function openPanel(node) {
+        const panel = document.getElementById('skill-detail-panel');
+        document.getElementById('panel-skill-name').innerText = node.id;
+        panel.style.right = '20px';
+    }
+
+    function closePanel() {
+        document.getElementById('skill-detail-panel').style.right = '-400px';
+    }
+</script>
+
+<style>
+    .x-small {
+        font-size: 0.75rem;
+    }
+
+    .xx-small {
+        font-size: 0.6rem;
+    }
+
+    .uppercase {
+        text-transform: uppercase;
+    }
+
+    #3d-graph canvas {
+        border-radius: 12px;
+    }
+</style>
+{% endblock %}

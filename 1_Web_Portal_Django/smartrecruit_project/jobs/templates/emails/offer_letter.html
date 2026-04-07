@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+        body { font-family: 'Inter', -apple-system, sans-serif; background-color: #0a0b10; color: #f8f9fa; margin: 0; padding: 0; }
+        .container { max-width: 600px; margin: 40px auto; background: rgba(255,255,255,0.03); border: 1px solid rgba(0, 242, 255, 0.2); border-radius: 16px; overflow: hidden; }
+        .header { background: linear-gradient(135deg, rgba(0,242,255,0.1), rgba(188,19,254,0.1)); padding: 40px 30px; text-align: center; border-bottom: 1px solid rgba(0, 242, 255, 0.2); }
+        .bolt { font-size: 48px; margin-bottom: 10px; animation: pulse 2s infinite; display: inline-block; }
+        .title { margin: 0; font-size: 24px; font-weight: 800; background: linear-gradient(90deg, #00f2ff, #bc13fe); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .content { padding: 40px 30px; line-height: 1.6; }
+        .highlight-box { background: rgba(0, 242, 255, 0.05); border-left: 4px solid #00f2ff; padding: 20px; margin: 25px 0; border-radius: 0 8px 8px 0; }
+        .btn { display: inline-block; background: linear-gradient(135deg, #00f2ff, #bc13fe); color: #000; text-decoration: none; font-weight: 800; padding: 14px 30px; border-radius: 50px; margin-top: 20px; text-transform: uppercase; letter-spacing: 1px; }
+        .footer { padding: 20px 30px; text-align: center; font-size: 12px; color: rgba(255,255,255,0.4); border-top: 1px solid rgba(255,255,255,0.1); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="bolt">⚡</div>
+            <h1 class="title">Welcome to the Multiverse!</h1>
+        </div>
+        <div class="content">
+            <p>Dear <strong>{{ candidate_name }}</strong>,</p>
+            <p>We are thrilled to inform you that you have cleared all 4 rounds of our <strong>SmartRecruit</strong> process with an exceptional performance. Your AI Sentiment scores and Technical skills have placed you in the top 1% of applicants.</p>
+            
+            <div class="highlight-box">
+                <p style="margin: 0 0 10px 0;"><strong>Role:</strong> {{ job_title }}</p>
+                <p style="margin: 0;"><strong>Company:</strong> {{ company_name }}</p>
+            </div>
+            
+            <p>Please log in to your dashboard to view and sign your digital offer. Welcome aboard!</p>
+            
+            <div style="text-align: center;">
+                <a href="{{ dashboard_url }}" class="btn">View Digital Offer →</a>
+            </div>
+        </div>
+        <div class="footer">
+            Generated securely by SmartRecruit AI Protocol
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,30 @@
+{% extends "emails/base_email.html" %}
+
+{% block title %}Welcome to the Team!{% endblock %}
+
+{% block content %}
+<h2>Congratulations, {{ user.first_name }}!</h2>
+<p>We are thrilled to officially welcome you to the team as our new <strong>{{ job.title }}</strong>.</p>
+
+<div class="info-box">
+    <p>To begin your journey with us, please provide the following documents for verification:</p>
+    <ul>
+        <li>Government Issued ID (PAN / Aadhar)</li>
+        <li>Academic Certificates</li>
+        <li>Previous Employment Relieving Letters</li>
+        <li>Latest Passport Size Photograph</li>
+    </ul>
+</div>
+
+<p>You can upload these documents directly through your candidate dashboard by clicking the button below:</p>
+
+<div style="text-align: center;">
+    <a href="http://127.0.0.1:8000/jobs/dashboard/" class="button">Go to Dashboard</a>
+</div>
+
+<p>If you have any questions, feel free to reply to this email.</p>
+
+<p>Best Regards,<br>
+    <strong>The SmartRecruit Team</strong>
+</p>
+{% endblock %}

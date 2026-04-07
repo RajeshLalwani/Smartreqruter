@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+    body { background-color: #050508; color: #fdfcfb; font-family: 'Inter', Arial, sans-serif; margin: 0; padding: 0; }
+    .container { max-width: 600px; margin: 0 auto; padding: 40px 20px; }
+    .glass-card { background: rgba(15, 15, 20, 0.8); border: 1px solid rgba(255, 193, 7, 0.2); border-radius: 16px; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+    .header { text-align: center; margin-bottom: 30px; }
+    .logo { color: #ffc107; font-weight: bold; font-size: 24px; letter-spacing: -0.5px; }
+    h2 { color: #fff; text-align: center; margin-bottom: 20px; }
+    p { color: #b0bec5; line-height: 1.6; }
+    .btn { display: inline-block; padding: 12px 24px; background: linear-gradient(135deg, #ffc107, #ff5722); color: #fff; text-decoration: none; border-radius: 30px; font-weight: bold; margin-top: 20px; text-align: center; box-shadow: 0 0 15px rgba(255, 87, 34, 0.4); }
+    .footer { text-align: center; margin-top: 40px; color: #455a64; font-size: 12px; }
+</style>
+</head>
+<body>
+<div class="container">
+    <div class="glass-card">
+        <div class="header">
+            <div class="logo">⚡ SmartRecruit AI</div>
+        </div>
+        <h2>Analysis Rendered</h2>
+        <p>Your biometric telemetry and code integrity files have been fully processed by the primary hiring nodes.</p>
+        <p>The neural engine has completed the post-flight evaluation for your recent <strong>{{ job_title }}</strong> session.</p>
+        <div style="text-align: center;">
+            <a href="{{ report_url }}" class="btn">VIEW FULL NEURAL REPORT</a>
+        </div>
+    </div>
+    <div class="footer">
+        &copy; 2026 SmartRecruit Systems. Trust but Verify.
+    </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,153 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Job Market Intelligence | SmartRecruit{% endblock %}
+
+{% block content %}
+<style>
+    /* Z-INDEX SAFEGUARDS */
+    .modal { z-index: 2000 !important; }
+    .modal-backdrop { z-index: 1050 !important; }
+    .tracking-widest { letter-spacing: 0.15em; }
+    .x-small { font-size: 0.75rem; }
+
+    /* Search inputs */
+    .sv-input {
+        background: rgba(255,255,255,0.05) !important;
+        color: var(--text-color, #e2e8f0) !important;
+        border: 1px solid rgba(255,255,255,0.12) !important;
+        border-radius: 0.5rem;
+        transition: border-color 0.2s ease;
+    }
+    .sv-input:focus { border-color: rgba(0,176,255,0.5) !important; box-shadow: 0 0 0 3px rgba(0,176,255,0.1) !important; outline: none; }
+
+    /* Skill bars */
+    .skill-bar-track { height: 8px; border-radius: 6px; background: rgba(255,255,255,0.05); overflow: hidden; flex: 1; }
+    .skill-bar-fill { height: 100%; border-radius: 6px; background: linear-gradient(90deg, #2979FF, #00B0FF); transition: width 1s ease; }
+
+    /* Emerging skill row */
+    .emerging-row { background: rgba(255,152,0,0.05); border: 1px solid rgba(255,152,0,0.15); border-radius: 0.6rem; padding: 0.6rem 0.75rem; }
+
+    /* Insight row */
+    .insight-row { background: rgba(0,200,83,0.04); border: 1px solid rgba(0,200,83,0.1); border-radius: 0.6rem; padding: 0.75rem 1rem; }
+</style>
+
+<div class="container-fluid px-4 mt-4 fade-up">
+
+    <!-- ─── Hero ─── -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-5 gap-3" data-aos="fade-down">
+        <div>
+            <div class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25 px-3 py-2 rounded-pill mb-3 tracking-widest text-uppercase x-small fw-bold">
+                <i class="fas fa-globe me-2"></i>Live Market Data
+            </div>
+            <h1 class="display-6 fw-bold text-white mb-2" style="font-family: 'Space Grotesk', sans-serif;">Job Market <span style="background: linear-gradient(90deg, #00B0FF, #2979FF); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">Intelligence</span></h1>
+            <p class="lead text-secondary mb-0">Real-time AI-powered market insights for any role and location.</p>
+        </div>
+    </div>
+
+    <!-- ─── Search Form ─── -->
+    <div class="glass-panel p-4 mb-5 rounded-4 border-info border-opacity-25" data-aos="fade-up">
+        <form method="get" class="d-flex gap-3 flex-wrap align-items-end mb-3">
+            <div class="flex-grow-1">
+                <label class="form-label x-small text-secondary fw-bold tracking-widest text-uppercase mb-1">Role</label>
+                <input name="role" class="form-control sv-input" value="{{ role }}" placeholder="e.g. Data Scientist">
+            </div>
+            <div style="min-width: 180px;">
+                <label class="form-label x-small text-secondary fw-bold tracking-widest text-uppercase mb-1">Location</label>
+                <input name="location" class="form-control sv-input" value="{{ location }}" placeholder="e.g. Bangalore">
+            </div>
+            <button type="submit" class="btn btn-info rounded-pill px-4 fw-bold hover-scale" style="color: #000;">
+                <i class="fas fa-search me-2"></i>Analyse Market
+            </button>
+        </form>
+        <!-- Popular Role Shortcuts -->
+        <div class="d-flex flex-wrap gap-2">
+            {% for r in popular_roles %}
+            <a href="?role={{ r }}&location={{ location }}" class="badge rounded-pill px-3 py-2 text-decoration-none hover-scale" style="background: rgba(0,176,255,0.1); color: #80d8ff; font-size: 0.72rem; border: 1px solid rgba(0,176,255,0.2);">{{ r }}</a>
+            {% endfor %}
+        </div>
+    </div>
+
+    {% if data %}
+    <!-- ─── Stat Cards ─── -->
+    <div class="row g-3 mb-5" data-aos="fade-up">
+        <div class="col-md-3">
+            <div class="glass-panel p-4 text-center rounded-4 border-info border-opacity-25 hover-scale">
+                <div class="fw-bold text-info" style="font-size: 2.5rem; font-family: 'Space Grotesk', sans-serif;">{{ data.demand_score }}</div>
+                <div class="x-small text-secondary fw-bold tracking-widest text-uppercase mt-1">Demand Score</div>
+                <div class="progress mt-2" style="height: 5px; background: rgba(255,255,255,0.06); border-radius: 4px;">
+                    <div class="progress-bar bg-info" style="width: {{ data.demand_score }}%; border-radius: 4px;"></div>
+                </div>
+                <span class="badge rounded-pill px-2 mt-2 x-small" style="background: rgba(0,176,255,0.12); color: #80d8ff; border: 1px solid rgba(0,176,255,0.2);">{{ data.demand_trend }}</span>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="glass-panel p-4 text-center rounded-4 border-success border-opacity-25 hover-scale">
+                <div class="fw-bold text-success" style="font-size: 2rem; font-family: 'Space Grotesk', sans-serif;">{{ data.salary_range }}</div>
+                <div class="x-small text-secondary fw-bold tracking-widest text-uppercase mt-1">Salary Range (LPA)</div>
+                <div class="text-info x-small mt-2">Avg: ₹{{ data.avg_salary_lpa }} LPA</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="glass-panel p-4 text-center rounded-4 border-warning border-opacity-25 hover-scale">
+                <div class="fw-bold text-warning" style="font-size: 2rem; font-family: 'Space Grotesk', sans-serif;">+{{ data.growth_rate_percent }}%</div>
+                <div class="x-small text-secondary fw-bold tracking-widest text-uppercase mt-1">YoY Growth</div>
+                <div class="text-secondary x-small mt-2">{{ data.job_openings_estimate }} openings</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="glass-panel p-4 text-center rounded-4 border-primary border-opacity-25 hover-scale">
+                <div class="fw-bold text-primary" style="font-size: 2rem; font-family: 'Space Grotesk', sans-serif;">{{ data.remote_percentage }}%</div>
+                <div class="x-small text-secondary fw-bold tracking-widest text-uppercase mt-1">Remote / Hybrid</div>
+                <div class="text-secondary x-small mt-2">Competition: {{ data.competition_level }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ─── Skills + Companies ─── -->
+    <div class="row g-4 mb-5" data-aos="fade-up" data-aos-delay="100">
+        <div class="col-md-6">
+            <div class="glass-panel p-4 h-100 rounded-4 border-secondary border-opacity-25">
+                <h6 class="fw-bold text-white mb-4 x-small tracking-widest text-uppercase border-bottom border-light border-opacity-10 pb-3"><i class="fas fa-fire text-danger me-2"></i>Top In-Demand Skills</h6>
+                {% for sk in data.top_skills_in_demand %}
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <div class="skill-bar-track">
+                        <div class="skill-bar-fill" style="width: {% widthratio forloop.counter 1 8 %}%;"></div>
+                    </div>
+                    <span class="x-small text-white fw-semibold" style="min-width: 130px;">{{ sk }}</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="glass-panel p-4 h-100 rounded-4 border-secondary border-opacity-25">
+                <h6 class="fw-bold text-white mb-4 x-small tracking-widest text-uppercase border-bottom border-light border-opacity-10 pb-3"><i class="fas fa-rocket text-warning me-2"></i>Emerging Skills (Future-Proof)</h6>
+                {% for sk in data.emerging_skills %}
+                <div class="emerging-row d-flex align-items-center gap-2 mb-2">
+                    <i class="fas fa-star text-warning flex-shrink-0" style="font-size: 0.75rem;"></i>
+                    <span class="x-small text-white">{{ sk }}</span>
+                    <span class="badge bg-warning text-dark ms-auto rounded-pill px-2" style="font-size: 0.6rem;">Emerging</span>
+                </div>
+                {% endfor %}
+                <h6 class="fw-bold text-white mb-3 mt-4 x-small tracking-widest text-uppercase border-bottom border-light border-opacity-10 pb-3"><i class="fas fa-building text-primary me-2"></i>Top Hiring Companies</h6>
+                <div class="d-flex flex-wrap gap-2">
+                    {% for co in data.top_hiring_companies %}
+                    <span class="badge rounded-pill px-3 py-2" style="background: rgba(41,121,255,0.1); color: #82b1ff; font-size: 0.72rem; border: 1px solid rgba(41,121,255,0.2);">{{ co }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ─── Market Insights ─── -->
+    <div class="glass-panel p-4 rounded-4 border-success border-opacity-25" data-aos="fade-up" data-aos-delay="150">
+        <h6 class="fw-bold text-white mb-4 x-small tracking-widest text-uppercase border-bottom border-light border-opacity-10 pb-3"><i class="fas fa-lightbulb text-success me-2"></i>Market Insights</h6>
+        {% for insight in data.insights %}
+        <div class="insight-row d-flex gap-3 mb-2">
+            <i class="fas fa-chart-line text-success flex-shrink-0 mt-1"></i>
+            <span class="small text-white">{{ insight }}</span>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

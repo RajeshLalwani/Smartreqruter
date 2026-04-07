@@ -1,0 +1,724 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="botanist-container">
+    <!-- Header Section -->
+    <div class="botanist-header">
+        <h1 class="glow-text"><i class="fas fa-seedling"></i> The Botanist</h1>
+        <p class="subtitle">AI Behavioral Pre-Screening • Session Active</p>
+    </div>
+
+    <!-- AI Avatar / Visualizer Section -->
+    <div class="visualizer-container">
+        <div class="ai-avatar-circle">
+            <canvas id="neuralWave"></canvas>
+            <div class="ai-status-orb" id="statusOrb"></div>
+        </div>
+        <div class="interaction-status" id="interactionStatus">Initializing Systems...</div>
+    </div>
+
+    <!-- Transcript Feed (Glassmorphism) -->
+    <div class="transcript-section">
+        <div class="glass-card transcript-card">
+            <div class="card-header">
+                <span><i class="fas fa-comment-dots"></i> Live Transcript Feed</span>
+                <span class="recording-indicator" id="recIndicator"></span>
+            </div>
+            <div class="transcript-body" id="transcriptBody">
+                <p class="system-msg">Connecting to Botanist core intelligence...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="botanist-controls">
+        <button id="startBtn" class="premium-btn cyan-btn">
+            <i class="fas fa-microphone"></i> Ready to Talk?
+        </button>
+        <button id="stopBtn" class="premium-btn red-btn d-none">
+            <i class="fas fa-stop-circle"></i> End Session
+        </button>
+    </div>
+    
+    <!-- Hidden webcam for silent sentiment analysis -->
+    <video id="webcam" autoplay playsinline muted class="d-none"></video>
+    
+    <!-- 🔱 SENTINEL AI PROCTORING HUD 🔱 -->
+    <div id="ai-sentinel" class="sentinel-bubble d-none">
+        <div class="sentinel-header">
+            <span class="pulse-dot"></span> SENTINEL LIVE MONITOR
+        </div>
+        
+        <div class="stats-grid">
+            <div class="stat-item">
+                <span class="label">Vocal Energy</span>
+                <span id="stat-emotion" class="value text-info">READY</span>
+            </div>
+            <div class="stat-item">
+                <span class="label">Sentiment</span>
+                <div class="sentinel-progress"><div id="bar-confidence" class="sentinel-bar" style="width: 0%"></div></div>
+            </div>
+            <div class="stat-item">
+                <span class="label">Attention</span>
+                <span id="stat-attention" class="value text-success">HIGH</span>
+            </div>
+            <div class="stat-item">
+                <span class="label">Stress</span>
+                <span id="stat-stress" class="value text-warning">LOW</span>
+            </div>
+        </div>
+
+        <div id="sentinel-alert" class="sentinel-alert">
+            <i class="fas fa-biohazard me-2"></i><span id="alert-msg">MOBILE DETECTED</span>
+        </div>
+    </div>
+
+    <!-- AI VISION STATUS (IMAGE REFERENCE) -->
+    <div style="position: fixed; bottom: 30px; left: 30px; z-index: 1000;">
+        <button id="vision-toggle-btn" class="vision-toggle" onclick="toggleVision()">
+            <i id="vision-icon" class="fas fa-video"></i>
+            <span id="vision-text">AI VISION: ON</span>
+        </button>
+    </div>
+</div>
+
+<!-- Ready to Talk Modal -->
+<div class="botanist-modal-overlay d-none" id="permissionModal">
+    <div class="glass-card modal-card">
+        <h2>System Check</h2>
+        <p>The Botanist is ready to begin your behavioral assessment. We require microphone and camera access.</p>
+        <div class="modal-actions">
+            <button class="premium-btn cyan-btn" id="allowMicBtn">Grant Access & Begin</button>
+        </div>
+    </div>
+</div>
+
+<style>
+    :root {
+        --midnight-dark: #0a0b10;
+        --electric-cyan: #00d2ff;
+        --glass-bg: rgba(255, 255, 255, 0.05);
+        --glass-border: rgba(255, 255, 255, 0.1);
+    }
+
+    .botanist-container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 40px 20px;
+        text-align: center;
+        color: #fff;
+    }
+
+    .glow-text {
+        font-size: 2.5rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        background: linear-gradient(90deg, #fff, var(--electric-cyan));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 5px;
+        filter: drop-shadow(0 0 10px rgba(0, 210, 255, 0.5));
+    }
+
+    .visualizer-container {
+        position: relative;
+        margin: 50px auto;
+        width: 300px;
+        height: 300px;
+    }
+
+    .ai-avatar-circle {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(0, 210, 255, 0.1) 0%, transparent 70%);
+        border: 2px solid var(--glass-border);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+    }
+
+    #neuralWave {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+    }
+
+    .ai-status-orb {
+        width: 20px;
+        height: 20px;
+        background: var(--electric-cyan);
+        border-radius: 50%;
+        box-shadow: 0 0 20px var(--electric-cyan);
+        z-index: 10;
+        transition: all 0.3s ease;
+    }
+
+    .ai-status-orb.speaking {
+        animation: pulse-cyan 1.5s infinite;
+    }
+
+    @keyframes pulse-cyan {
+        0% { transform: scale(1); box-shadow: 0 0 20px var(--electric-cyan); }
+        50% { transform: scale(1.5); box-shadow: 0 0 40px var(--electric-cyan); }
+        100% { transform: scale(1); box-shadow: 0 0 20px var(--electric-cyan); }
+    }
+
+    /* 🔱 ADVANCED SENTINEL SUITE FOR BOTANIST 🔱 */
+    .sentinel-bubble {
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        z-index: 1000;
+        width: 250px;
+        background: rgba(10, 11, 20, 0.85); /* Midnight Glass */
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(0, 210, 255, 0.4);
+        border-radius: 12px;
+        padding: 15px;
+        box-shadow: 0 0 40px rgba(0, 0, 0, 0.8), 0 0 20px rgba(0, 210, 255, 0.1) inset;
+        font-family: 'JetBrains Mono', monospace;
+        transition: all 0.4s ease;
+        text-align: left;
+    }
+
+    .sentinel-header {
+        font-size: 0.65rem;
+        font-weight: 800;
+        color: var(--electric-cyan);
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .pulse-dot {
+        width: 6px; height: 6px;
+        background: var(--electric-cyan);
+        border-radius: 50%;
+        animation: blink 1s step-end infinite;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+    }
+
+    .stat-item { display: flex; flex-direction: column; gap: 4px; }
+    .stat-item .label { font-size: 0.55rem; color: rgba(255,255,255,0.4); text-transform: uppercase; font-weight: bold; }
+    .stat-item .value { font-size: 0.8rem; font-weight: 700; color: #fff; }
+
+    .sentinel-progress {
+        height: 4px;
+        background: rgba(255,255,255,0.1);
+        border-radius: 2px;
+        margin-top: 4px;
+    }
+    .sentinel-bar {
+        height: 100%;
+        background: var(--electric-cyan);
+        transition: width 0.8s ease;
+    }
+
+    .sentinel-alert {
+        margin-top: 15px;
+        background: rgba(255, 49, 49, 0.15);
+        border: 1px solid #ff5252;
+        color: #ff5252;
+        padding: 8px;
+        border-radius: 6px;
+        font-size: 0.65rem;
+        font-weight: 900;
+        text-align: center;
+        display: none;
+        animation: flash 0.6s infinite;
+    }
+
+    .vision-toggle {
+        background: rgba(0, 0, 0, 0.8);
+        border: 1px solid rgba(0, 210, 255, 0.6);
+        color: var(--electric-cyan);
+        border-radius: 50px;
+        padding: 6px 16px;
+        font-size: 0.7rem;
+        font-weight: 800;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .vision-toggle.off {
+        border-color: rgba(255, 255, 255, 0.2);
+        color: rgba(255, 255, 255, 0.5);
+    }
+
+    @keyframes flash { 50% { opacity: 0.4; } }
+
+    .interaction-status {
+        margin-top: 20px;
+        font-family: 'Space Mono', monospace;
+        color: var(--electric-cyan);
+        font-size: 0.9rem;
+    }
+
+    .transcript-section {
+        margin-top: 40px;
+    }
+
+    .glass-card {
+        background: var(--glass-bg);
+        backdrop-filter: blur(15px);
+        border: 1px solid var(--glass-border);
+        border-radius: 20px;
+        padding: 25px;
+        text-align: left;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+    }
+
+    .transcript-card {
+        height: 300px;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 0.5px solid var(--glass-border);
+        padding-bottom: 10px;
+        margin-bottom: 15px;
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.7);
+    }
+
+    .recording-indicator {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: #ff5252;
+        display: none;
+        animation: blink 1s infinite;
+    }
+
+    @keyframes blink {
+        0% { opacity: 1; }
+        50% { opacity: 0.3; }
+        100% { opacity: 1; }
+    }
+
+    .transcript-body {
+        flex: 1;
+        overflow-y: auto;
+        font-family: 'Inter', sans-serif;
+        line-height: 1.6;
+    }
+
+    .bot-msg { color: var(--electric-cyan); font-weight: 500; margin-bottom: 12px; }
+    .user-msg { color: #fff; margin-bottom: 12px; opacity: 0.9; }
+    .system-msg { color: rgba(255, 255, 255, 0.4); font-size: 0.85rem; font-style: italic; }
+
+    .botanist-controls {
+        margin-top: 30px;
+    }
+
+    .premium-btn {
+        padding: 12px 30px;
+        border-radius: 30px;
+        border: none;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .cyan-btn {
+        background: var(--electric-cyan);
+        color: #000;
+        box-shadow: 0 0 20px rgba(0, 210, 255, 0.4);
+    }
+
+    .cyan-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 0 30px rgba(0, 210, 255, 0.6);
+    }
+
+    .red-btn {
+        background: #ff5252;
+        color: #fff;
+    }
+
+    /* Modal Styling */
+    .botanist-modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        z-index: 1000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .modal-card {
+        max-width: 450px;
+        text-align: center;
+    }
+
+    .modal-card h2 { margin-bottom: 15px; color: var(--electric-cyan); }
+    .modal-card p { margin-bottom: 25px; color: rgba(255, 255, 255, 0.8); }
+
+    .d-none { display: none !important; }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const startBtn = document.getElementById('startBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const permissionModal = document.getElementById('permissionModal');
+        const allowMicBtn = document.getElementById('allowMicBtn');
+        const interactionStatus = document.getElementById('interactionStatus');
+        const transcriptBody = document.getElementById('transcriptBody');
+        const recIndicator = document.getElementById('recIndicator');
+        const statusOrb = document.getElementById('statusOrb');
+
+        const canvas = document.getElementById('neuralWave');
+        const ctx = canvas.getContext('2d');
+        let audioContext, analyser, dataArray;
+        let animationId;
+
+        // Interview State
+        let recognition;
+        let isInterviewActive = false;
+        let currentTranscript = "";
+        let fullTranscript = "";
+        let interviewId = "{{ interview.id }}";
+        
+        // --- SPEECH RECOGNITION (STT) ---
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (SpeechRecognition) {
+            recognition = new SpeechRecognition();
+            recognition.continuous = true;
+            recognition.interimResults = true;
+            recognition.lang = 'en-US';
+
+            recognition.onstart = () => {
+                recIndicator.style.display = 'block';
+                interactionStatus.innerText = "Listening...";
+                statusOrb.classList.remove('speaking');
+            };
+
+            recognition.onresult = (event) => {
+                let interimTranscript = '';
+                for (let i = event.resultIndex; i < event.results.length; ++i) {
+                    if (event.results[i].isFinal) {
+                        currentTranscript += event.results[i][0].transcript;
+                        addTranscriptMessage(event.results[i][0].transcript, 'user');
+                        processUserResponse(event.results[i][0].transcript);
+                    } else {
+                        interimTranscript += event.results[i][0].transcript;
+                    }
+                }
+            };
+
+            recognition.onerror = (event) => {
+                console.error("STT Error:", event.error);
+                interactionStatus.innerText = "STT Error: " + event.error;
+            };
+
+            recognition.onend = () => {
+                if (isInterviewActive) recognition.start(); // Keep listening
+            };
+        }
+
+        // --- SPEECH SYNTHESIS (TTS) ---
+        function speak(text) {
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.rate = 1.0;
+            utterance.pitch = 1.1; // Slightly higher for "The Botanist" persona
+            
+            utterance.onstart = () => {
+                statusOrb.classList.add('speaking');
+                interactionStatus.innerText = "The Botanist is speaking...";
+                addTranscriptMessage(text, 'bot');
+            };
+
+            utterance.onend = () => {
+                statusOrb.classList.remove('speaking');
+                interactionStatus.innerText = "Waiting for you...";
+            };
+
+            window.speechSynthesis.speak(utterance);
+        }
+
+        // --- VISUALIZER & CHUNK CAPTURE ---
+        function initVisualizer(stream) {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const source = audioContext.createMediaStreamSource(stream);
+            analyser = audioContext.createAnalyser();
+            analyser.fftSize = 256;
+            source.connect(analyser);
+            dataArray = new Uint8Array(analyser.frequencyBinCount);
+            
+            draw();
+
+            // --- Phase 13: Web Audio API Chunk Capture ---
+            const mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+            mediaRecorder.ondataavailable = async (e) => {
+                if (e.data.size > 0 && isInterviewActive) {
+                    const arrayBuffer = await e.data.arrayBuffer();
+                    fetch('/api/analyze-vocal-confidence/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/octet-stream',
+                            'X-CSRFToken': '{{ csrf_token }}',
+                            'X-Interview-Id': interviewId,
+                            'X-Transcript': currentTranscript // Send recent transcript for Sentiment-from-Tone
+                        },
+                        body: arrayBuffer
+                    }).catch(err => console.error("Audio feed error:", err));
+                    currentTranscript = ""; // Reset for next chunk
+                }
+            };
+            mediaRecorder.start(3000); // Capture chunks every 3 seconds
+        }
+
+        function draw() {
+            animationId = requestAnimationFrame(draw);
+            analyser.getByteFrequencyData(dataArray);
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = '#00d2ff';
+            ctx.beginPath();
+
+            const sliceWidth = canvas.width * 1.0 / dataArray.length;
+            let x = 0;
+
+            for (let i = 0; i < dataArray.length; i++) {
+                const v = dataArray[i] / 128.0;
+                const y = v * canvas.height / 2;
+
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+
+                x += sliceWidth;
+            }
+            ctx.lineTo(canvas.width, canvas.height / 2);
+            ctx.stroke();
+        }
+
+        // --- INTERVIEW LOGIC ---
+        function addTranscriptMessage(text, type) {
+            const p = document.createElement('p');
+            p.className = type === 'user' ? 'user-msg' : 'bot-msg';
+            p.innerHTML = (type === 'user' ? '<strong>You:</strong> ' : '<strong>Botanist:</strong> ') + text;
+            transcriptBody.appendChild(p);
+            transcriptBody.scrollTop = transcriptBody.scrollHeight;
+            
+            if (type === 'user') fullTranscript += "Candidate: " + text + "\n";
+            else fullTranscript += "Botanist: " + text + "\n";
+        }
+
+        async function processUserResponse(text) {
+            interactionStatus.innerText = "Analyzing response...";
+            try {
+                const response = await fetch('/jobs/botanist-process/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify({
+                        text: text,
+                        interview_id: interviewId,
+                        history: fullTranscript
+                    })
+                });
+                const data = await response.json();
+                if (data.reply) {
+                    speak(data.reply);
+                }
+            } catch (err) {
+                console.error("AI Error:", err);
+            }
+        }
+
+        // --- EVENT HANDLERS ---
+        startBtn.onclick = () => {
+            permissionModal.classList.remove('d-none');
+        };
+
+        allowMicBtn.onclick = async () => {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                permissionModal.classList.add('d-none');
+                startBtn.classList.add('d-none');
+                stopBtn.classList.remove('d-none');
+                
+                isInterviewActive = true;
+                
+                // Assign video stream silently for Sentiment AI
+                const videoElement = document.getElementById('webcam');
+                videoElement.srcObject = stream;
+                
+                initVisualizer(stream);
+                if (recognition) recognition.start();
+                initBotanistSentimentAI();
+                
+                // Initial Greeting
+                setTimeout(() => {
+                    speak("Hello. I am The Botanist. I'll be conducting your behavioral pre-screening today. Tell me, how do you handle high-pressure situations in a collaborative environment?");
+                }, 1000);
+
+            } catch (err) {
+                alert("Microphone access is required for this session.");
+            }
+        };
+
+        stopBtn.onclick = async () => {
+            isInterviewActive = false;
+            if (recognition) recognition.stop();
+            cancelAnimationFrame(animationId);
+            window.speechSynthesis.cancel();
+            
+            interactionStatus.innerText = "Session complete. Generating evaluation...";
+            
+            // Finalize Session
+            await fetch('/jobs/botanist-finalize/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({
+                    interview_id: interviewId,
+                    full_transcript: fullTranscript
+                })
+            });
+            
+            window.location.href = "/jobs/interview-complete/" + interviewId + "/";
+        };
+
+        // --- SENTINEL AI PROCTORING ---
+        const sentinelBubble = document.getElementById('ai-sentinel');
+        const statEmotion = document.getElementById('stat-emotion');
+        const barConfidence = document.getElementById('bar-confidence');
+        const statAttention = document.getElementById('stat-attention');
+        const statStress = document.getElementById('stat-stress');
+        const sentinelAlert = document.getElementById('sentinel-alert');
+        const alertMsg = document.getElementById('alert-msg');
+        
+        let isVisionOn = true;
+        let cheatCounter = 0;
+
+        window.toggleVision = function() {
+            isVisionOn = !isVisionOn;
+            const btn = document.getElementById('vision-toggle-btn');
+            const icon = document.getElementById('vision-icon');
+            const text = document.getElementById('vision-text');
+            if (isVisionOn) {
+                btn.classList.remove('off');
+                icon.className = 'fas fa-video';
+                text.innerText = 'AI VISION: ON';
+            } else {
+                btn.classList.add('off');
+                icon.className = 'fas fa-video-slash';
+                text.innerText = 'AI VISION: OFF';
+                clearSentinelAlert();
+            }
+        }
+
+        function triggerSentinelAlert(msg, level='HIGH') {
+            sentinelAlert.style.display = 'block';
+            alertMsg.innerText = msg;
+            sentinelBubble.style.borderColor = '#ff5252';
+            
+            if (level === 'CRITICAL') {
+                cheatCounter++;
+                if (cheatCounter > 15) { // ~5 seconds
+                    interactionStatus.innerText = "CRITICAL VIOLATION: SUBMITTING SESSION...";
+                    interactionStatus.className = "interaction-status text-danger fw-bold blink";
+                    setTimeout(() => { stopBtn.click(); }, 3000);
+                }
+            }
+        }
+
+        function clearSentinelAlert() {
+            sentinelAlert.style.display = 'none';
+            sentinelBubble.style.borderColor = 'rgba(0, 210, 255, 0.4)';
+            cheatCounter = 0;
+            if (interactionStatus.className.includes('text-danger')) {
+                interactionStatus.innerText = "Interruption cleared. Continuing...";
+                interactionStatus.className = "interaction-status";
+            }
+        }
+
+        function initBotanistSentimentAI() {
+            const video = document.getElementById('webcam');
+            
+            setInterval(async () => {
+                if (!isInterviewActive || !isVisionOn || video.readyState !== 4) return;
+                
+                const sCanvas = document.createElement('canvas');
+                sCanvas.width = video.videoWidth;
+                sCanvas.height = video.videoHeight;
+                sCanvas.getContext('2d').drawImage(video, 0, 0, sCanvas.width, sCanvas.height);
+                const frameBase64 = sCanvas.toDataURL('image/jpeg', 0.6);
+                
+                try {
+                    const response = await fetch("{% url 'process_sentiment_stream' application.id %}", {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': '{{ csrf_token }}'
+                        },
+                        body: JSON.stringify({ frame_base64: frameBase64 })
+                    });
+                    
+                    const data = await response.json();
+                    if (data.status === 'success') {
+                        sentinelBubble.classList.remove('d-none');
+                        
+                        const emotionMap = {
+                            'happy': { i: 'fa-smile', c: '#00C853', label: 'POSITIVE' },
+                            'neutral': { i: 'fa-meh', c: '#00d2ff', label: 'NEUTRAL' },
+                            'angry': { i: 'fa-angry', c: '#ff5252', label: 'STRESSED' },
+                            'multiple_faces': { label: 'MULTI-FACE', c: '#ff5252', alert: true },
+                            'mobile_phone': { label: 'MOBILE DETECTED', c: '#ff5252', alert: true, critical: true }
+                        };
+
+                        if (data.violations && data.violations.length > 0) {
+                            const viol = data.violations[0];
+                            if (viol.includes('MOBILE')) triggerSentinelAlert("MOBILE DETECTED", "CRITICAL");
+                            else if (viol.includes('FACE')) triggerSentinelAlert("MULTIPLE FACES", "HIGH");
+                        } else {
+                            clearSentinelAlert();
+                        }
+
+                        statEmotion.innerText = (data.emotion || 'NEUTRAL').toUpperCase();
+                        barConfidence.style.width = `${data.score || 0}%`;
+                        
+                        statAttention.innerText = data.attention_score > 70 ? "HIGH" : (data.attention_score > 30 ? "MED" : "LOW");
+                        statAttention.className = `value ${data.attention_score > 70 ? 'text-success' : 'text-warning'}`;
+                        
+                        const stressVal = Math.round(data.stress_estimate || 20);
+                        statStress.innerText = stressVal > 60 ? "HIGH" : (stressVal > 30 ? "MED" : "LOW");
+                        statStress.className = `value ${stressVal > 60 ? 'text-danger' : (stressVal > 30 ? 'text-warning' : 'text-success')}`;
+                    }
+                } catch (e) { console.warn("Sentinel heartbeat missed."); }
+            }, 3500); 
+        }
+    });
+</script>
+{% endblock %}

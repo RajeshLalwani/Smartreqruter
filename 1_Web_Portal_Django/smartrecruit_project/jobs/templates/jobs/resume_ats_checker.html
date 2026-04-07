@@ -1,0 +1,160 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Resume ATS Checker | SmartRecruit{% endblock %}
+{% block content %}
+<div class="container-fluid px-4 mt-4">
+
+    <div class="glass-panel p-4 mb-4"
+        style="background:linear-gradient(135deg,rgba(0,176,255,0.1),rgba(41,121,255,0.08));border:1px solid rgba(0,176,255,0.25);">
+        <h2 class="fw-bold text-theme mb-1"><i class="fas fa-file-search text-info me-2"></i>Resume ATS Checker</h2>
+        <p class="text-muted mb-0">Instantly score your resume against any job — fix ATS issues before applying</p>
+    </div>
+
+    <div class="row g-4">
+        <!-- Input -->
+        <div class="col-lg-5">
+            <div class="glass-panel p-4">
+                <form method="post">
+                    {% csrf_token %}
+                    <h6 class="fw-bold text-theme mb-3"><i class="fas fa-briefcase text-primary me-2"></i>Target Job
+                    </h6>
+                    <select name="job_id" class="form-select form-select-sm mb-4"
+                        style="background:rgba(255,255,255,0.05);color:var(--text-color);border:1px solid rgba(255,255,255,0.12);">
+                        <option value="">— Generic ATS Check —</option>
+                        {% for job in jobs %}
+                        <option value="{{ job.id }}">{{ job.title }}</option>
+                        {% endfor %}
+                    </select>
+
+                    <h6 class="fw-bold text-theme mb-2"><i class="fas fa-file-alt text-info me-2"></i>Paste Your Resume
+                        Text</h6>
+                    <p class="text-muted small mb-2">Copy-paste your resume content (plain text, no formatting needed)
+                    </p>
+                    <textarea name="resume_text" class="form-control" rows="14"
+                        placeholder="Paste your resume text here…&#10;&#10;JOHN DOE&#10;john@example.com | +91-XXXXXXXXXX&#10;&#10;EXPERIENCE&#10;Data Scientist at XYZ Corp (2022-Present)&#10;- Built ML models…&#10;&#10;EDUCATION&#10;B.Tech Computer Science…&#10;&#10;SKILLS&#10;Python, SQL, Machine Learning, TensorFlow…"
+                        style="background:rgba(255,255,255,0.04);color:var(--text-color);border:1px solid rgba(255,255,255,0.1);resize:vertical;font-size:0.85rem;font-family:monospace;">{% if result %}{{ result.resume_text|default:'' }}{% endif %}</textarea>
+                    <button type="submit" class="btn btn-info w-100 mt-3 rounded-pill fw-bold text-dark">
+                        <i class="fas fa-search me-2"></i>Check ATS Score
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Results -->
+        <div class="col-lg-7">
+            {% if result %}
+
+            <!-- Score Cards -->
+            <div class="row g-3 mb-4">
+                {% for label, score, color in scores_list %}
+                <div class="col-6 col-md-3">
+                    <div class="glass-panel p-3 text-center">
+                        <div class="fw-bold text-{{ color }}" style="font-size:1.6rem;">{{ score }}</div>
+                        <div class="small text-muted">{{ label }}</div>
+                        <div class="progress mt-2" style="height:4px;">
+                            <div class="progress-bar bg-{{ color }}" style="width:{{ score }}%;"></div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Verdict Banner -->
+            <div class="glass-panel p-3 mb-4 d-flex align-items-center gap-3"
+                style="border-left:4px solid {% if result.ats_score >= 75 %}#00C853{% elif result.ats_score >= 50 %}#FF6D00{% else %}#FF4444{% endif %};">
+                <i
+                    class="fas fa-{% if result.ats_score >= 75 %}check-circle text-success{% elif result.ats_score >= 50 %}exclamation-circle text-warning{% else %}times-circle text-danger{% endif %} fa-2x flex-shrink-0"></i>
+                <div>
+                    <div class="fw-bold text-theme">{{ result.verdict }}</div>
+                    <div class="small text-muted">ATS score: {{ result.ats_score }}/100</div>
+                </div>
+            </div>
+
+            <div class="row g-3 mb-3">
+                <!-- Sections Found/Missing -->
+                <div class="col-md-6">
+                    <div class="glass-panel p-3 h-100">
+                        <h6 class="fw-bold text-success mb-2"><i class="fas fa-check me-1"></i>Sections Found</h6>
+                        {% for s in result.sections_found %}
+                        <span class="badge rounded-pill me-1 mb-1 px-3"
+                            style="background:rgba(0,200,83,0.12);border:1px solid rgba(0,200,83,0.3);color:#69f0ae;">{{                             s }}</span>
+                        {% empty %}<span class="text-muted small">None detected</span>{% endfor %}
+                        {% if result.sections_missing %}
+                        <hr class="my-2" style="border-color:rgba(255,255,255,0.06);">
+                        <h6 class="fw-bold text-danger mb-2 small"><i class="fas fa-times me-1"></i>Missing Sections
+                        </h6>
+                        {% for s in result.sections_missing %}
+                        <span class="badge rounded-pill me-1 mb-1 px-3"
+                            style="background:rgba(255,82,82,0.12);border:1px solid rgba(255,82,82,0.3);color:#ff8a80;">{{                             s }}</span>
+                        {% endfor %}
+                        {% endif %}
+                    </div>
+                </div>
+                <!-- Keywords -->
+                <div class="col-md-6">
+                    <div class="glass-panel p-3 h-100">
+                        <h6 class="fw-bold text-primary mb-2"><i class="fas fa-key me-1"></i>Keywords Matched</h6>
+                        {% for kw in result.found_keywords %}
+                        <span class="badge rounded-pill me-1 mb-1 px-2"
+                            style="background:rgba(41,121,255,0.12);border:1px solid rgba(41,121,255,0.3);color:#82b1ff;font-size:0.75rem;">{{                             kw }}</span>
+                        {% empty %}<span class="text-muted small">Select a job to match keywords</span>{% endfor %}
+                        {% if result.missing_keywords %}
+                        <hr class="my-2" style="border-color:rgba(255,255,255,0.06);">
+                        <h6 class="fw-bold text-danger mb-2 small">Add These Keywords</h6>
+                        {% for kw in result.missing_keywords %}
+                        <span class="badge rounded-pill me-1 mb-1 px-2"
+                            style="background:rgba(255,82,82,0.12);border:1px solid rgba(255,82,82,0.3);color:#ff8a80;font-size:0.75rem;">{{                             kw }}</span>
+                        {% endfor %}
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Wins -->
+            <div class="glass-panel p-3 mb-3">
+                <h6 class="fw-bold text-warning mb-3"><i class="fas fa-bolt me-2"></i>Quick Wins — Fix These First</h6>
+                {% for tip in result.quick_wins %}
+                <div class="d-flex gap-2 mb-2 align-items-start">
+                    <span class="badge rounded-circle flex-shrink-0 mt-1"
+                        style="background:#FF6D00;width:20px;height:20px;font-size:0.65rem;display:flex;align-items:center;justify-content:center;">{{                         forloop.counter }}</span>
+                    <span class="small text-theme">{{ tip }}</span>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Formatting Issues -->
+            {% if result.formatting_issues %}
+            <div class="glass-panel p-3">
+                <h6 class="fw-bold text-theme mb-2"><i class="fas fa-align-left text-info me-2"></i>Formatting Tips</h6>
+                {% for issue in result.formatting_issues %}
+                <div class="d-flex gap-2 mb-2">
+                    <i class="fas fa-info-circle text-info mt-1 flex-shrink-0" style="font-size:0.8rem;"></i>
+                    <span class="small text-theme">{{ issue }}</span>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            {% else %}
+            <div class="glass-panel p-5 text-center">
+                <i class="fas fa-file-search fa-4x text-info mb-4 d-block" style="opacity:0.3;"></i>
+                <h5 class="text-theme mb-2">Paste Your Resume</h5>
+                <p class="text-muted">Get a comprehensive ATS score with keyword analysis, section detection, and
+                    fixable suggestions.</p>
+                <div class="row g-3 mt-3">
+                    {% for label, desc, icon, color in tips_list %}
+                    <div class="col-md-4">
+                        <div class="glass-panel p-3 text-center">
+                            <i class="{{ icon }} text-{{ color }} fa-2x mb-2 d-block"></i>
+                            <div class="fw-semibold text-theme small">{{ label }}</div>
+                            <div style="font-size:0.75rem;" class="text-muted">{{ desc }}</div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

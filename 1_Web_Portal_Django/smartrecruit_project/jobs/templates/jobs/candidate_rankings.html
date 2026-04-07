@@ -1,0 +1,203 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}AI Candidate Rankings — {{ job.title }} | SmartRecruit{% endblock %}
+
+{% block sidebar %}
+    {% include 'jobs/_recruiter_sidebar.html' %}
+{% endblock %}
+
+{% block content %}
+<div class="candidate-wrapper d-flex flex-grow-1" style="background: #0a0b10; min-height: 100vh;">
+    <div class="main-content flex-grow-1 p-4" style="max-height: 100vh; overflow-y: auto; scrollbar-width: none;">
+<style>
+    /* Z-INDEX SAFEGUARDS */
+    .modal { z-index: 2000 !important; }
+    .modal-backdrop { z-index: 1050 !important; }
+    .tracking-widest { letter-spacing: 0.15em; }
+    .x-small { font-size: 0.75rem; }
+    .xx-small { font-size: 0.65rem; }
+
+    /* First-place row highlight */
+    .rank-first td { background: rgba(255,215,0,0.04) !important; border-left: 2px solid rgba(255,215,0,0.3) !important; }
+    .rank-row { transition: background 0.15s ease; }
+    .rank-row:hover td { background: rgba(255,255,255,0.02) !important; }
+
+    /* AI Insight boxes */
+    .insight-box { border-radius: 0.75rem; padding: 0.85rem 1rem; }
+</style>
+
+<div class="container-fluid mt-4 fade-up">
+
+    <!-- ─── Hero ─── -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-5 gap-3" data-aos="fade-down">
+        <div>
+            <div class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 px-3 py-2 rounded-pill mb-3 tracking-widest text-uppercase x-small fw-bold">
+                <i class="fas fa-trophy me-2"></i>Predictive Ranking Engine
+            </div>
+            <h1 class="display-6 fw-bold text-white mb-2" style="font-family: 'Space Grotesk', sans-serif;">AI Candidate <span style="background: linear-gradient(90deg, #FFD700, #FF6D00); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">Rankings</span></h1>
+            <p class="lead text-secondary mb-0"><span class="fw-bold text-warning">{{ job.title }}</span> &middot; {{ total_applicants }} applicants ranked by composite predictive score</p>
+        </div>
+        <div class="d-flex gap-2 flex-wrap">
+            <a href="{% url 'decision_matrix' job.id %}" class="btn btn-primary rounded-pill px-4 fw-bold hover-scale shadow-sm"><i class="fas fa-microchip me-2"></i>Decision Matrix</a>
+            <a href="{% url 'job_detail' job.id %}" class="btn btn-outline-secondary rounded-pill px-4 fw-bold hover-scale"><i class="fas fa-arrow-left me-2"></i>Back to Job</a>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- ─── Rankings Table ─── -->
+        <div class="col-lg-8" data-aos="fade-right">
+            <div class="glass-panel p-0 rounded-4 overflow-hidden border-secondary border-opacity-25 shadow-lg">
+                <div class="p-4 border-bottom border-light border-opacity-10 d-flex justify-content-between align-items-center bg-dark bg-opacity-25">
+                    <h5 class="fw-bold text-white mb-0 d-flex align-items-center gap-2">
+                        <i class="fas fa-sort-amount-down text-warning"></i>Ranked Candidates
+                    </h5>
+                    <span class="badge bg-warning bg-opacity-20 text-warning border border-warning border-opacity-25 rounded-pill x-small fw-bold px-3 py-2"><i class="fas fa-robot me-1"></i>AI Powered</span>
+                </div>
+
+                {% if rankings %}
+                <div class="table-responsive">
+                    <table class="table table-borderless align-middle mb-0 text-white w-100">
+                        <thead class="text-secondary x-small tracking-widest text-uppercase border-bottom border-light border-opacity-10 bg-light bg-opacity-5">
+                            <tr>
+                                <th class="ps-4 py-3 border-0" style="width: 40px;">Rank</th>
+                                <th class="py-3 border-0">Candidate</th>
+                                <th class="py-3 border-0">AI Score</th>
+                                <th class="py-3 border-0">Likelihood</th>
+                                <th class="py-3 border-0">Status</th>
+                                <th class="py-3 pe-4 border-0">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in rankings %}
+                            <tr class="border-bottom border-light border-opacity-5 rank-row {% if forloop.counter == 1 %}rank-first{% endif %}">
+                                <td class="ps-4 py-3 fw-bold" style="font-family: 'Space Grotesk', sans-serif;">
+                                    {% if forloop.counter == 1 %}<span class="text-warning" style="font-size: 1.1rem; filter: drop-shadow(0 0 6px rgba(255,215,0,0.5));">👑</span>
+                                    {% elif forloop.counter == 2 %}<span class="text-secondary fw-bold">🥈</span>
+                                    {% elif forloop.counter == 3 %}<span style="color: #cd7f32;" class="fw-bold">🥉</span>
+                                    {% else %}<span class="text-muted">{{ forloop.counter }}</span>{% endif %}
+                                </td>
+                                <td class="py-3">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold flex-shrink-0" style="width: 36px; height: 36px; background: linear-gradient(135deg, rgba(41,121,255,0.5), rgba(124,77,255,0.5)); font-family: 'Space Grotesk', sans-serif; font-size: 0.85rem;">{{ item.application.candidate.full_name|slice:":1" }}</div>
+                                        <div>
+                                            <div class="fw-semibold text-white x-small">{{ item.application.candidate.full_name }}</div>
+                                            <div class="text-secondary" style="font-size: 0.7rem;">{{ item.application.candidate.email }}</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="py-3">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="progress flex-grow-1" style="height: 6px; min-width: 50px; max-width: 80px; background: rgba(255,255,255,0.06); border-radius: 4px;">
+                                            <div class="progress-bar {% if item.composite_score >= 70 %}bg-success{% elif item.composite_score >= 50 %}bg-warning{% else %}bg-danger{% endif %}" style="width: {{ item.composite_score }}%; border-radius: 4px;"></div>
+                                        </div>
+                                        <span class="fw-bold x-small" style="font-family: 'Space Grotesk', sans-serif;">{{ item.composite_score }}%</span>
+                                    </div>
+                                </td>
+                                <td class="py-3"><span class="badge bg-{{ item.likelihood_color }} bg-opacity-20 text-{{ item.likelihood_color }} border border-{{ item.likelihood_color }} border-opacity-25 px-2 py-1 rounded-pill x-small fw-bold">{{ item.likelihood }}</span></td>
+                                <td class="py-3"><span class="badge bg-secondary bg-opacity-20 text-secondary border border-secondary border-opacity-25 px-2 py-1 rounded-pill xx-small">{{ item.application.get_status_display }}</span></td>
+                                <td class="py-3 pe-4">
+                                    <div class="d-flex gap-1">
+                                        <a href="{% url 'application_details' item.application.id %}" class="btn btn-outline-light btn-sm rounded-pill px-3 x-small fw-bold"><i class="fas fa-user me-1"></i>Profile</a>
+                                        <a href="{% url 'skill_gap_analysis' item.application.id %}" class="btn btn-outline-info btn-sm rounded-pill px-3 x-small fw-bold"><i class="fas fa-brain me-1"></i>Gap</a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-5 text-secondary p-4">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center bg-dark border border-secondary border-opacity-25 mx-auto mb-3" style="width: 64px; height: 64px;"><i class="fas fa-users fa-lg opacity-25"></i></div>
+                    <h6 class="fw-bold text-white mb-1">No Applicants Yet</h6>
+                    <p class="small">Candidates who apply will be ranked here by composite AI score.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- ─── Right Rail: Charts + Insights ─── -->
+        <div class="col-lg-4" data-aos="fade-up">
+            <!-- Score Distribution Chart -->
+            <div class="glass-panel p-4 mb-4 rounded-4 border-secondary border-opacity-25">
+                <h6 class="fw-bold text-white mb-3 x-small tracking-widest text-uppercase border-bottom border-light border-opacity-10 pb-3"><i class="fas fa-chart-bar text-info me-2"></i>AI Score Distribution</h6>
+                <canvas id="scoreDistChart" height="200"></canvas>
+                <p class="text-secondary xx-small mt-3 mb-0 text-center">Across all {{ total_applicants }} applicants</p>
+            </div>
+
+            <!-- Likelihood Doughnut -->
+            <div class="glass-panel p-4 mb-4 rounded-4 border-secondary border-opacity-25">
+                <h6 class="fw-bold text-white mb-3 x-small tracking-widest text-uppercase border-bottom border-light border-opacity-10 pb-3"><i class="fas fa-chart-pie text-warning me-2"></i>Hiring Likelihood</h6>
+                <canvas id="likelihoodChart" height="200"></canvas>
+            </div>
+
+            <!-- AI Key Insights -->
+            <div class="glass-panel p-4 rounded-4" style="border: 1px solid rgba(102,126,234,0.25); background: rgba(102,126,234,0.06);">
+                <h6 class="fw-bold text-white mb-3 x-small tracking-widest text-uppercase border-bottom border-light border-opacity-10 pb-3"><i class="fas fa-lightbulb text-warning me-2"></i>AI Key Insights</h6>
+                {% if rankings %}
+                <div class="insight-box mb-3" style="background: rgba(0,230,118,0.07); border-left: 3px solid #00E676;">
+                    <p class="small mb-0"><strong class="text-success">Top Pick:</strong> <span class="text-white">{{ rankings.0.application.candidate.full_name }}</span> scored <strong>{{ rankings.0.composite_score }}%</strong> on the predictive model.</p>
+                </div>
+                <div class="insight-box" style="background: rgba(255,193,7,0.07); border-left: 3px solid #ffc107;">
+                    <p class="small mb-0"><strong class="text-warning">AI Advice:</strong> {% if rankings.0.composite_score >= 75 %}Prioritize the top 3 candidates for immediate interview scheduling.{% else %}Consider expanding the talent pool — top scores are moderate. Review job requirements.{% endif %}</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+Chart.defaults.color = '#94a3b8';
+Chart.defaults.borderColor = 'rgba(255,255,255,0.04)';
+
+// Score Distribution Bar
+const scoreDistData = {{ score_distribution|safe }};
+new Chart(document.getElementById('scoreDistChart'), {
+    type: 'bar',
+    data: {
+        labels: Object.keys(scoreDistData),
+        datasets: [{
+            label: 'Candidates',
+            data: Object.values(scoreDistData),
+            backgroundColor: ['rgba(255,82,82,0.7)', 'rgba(255,152,0,0.7)', 'rgba(255,193,7,0.7)', 'rgba(0,230,118,0.6)', 'rgba(0,200,83,0.8)'],
+            borderRadius: 6, borderWidth: 0,
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: {
+            y: { beginAtZero: true, ticks: { color: '#64748b', stepSize: 1 }, grid: { color: 'rgba(255,255,255,0.04)' } },
+            x: { ticks: { color: '#64748b' }, grid: { display: false } }
+        }
+    }
+});
+
+// Likelihood Doughnut
+const likelihoods = { 'Very High': 0, 'High': 0, 'Moderate': 0, 'Low': 0, 'Very Low': 0, 'Insufficient Data': 0 };
+const allRankings = [{% for r in rankings %}{ likelihood: '{{ r.likelihood }}' },{% endfor %}];
+allRankings.forEach(r => { if (likelihoods[r.likelihood] !== undefined) likelihoods[r.likelihood]++; });
+const filteredKeys = Object.keys(likelihoods).filter(k => likelihoods[k] > 0);
+const filteredVals = filteredKeys.map(k => likelihoods[k]);
+
+new Chart(document.getElementById('likelihoodChart'), {
+    type: 'doughnut',
+    data: {
+        labels: filteredKeys,
+        datasets: [{
+            data: filteredVals,
+            backgroundColor: ['#00C853', '#00E676', '#FFC107', '#FF9800', '#FF5252', '#9E9E9E'],
+            borderWidth: 2, borderColor: 'rgba(0,0,0,0.3)',
+        }]
+    },
+    options: {
+        cutout: '65%',
+        plugins: { legend: { position: 'bottom', labels: { color: '#94a3b8', usePointStyle: true, font: { size: 11 }, padding: 12 } } }
+    }
+});
+</script>
+    </div>
+</div>
+{% endblock %}

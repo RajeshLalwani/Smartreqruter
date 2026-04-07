@@ -1,0 +1,210 @@
+Found 46 test(s).
+python : Creating test database for alias 'default' ('file:memorydb_default?mode=memory&cache=shared')...
+At line:1 char:1
++ python manage.py test jobs -v 2 2>&1 | Out-File -Encoding ASCII test_ ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Creating test d...che=shared')...:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+
+Operations to perform:
+  Synchronize unmigrated apps: bootstrap5, channels, daphne, messages, rest_framework, runserver_nostatic, staticfiles
+  Apply all migrations: admin, auth, authtoken, contenttypes, core, jobs, sessions
+Synchronizing apps without migrations:
+  Creating tables...
+    Running deferred SQL...
+Running migrations:
+  Applying contenttypes.0001_initial... OK
+  Applying contenttypes.0002_remove_content_type_name... OK
+  Applying auth.0001_initial... OK
+  Applying auth.0002_alter_permission_name_max_length... OK
+  Applying auth.0003_alter_user_email_max_length... OK
+  Applying auth.0004_alter_user_username_opts... OK
+  Applying auth.0005_alter_user_last_login_null... OK
+  Applying auth.0006_require_contenttypes_0002... OK
+  Applying auth.0007_alter_validators_add_error_messages... OK
+  Applying auth.0008_alter_user_username_max_length... OK
+  Applying auth.0009_alter_user_last_name_max_length... OK
+  Applying auth.0010_alter_group_name_max_length... OK
+  Applying auth.0011_update_proxy_permissions... OK
+  Applying auth.0012_alter_user_first_name_max_length... OK
+  Applying core.0001_initial... OK
+  Applying admin.0001_initial... OK
+  Applying admin.0002_logentry_remove_auto_add... OK
+  Applying admin.0003_logentry_add_action_flag_choices... OK
+  Applying authtoken.0001_initial... OK
+  Applying authtoken.0002_auto_20160226_1747... OK
+  Applying authtoken.0003_tokenproxy... OK
+  Applying authtoken.0004_alter_tokenproxy_options... OK
+  Applying core.0002_user_blind_hiring... OK
+  Applying jobs.0001_initial... OK
+  Applying jobs.0002_remove_interview_completed_interview_status_and_more... OK
+  Applying jobs.0003_application_updated_at_interview_created_at_and_more... OK
+  Applying jobs.0004_alter_interview_interview_type... OK
+  Applying jobs.0005_alter_application_applied_at_and_more... OK
+  Applying jobs.0006_jobposting_technology_stack... OK
+  Applying jobs.0007_alter_jobposting_technology_stack... OK
+  Applying jobs.0008_question_proctoringlog... OK
+  Applying jobs.0009_activitylog... OK
+  Applying jobs.0010_technology_jobposting_technology... OK
+  Applying jobs.0011_emailtemplate_application_ai_insights_and_more... OK
+  Applying jobs.0012_notification... OK
+  Applying jobs.0013_application_source_of_hire_and_more... OK
+  Applying jobs.0014_availabilityslot... OK
+  Applying jobs.0015_alter_interview_interview_type... OK
+  Applying sessions.0001_initial... OK
+System check identified no issues (0 silenced).
+test_analyze_sentiment_negative (jobs.tests.AIInterviewerTests.test_analyze_sentiment_negative) ... ok
+test_analyze_sentiment_positive (jobs.tests.AIInterviewerTests.test_analyze_sentiment_positive) ... ok
+test_generate_voice_file (jobs.tests.UtilsTests.test_generate_voice_file) ... ok
+Email 'Test Subject' sent to ['test@example.com']
+test_send_html_email (jobs.tests.UtilsTests.test_send_html_email) ... ok
+test_export_candidate_pdf (jobs.tests.ViewsTests.test_export_candidate_pdf) ... 
+C:\Users\ASUS\AppData\Local\Programs\Python\Python314\Lib\site-packages\django\db\models\manager.py:155: 
+RuntimeWarning: coroutine 'AsyncMockMixin._execute_mock_call' was never awaited
+  return self._queryset_class(model=self.model, using=self._db, hints=self._hints)
+RuntimeWarning: Enable tracemalloc to get the object allocation traceback
+ok
+test_get_notifications_api (jobs.tests.ViewsTests.test_get_notifications_api) ... ok
+test_api_generate_jd_invalid_method (jobs.tests_ai_generator.AIJDGeneratorTests.test_api_generate_jd_invalid_method)
+Test API rejects GET requests. ... ok
+test_api_generate_jd_success (jobs.tests_ai_generator.AIJDGeneratorTests.test_api_generate_jd_success)
+Test the API endpoint returns success and description. ... FAIL
+test_utils_generate_ai_job_description 
+(jobs.tests_ai_generator.AIJDGeneratorTests.test_utils_generate_ai_job_description)
+Test the utility function generates content with keywords. ... ok
+test_utils_generate_ai_job_description_tones 
+(jobs.tests_ai_generator.AIJDGeneratorTests.test_utils_generate_ai_job_description_tones) ... FAIL
+test_analytics_filtering (jobs.tests_analytics.AnalyticsTests.test_analytics_filtering) ... ok
+test_analytics_view (jobs.tests_analytics.AnalyticsTests.test_analytics_view) ... ok
+test_export_csv (jobs.tests_analytics.AnalyticsTests.test_export_csv) ... ok
+test_export_csv_filtered (jobs.tests_analytics.AnalyticsTests.test_export_csv_filtered) ... ok
+test_export_pdf (jobs.tests_analytics.AnalyticsTests.test_export_pdf) ... ok
+test_anonymize_filter_off (jobs.tests_blind_hiring.BlindHiringTests.test_anonymize_filter_off)
+Test that filter returns full name when blind hiring is OFF ... ok
+test_anonymize_filter_on (jobs.tests_blind_hiring.BlindHiringTests.test_anonymize_filter_on)
+Test that filter returns masked name when blind hiring is ON ... ok
+test_settings_toggle (jobs.tests_blind_hiring.BlindHiringTests.test_settings_toggle)
+Test that settings view toggles the flag ... ok
+test_ai_interview_integration (jobs.tests_integration.IntegrationTests.test_ai_interview_integration)
+Test AI Interview submission creates Interview record and updates Application ... ok
+test_assessment_scoring_integration (jobs.tests_integration.IntegrationTests.test_assessment_scoring_integration)
+Test submission of aptitude test calculates score and updates model ... ok
+test_status_update_integration (jobs.tests_integration.IntegrationTests.test_status_update_integration)
+Test that updating status triggers email and logs ... ok
+test_create_notification (jobs.tests_notifications.NotificationTests.test_create_notification) ... ok
+test_delete_notification (jobs.tests_notifications.NotificationTests.test_delete_notification) ... ok
+test_email_notification (jobs.tests_notifications.NotificationTests.test_email_notification) ... ok
+test_get_notifications_api (jobs.tests_notifications.NotificationTests.test_get_notifications_api) ... ok
+test_mark_all_read (jobs.tests_notifications.NotificationTests.test_mark_all_read) ... ok
+test_mark_read_api (jobs.tests_notifications.NotificationTests.test_mark_read_api) ... ok
+test_dashboard_response_time (jobs.tests_performance.PerformanceTests.test_dashboard_response_time)
+
+Dashboard Load Time: 0.0217s
+Verify Dashboard loads under 300ms ... ok
+test_job_list_response_time (jobs.tests_performance.PerformanceTests.test_job_list_response_time)
+
+Job List Load Time: 0.0160s
+Verify Job List loads under 200ms ... ok
+Email 'Interview Scheduled: Python Dev' sent to ['']
+test_booking_dynamic_slot (jobs.tests_scheduler.SchedulerAutomationTests.test_booking_dynamic_slot) ... ok
+test_dynamic_slot_generation (jobs.tests_scheduler.SchedulerAutomationTests.test_dynamic_slot_generation)
+Verify slots are generated for candidate view ... ok
+Email 'Application Update: Python Dev' sent to ['']
+test_expiry_command (jobs.tests_scheduler.SchedulerAutomationTests.test_expiry_command) ... ok
+test_idor_candidate_access_other_application 
+(jobs.tests_security.SecurityTests.test_idor_candidate_access_other_application)
+Verify Candidate A cannot access Candidate B's assessment or details ... ok
+test_idor_candidate_access_other_interview 
+(jobs.tests_security.SecurityTests.test_idor_candidate_access_other_interview)
+Verify Candidate A cannot access Candidate B's AI interview ... ok
+test_rbac_candidate_access_candidate_list (jobs.tests_security.SecurityTests.test_rbac_candidate_access_candidate_list)
+Verify candidate cannot access candidate list ... ok
+test_rbac_candidate_access_recruiter_analytics 
+(jobs.tests_security.SecurityTests.test_rbac_candidate_access_recruiter_analytics)
+Verify candidate cannot access recruiter analytics ... ok
+test_xss_protection_in_job_posting (jobs.tests_security.SecurityTests.test_xss_protection_in_job_posting)
+Verify XSS injection in Job Posting is escaped ... ok
+test_exact_match_scores (jobs.tests_semantic_matching.SemanticMatchingTests.test_exact_match_scores)
+Test matching logic basics. ... 
+C:\Users\ASUS\AppData\Local\Programs\Python\Python314\Lib\site-packages\confection\__init__.py:38: UserWarning: Core 
+Pydantic V1 functionality isn't compatible with Python 3.14 or greater.
+  from pydantic.v1 import BaseModel, Extra, ValidationError, create_model
+ok
+test_get_match_details_structure (jobs.tests_semantic_matching.SemanticMatchingTests.test_get_match_details_structure)
+Test the dictionary structure returned. ... ok
+test_tech_stack_boost (jobs.tests_semantic_matching.SemanticMatchingTests.test_tech_stack_boost)
+Test 10% boost for Stack match. ... ok
+
+--- Starting Full User Journey Test ---
+1. Candidate Applying...
+   Application Created: ID 1
+2. Recruiter Shortlisting...
+   Resume Selected. Candidate proceeds to Round 1.
+3. Candidate takes Aptitude Test...
+   Round 1 Passed (Score: 80.0/100)
+4. Candidate takes Practical Test...
+   Round 2 Passed (Score: 90.0/100)
+5. Candidate takes AI Interview...
+   AI Interview Passed (Confidence: 95%)
+6. HR Round & Offer Generation...
+   Offer Generated and Sent!
+7. Verifying Analytics Dashboard...
+   Database Verified: 1 Hired Candidate.
+   Activity Logs found: 13
+   Verifying PDF Export...
+   PDF Export Verified (HTTP 200)
+   Verifying Time to Hire Metric...
+   Analytics Dashboard Verified.
+
+--- User Journey Test Complete: SUCCESS ---
+test_full_recruitment_flow (jobs.tests_user_journey.UserJourneyTest.test_full_recruitment_flow) ... ok
+test_ai_interviewer_empty_input (jobs.tests_whitebox.WhiteBoxTests.test_ai_interviewer_empty_input)
+Test AI Interviewer behavior with empty input ... ok
+test_assessment_service_empty_session (jobs.tests_whitebox.WhiteBoxTests.test_assessment_service_empty_session)
+Test calculation with empty session (should be 0, no div by zero) ... ok
+test_assessment_service_partial_data (jobs.tests_whitebox.WhiteBoxTests.test_assessment_service_partial_data)
+Test calculation with missing session answers (should handle gracefully) ... ok
+test_practical_score_calculation_edge_cases 
+(jobs.tests_whitebox.WhiteBoxTests.test_practical_score_calculation_edge_cases)
+Test practical score calculation with various code inputs ... ok
+test_practical_score_max_cap (jobs.tests_whitebox.WhiteBoxTests.test_practical_score_max_cap)
+Verify code score is capped at 50 ... ok
+
+======================================================================
+FAIL: test_api_generate_jd_success (jobs.tests_ai_generator.AIJDGeneratorTests.test_api_generate_jd_success)
+Test the API endpoint returns success and description.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\ASUS\Documents\IR Info Tech Pvt. 
+Ltd\Project\SmartRecruit\1_Web_Portal_Django\smartrecruit_project\jobs\tests_ai_generator.py", line 43, in 
+test_api_generate_jd_success
+    self.assertTrue(any(x in content['description'] for x in ['Hey', 'awesome', 'squad']))
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: False is not true
+
+======================================================================
+FAIL: test_utils_generate_ai_job_description_tones 
+(jobs.tests_ai_generator.AIJDGeneratorTests.test_utils_generate_ai_job_description_tones)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\ASUS\Documents\IR Info Tech Pvt. 
+Ltd\Project\SmartRecruit\1_Web_Portal_Django\smartrecruit_project\jobs\tests_ai_generator.py", line 54, in 
+test_utils_generate_ai_job_description_tones
+    self.assertIn("About the Role:", desc_modern)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'About the Role:' not found in '**Job Overview**\nJoin a forward-thinking team as a Dev. We value 
+innovation, creativity, and a commitment to building user-centric solutions.\n\n**Key Responsibilities**\n- Identify 
+and correct bottlenecks and fix bugs.\n- Collaborate with cross-functional teams to define, design, and ship new 
+features.\n\n**Requirements**\n- Proven experience as a Dev or similar role.\n- Strong proficiency in P, y, t, h, o, 
+n.\n- Familiarity with RESTful APIs and modern frontend build pipelines.\n- Ability to understand business 
+requirements and translate them into technical requirements.\n- Degree in Computer Science, Engineering, or relevant 
+field.\n\n**What We Offer**\n- Competitive salary and flexible work environment.\n- Modern office space and remote 
+work options.\n- Collaborative culture and team events.\n'
+
+----------------------------------------------------------------------
+Ran 46 tests in 49.453s
+
+FAILED (failures=2)
+Destroying test database for alias 'default' ('file:memorydb_default?mode=memory&cache=shared')...
+

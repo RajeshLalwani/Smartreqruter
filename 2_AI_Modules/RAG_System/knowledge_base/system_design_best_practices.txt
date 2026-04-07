@@ -1,0 +1,21 @@
+# Architectural Best Practices - System Design
+
+1. Redundancy and High Availability:
+- Always use a Load Balancer (LB) to distribute traffic across multiple EC2 instances.
+- Ensure databases (DB) are in a Multi-AZ configuration or have read replicas to avoid single points of failure.
+- Use Auto-Scaling Groups for compute resources to handle variable loads.
+
+2. Security and Isolation:
+- Use an API Gateway (APIG) as a single entry point for all client requests.
+- Place databases in private subnets with no direct internet access.
+- Implement Web Application Firewalls (WAF) to protect against common web attacks.
+
+3. Scalability and Performance:
+- Use S3 for static asset storage and Content Delivery Networks (CDN) for low-latency delivery.
+- Implement caching (e.g., Redis/Memcached) for frequently accessed data.
+- Use asynchronous communication (e.g., Message Queues like SQS) to decouple services and improve responsiveness.
+
+4. Monitoring and Operations:
+- Enable CloudWatch or ELK stack for real-time logging and metrics.
+- Use Infrastructure as Code (IaC) like Terraform or CloudFormation for reproducible environments.
+- Implement circuit breakers to prevent cascading failures in microservices.

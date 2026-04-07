@@ -1,0 +1,43 @@
+{% extends 'emails/base_email.html' %}
+
+{% block title %}Congratulations! You're Shortlisted - SmartRecruit{% endblock %}
+
+{% block content %}
+<h2>🎉 Congratulations! You're Shortlisted!</h2>
+
+<p>Dear {{ candidate_name }},</p>
+
+<p>Great news! Your application for <strong>{{ job_title }}</strong> has been shortlisted based on your impressive
+    resume score.</p>
+
+<div class="info-box">
+    <p><strong>Your Performance:</strong></p>
+    <p>AI Resume Score: <strong style="color: #28a745; font-size: 18px;">{{ ai_score }}%</strong></p>
+    <p>Status: <strong style="color: #28a745;">SHORTLISTED</strong></p>
+</div>
+
+<p><strong>Next Steps:</strong></p>
+<ol>
+    <li>You are now eligible for <strong>Round 1: Aptitude Test</strong></li>
+    <li>The test consists of multiple-choice questions on computer science fundamentals</li>
+    <li>Duration: 30 minutes</li>
+    <li>Passing Score: {{ passing_score }}%</li>
+</ol>
+
+<p><strong>Important Notes:</strong></p>
+<ul>
+    <li>Our proctoring system will monitor for tab switching and violations</li>
+    <li>Ensure you have a stable internet connection</li>
+    <li>Complete the test in one sitting</li>
+</ul>
+
+<center>
+    <a href="{{ assessment_url }}" class="button">Start Aptitude Test</a>
+</center>
+
+<p>Good luck! We're excited to see your performance.</p>
+
+<p>Best regards,<br>
+    <strong>The SmartRecruit Team</strong>
+</p>
+{% endblock %}

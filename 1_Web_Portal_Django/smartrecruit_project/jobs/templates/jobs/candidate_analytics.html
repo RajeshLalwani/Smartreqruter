@@ -1,0 +1,244 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}My Stats | SmartRecruit{% endblock %}
+
+{% block sidebar %}
+    {% include 'jobs/_candidate_sidebar.html' %}
+{% endblock %}
+
+{% block content %}
+<div class="d-flex" id="candidate-wrapper" style="min-height:calc(100vh - 72px)">
+    <!-- Sidebar is handled by block sidebar in app-shell -->
+    
+    <main class="flex-grow-1 p-4 p-lg-5 overflow-auto">
+        <div class="container-fluid fade-up">
+
+    <!-- ─── Hero ─── -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-5 gap-3" data-aos="fade-down">
+        <div>
+            <div class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-3 py-2 rounded-pill mb-3 tracking-widest text-uppercase x-small fw-bold">
+                <i class="fas fa-chart-pie me-2" style="color: #7C4DFF;"></i>Skill Insights
+            </div>
+            <h1 class="display-6 fw-bold text-white mb-2" style="font-family: 'Space Grotesk', sans-serif;">My <span style="background: linear-gradient(90deg, #7C4DFF, #2979FF); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">Stats</span></h1>
+            <p class="lead text-secondary mb-0">See how you are doing in your job search — track scores, trends & outcomes.</p>
+        </div>
+    </div>
+
+    <!-- ─── Stat Cards ─── -->
+    <div class="row g-3 mb-5" data-aos="fade-up">
+        <div class="col-6 col-md-3">
+            <div class="glass-panel p-4 text-center rounded-4 border-primary border-opacity-25 hover-scale h-100">
+                <i class="fas fa-paper-plane text-primary fa-2x mb-2 d-block"></i>
+                <div class="fw-bold text-primary" style="font-size: 2rem; font-family: 'Space Grotesk', sans-serif;">{{ total }}</div>
+                <div class="x-small text-secondary fw-bold tracking-widest text-uppercase mt-1">Applications</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="glass-panel p-4 text-center rounded-4 border-info border-opacity-25 hover-scale h-100">
+                <i class="fas fa-robot text-info fa-2x mb-2 d-block"></i>
+                <div class="fw-bold text-info" style="font-size: 2rem; font-family: 'Space Grotesk', sans-serif;">{{ avg_ai }}%</div>
+                <div class="x-small text-secondary fw-bold tracking-widest text-uppercase mt-1">Avg AI Score</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="glass-panel p-4 text-center rounded-4 border-success border-opacity-25 hover-scale h-100">
+                <i class="fas fa-trophy text-success fa-2x mb-2 d-block"></i>
+                <div class="fw-bold text-success" style="font-size: 2rem; font-family: 'Space Grotesk', sans-serif;">{{ hired }}</div>
+                <div class="x-small text-secondary fw-bold tracking-widest text-uppercase mt-1">Offers</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="glass-panel p-4 text-center rounded-4 border-warning border-opacity-25 hover-scale h-100">
+                <i class="fas fa-percentage text-warning fa-2x mb-2 d-block"></i>
+                <div class="fw-bold text-warning" style="font-size: 2rem; font-family: 'Space Grotesk', sans-serif;">{{ hit_rate }}%</div>
+                <div class="x-small text-secondary fw-bold tracking-widest text-uppercase mt-1">Success Rate</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ─── Charts Row 1: Trend + Doughnut ─── -->
+    <div class="row g-4 mb-4" data-aos="fade-up">
+        <div class="col-lg-8">
+            <div class="glass-panel p-4 h-100 rounded-4 border-secondary border-opacity-25">
+                <h6 class="fw-bold text-white mb-4 x-small tracking-widest text-uppercase border-bottom border-light border-opacity-10 pb-3"><i class="fas fa-chart-line text-primary me-2"></i>AI Score Trend Across Applications</h6>
+                {% if trend_values %}
+                <canvas id="scoreTrendChart" height="160"></canvas>
+                {% else %}
+                <div class="text-center py-5 text-secondary">
+                    <i class="fas fa-chart-line fa-3x mb-3 d-block opacity-25"></i>
+                    <p class="small">Apply to jobs to start tracking your AI score trend.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="glass-panel p-4 h-100 rounded-4 border-secondary border-opacity-25">
+                <h6 class="fw-bold text-white mb-4 x-small tracking-widest text-uppercase border-bottom border-light border-opacity-10 pb-3"><i class="fas fa-chart-pie me-2" style="color:#7C4DFF;"></i>Status Breakdown</h6>
+                <canvas id="outcomeChart" height="200"></canvas>
+                <div class="d-flex justify-content-center gap-4 mt-3">
+                    <div class="text-center"><span class="d-block fw-bold text-warning" style="font-family:'Space Grotesk',sans-serif;">{{ active }}</span><span class="x-small text-muted">Active</span></div>
+                    <div class="text-center"><span class="d-block fw-bold text-success" style="font-family:'Space Grotesk',sans-serif;">{{ hired }}</span><span class="x-small text-muted">Hired</span></div>
+                    <div class="text-center"><span class="d-block fw-bold text-danger" style="font-family:'Space Grotesk',sans-serif;">{{ rejected }}</span><span class="x-small text-muted">Rejected</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ─── Charts Row 2: Monthly Bar + Top Matches ─── -->
+    <div class="row g-4 mb-5" data-aos="fade-up" data-aos-delay="100">
+        <div class="col-lg-6">
+            <div class="glass-panel p-4 h-100 rounded-4 border-secondary border-opacity-25">
+                <h6 class="fw-bold text-white mb-4 x-small tracking-widest text-uppercase border-bottom border-light border-opacity-10 pb-3"><i class="fas fa-calendar-alt text-success me-2"></i>Monthly Application Activity</h6>
+                <canvas id="monthlyChart" height="180"></canvas>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="glass-panel p-4 h-100 rounded-4 border-secondary border-opacity-25">
+                <h6 class="fw-bold text-white mb-4 x-small tracking-widest text-uppercase border-bottom border-light border-opacity-10 pb-3"><i class="fas fa-star text-warning me-2"></i>Top AI Score Matches</h6>
+                {% if top_matches %}
+                <div class="table-responsive">
+                    <table class="table table-borderless align-middle mb-0 text-white w-100">
+                        <thead class="text-secondary x-small tracking-widest text-uppercase border-bottom border-light border-opacity-10">
+                            <tr>
+                                <th class="py-2 fw-bold">Job</th>
+                                <th class="py-2 fw-bold">AI Score</th>
+                                <th class="py-2 fw-bold">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for match in top_matches %}
+                            <tr class="border-bottom border-light border-opacity-5">
+                                <td class="x-small py-2 fw-semibold text-white">{{ match.job__title|truncatechars:25 }}</td>
+                                <td class="py-2">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="progress flex-grow-1" style="height: 5px; max-width: 60px; background: rgba(255,255,255,0.06); border-radius: 4px;">
+                                            <div class="progress-bar {% if match.ai_score >= 70 %}bg-success{% elif match.ai_score >= 50 %}bg-warning{% else %}bg-danger{% endif %}" style="width: {{ match.ai_score }}%; border-radius: 4px;"></div>
+                                        </div>
+                                        <span class="x-small fw-bold">{{ match.ai_score|floatformat:0 }}%</span>
+                                    </div>
+                                </td>
+                                <td class="py-2">
+                                    <span class="badge rounded-pill px-2 x-small" style="background: {% if 'HIRED' in match.status or 'PASSED' in match.status %}rgba(0,200,83,0.15){% elif 'REJECTED' in match.status or 'FAILED' in match.status %}rgba(255,82,82,0.15){% else %}rgba(41,121,255,0.15){% endif %}; color: {% if 'HIRED' in match.status or 'PASSED' in match.status %}#69f0ae{% elif 'REJECTED' in match.status or 'FAILED' in match.status %}#ff8a80{% else %}#82b1ff{% endif %};">{{ match.status|cut:"_" }}</span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4 text-secondary small">Apply to jobs to see your match scores here.</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- ─── Quick Links (Consolidated Career Hub) ─── -->
+    <div class="row g-3 mb-5" data-aos="fade-up" data-aos-delay="200">
+        <div class="col-md-4">
+            <a href="{% url 'resume_ats_checker' %}" class="glass-panel p-3 rounded-4 quick-link-card border-info border-opacity-25">
+                <i class="fas fa-file-search text-info fa-2x flex-shrink-0"></i>
+                <div><div class="fw-bold text-white">Resume Fix</div><div class="x-small text-secondary">Improve your resume</div></div>
+            </a>
+        </div>
+        <div class="col-md-4">
+            <a href="{% url 'interview_prep' %}" class="glass-panel p-3 rounded-4 quick-link-card border-warning border-opacity-25">
+                <i class="fas fa-lightbulb text-warning fa-2x flex-shrink-0"></i>
+                <div><div class="fw-bold text-white">Prep Lab</div><div class="x-small text-secondary">Practice with AI</div></div>
+            </a>
+        </div>
+        <div class="col-md-4">
+            <a href="{% url 'candidate_applications' %}" class="glass-panel p-3 rounded-4 quick-link-card border-success border-opacity-25">
+                <i class="fas fa-map-signs text-success fa-2x flex-shrink-0"></i>
+                <div><div class="fw-bold text-white">Roadmaps</div><div class="x-small text-secondary">Career planning</div></div>
+            </a>
+        </div>
+        <div class="col-md-4">
+            <a href="{% url 'candidate_applications' %}" class="glass-panel p-3 rounded-4 quick-link-card border-danger border-opacity-25">
+                <i class="fas fa-microscope text-danger fa-2x flex-shrink-0"></i>
+                <div><div class="fw-bold text-white">Gap Test</div><div class="x-small text-secondary">Check your skills</div></div>
+            </a>
+        </div>
+        <div class="col-md-4">
+            <a href="{% url 'job_recommendations' %}" class="glass-panel p-3 rounded-4 quick-link-card border-primary border-opacity-25">
+                <i class="fas fa-magic text-primary fa-2x flex-shrink-0"></i>
+                <div><div class="fw-bold text-white">Job Tips</div><div class="x-small text-secondary">Matched for you</div></div>
+            </a>
+        </div>
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+Chart.defaults.color = '#94a3b8';
+Chart.defaults.borderColor = 'rgba(255,255,255,0.05)';
+const GRID = { color: 'rgba(255,255,255,0.04)' };
+const TICK = { color: '#64748b', font: { size: 11 } };
+
+// Score trend line chart
+const trendEl = document.getElementById('scoreTrendChart');
+if (trendEl) {
+    new Chart(trendEl, {
+        type: 'line',
+        data: {
+            labels: {{ trend_labels|safe }},
+            datasets: [{
+                label: 'AI Match Score (%)',
+                data: {{ trend_values|safe }},
+                borderColor: '#7C4DFF',
+                backgroundColor: 'rgba(124,77,255,0.1)',
+                fill: true, tension: 0.4, pointRadius: 5,
+                pointBackgroundColor: '#7C4DFF', pointHoverRadius: 8,
+            }]
+        },
+        options: {
+            plugins: { legend: { labels: { color: '#94a3b8' } } },
+            scales: {
+                x: { grid: GRID, ticks: { ...TICK, maxRotation: 30 } },
+                y: { grid: GRID, ticks: TICK, beginAtZero: true, max: 100 }
+            }
+        }
+    });
+}
+
+// Outcome doughnut
+new Chart(document.getElementById('outcomeChart'), {
+    type: 'doughnut',
+    data: {
+        labels: Object.keys({{ category_json|safe }}),
+        datasets: [{
+            data: Object.values({{ category_json|safe }}),
+            backgroundColor: ['#FF6D00', '#00C853', '#FF4444'],
+            borderWidth: 0
+        }]
+    },
+    options: {
+        plugins: { legend: { labels: { color: '#94a3b8', font: { size: 11 }, boxWidth: 10, padding: 12 } } },
+        cutout: '65%'
+    }
+});
+
+// Monthly bar
+new Chart(document.getElementById('monthlyChart'), {
+    type: 'bar',
+    data: {
+        labels: {{ monthly_labels|safe }},
+        datasets: [{
+            label: 'Applications',
+            data: {{ monthly_values|safe }},
+            backgroundColor: 'rgba(41,121,255,0.6)',
+            borderRadius: 6, borderSkipped: false
+        }]
+    },
+    options: {
+        plugins: { legend: { display: false } },
+        scales: {
+            x: { grid: GRID, ticks: TICK },
+            y: { grid: GRID, ticks: TICK, beginAtZero: true }
+        }
+    }
+});
+        </div>
+    </main>
+</div>
+{% endblock %}

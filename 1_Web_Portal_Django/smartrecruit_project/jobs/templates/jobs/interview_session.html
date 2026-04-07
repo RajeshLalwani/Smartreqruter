@@ -1,0 +1,1046 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Live Pair Programming - {{ application.candidate.full_name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --glass-bg: rgba(255, 255, 255, 0.05);
+        --glass-border: rgba(255, 255, 255, 0.1);
+        --neon-primary: #00d2ff;
+        --neon-secondary: #9d50bb;
+        --accent-success: #00ff88;
+        --glass-panel: rgba(255, 255, 255, 0.03);
+    }
+
+    /* Drawflow Custom Overrides */
+    .drawflow { background: #0f172a; }
+    .drawflow-node { width: 180px !important; }
+
+    .session-tab-content {
+        display: none;
+        height: 100%;
+        width: 100%;
+    }
+    .session-tab-content.active {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .tab-btn.active {
+        background: var(--neon-primary);
+        color: white;
+        box-shadow: 0 0 15px rgba(0, 210, 255, 0.4);
+    }
+
+    /* Botanist Pulse Wave */
+    #botanist-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+    }
+    #pulse-wave {
+        width: 100%;
+        height: 300px;
+        filter: drop-shadow(0 0 10px var(--neon-primary));
+    }
+    .transcript-sidebar {
+        max-height: 300px;
+        overflow-y: auto;
+        font-size: 0.85rem;
+        line-height: 1.5;
+        padding-right: 5px;
+    }
+    .transcript-entry {
+        margin-bottom: 12px;
+        padding: 8px 12px;
+        border-radius: 8px;
+        background: rgba(255,255,255,0.02);
+        border-left: 3px solid var(--neon-primary);
+    }
+    .transcript-bot { border-color: var(--neon-secondary); }
+    .transcript-user { border-color: var(--neon-primary); }
+
+    body {
+        overflow: hidden;
+        height: 100vh;
+        margin: 0;
+        background: transparent;
+    }
+    
+    .btn:active {
+        transform: scale(0.95) !important;
+    }
+
+    #session-timer {
+        font-family: 'Inter', monospace;
+        font-weight: 700;
+        font-size: 1.2rem;
+        background: var(--glass-fill);
+        border: 1px solid var(--neon-primary);
+        padding: 5px 15px;
+        border-radius: 8px;
+        backdrop-filter: blur(10px);
+        color: var(--neon-primary);
+        box-shadow: 0 0 15px rgba(0, 210, 255, 0.4);
+        transition: 0.3s all;
+    }
+
+    #session-timer.timer-danger {
+        border-color: #ff3366;
+        color: #ff3366;
+        box-shadow: 0 0 20px rgba(255, 51, 102, 0.6);
+        animation: pulseDanger 1.5s infinite;
+    }
+
+    @keyframes pulseDanger {
+        0% { box-shadow: 0 0 10px rgba(255, 51, 102, 0.4); }
+        50% { box-shadow: 0 0 30px rgba(255, 51, 102, 0.8); }
+        100% { box-shadow: 0 0 10px rgba(255, 51, 102, 0.4); }
+    }
+    
+    html[data-theme="clean"] .editor-wrapper {
+        border-color: #0052cc;
+        box-shadow: 0 10px 30px rgba(0, 82, 204, 0.1);
+    }
+    
+    html[data-theme="midnight"] .editor-wrapper {
+        border-color: var(--neon-primary);
+        box-shadow: 0 0 20px rgba(0, 210, 255, 0.2);
+    }
+    
+    .btn-run { background: rgba(0, 210, 255, 0.1); border-color: var(--neon-primary); color: white; border: 1px solid; border-radius: 8px; padding: 8px 20px; transition: 0.3s; }
+    .btn-run:hover { background: var(--neon-primary); box-shadow: 0 0 15px rgba(0, 210, 255, 0.5); }
+    
+    .btn-submit { background: rgba(157, 80, 187, 0.1); border-color: var(--neon-secondary); color: white; border: 1px solid; border-radius: 8px; padding: 8px 20px; transition: 0.3s; }
+    .btn-submit:hover { background: var(--neon-secondary); box-shadow: 0 0 15px rgba(157, 80, 187, 0.5); }
+
+    .session-container {
+        display: grid;
+        grid-template-columns: 1fr 340px;
+        grid-template-rows: 80px 1fr;
+        height: 100vh;
+        gap: 15px;
+        padding: 15px;
+    }
+
+    /* Header & Controls */
+    .session-header {
+        grid-column: 1 / -1;
+        background: var(--glass-bg);
+        backdrop-filter: blur(20px);
+        border: 1px solid var(--glass-border);
+        border-radius: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 25px;
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    }
+
+    .candidate-info h2 {
+        margin: 0;
+        font-size: 1.4rem;
+        background: linear-gradient(to right, #fff, #94a3b8);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+        letter-spacing: 1px;
+    }
+
+    .session-actions {
+        display: flex;
+        gap: 15px;
+        align-items: center;
+    }
+
+    /* Monaco Editor Container */
+    .editor-wrapper {
+        background: var(--glass-bg);
+        backdrop-filter: blur(15px);
+        border: 1px solid var(--glass-border);
+        border-radius: 15px;
+        overflow: hidden;
+        position: relative;
+        box-shadow: inset 0 0 40px rgba(0,0,0,0.2);
+    }
+
+    #monaco-container {
+        width: 100%;
+        height: 100%;
+    }
+
+    /* Sidebar: Presence & Chat */
+    .session-sidebar {
+        background: var(--glass-bg);
+        backdrop-filter: blur(20px);
+        border: 1px solid var(--glass-border);
+        border-radius: 15px;
+        display: flex;
+        flex-direction: column;
+        padding: 20px;
+        gap: 20px;
+    }
+
+    .presence-list {
+        flex-grow: 1;
+    }
+
+    .presence-title {
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        color: #94a3b8;
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .user-pill {
+        background: rgba(255,255,255,0.05);
+        border: 1px solid var(--glass-border);
+        border-radius: 10px;
+        padding: 10px;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        animation: slideIn 0.3s ease-out;
+    }
+
+    .user-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        background: linear-gradient(45deg, var(--neon-primary), var(--neon-secondary));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        color: white;
+    }
+
+    .user-status {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--accent-success);
+        box-shadow: 0 0 10px var(--accent-success);
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--glass-border); border-radius: 10px; }
+
+    /* Button Styling */
+    .btn-recruit {
+        background: rgba(0, 210, 255, 0.1);
+        border: 1px solid var(--neon-primary);
+        color: white;
+        padding: 8px 20px;
+        border-radius: 8px;
+        transition: 0.3s all;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .btn-recruit:hover {
+        background: var(--neon-primary);
+        box-shadow: 0 0 20px rgba(0, 210, 255, 0.4);
+        transform: translateY(-2px);
+    }
+
+    .btn-save {
+        border-color: var(--accent-success);
+        background: rgba(0, 255, 136, 0.1);
+    }
+
+    .btn-save:hover {
+        background: var(--accent-success);
+        box-shadow: 0 0 20px rgba(0, 255, 136, 0.4);
+    }
+
+    /* Monaco Remote Cursors */
+    .yRemoteSelection {
+        background-color: rgba(0, 210, 255, 0.2);
+    }
+    .yRemoteSelectionHead {
+        position: absolute;
+        border-left: 2px solid var(--neon-primary);
+        border-top: 2px solid var(--neon-primary);
+        border-bottom: 2px solid var(--neon-primary);
+        height: 100%;
+        box-sizing: border-box;
+    }
+    .yRemoteSelectionHead::after {
+        position: absolute;
+        content: attr(data-user);
+        top: -22px;
+        left: -2px;
+        padding: 2px 8px;
+        background: var(--neon-primary);
+        color: white;
+        font-size: 11px;
+        font-weight: 600;
+        white-space: nowrap;
+        border-radius: 4px;
+        font-family: 'Inter', sans-serif;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+        pointer-events: none;
+        z-index: 10;
+        text-shadow: 0 0 5px rgba(0,0,0,0.5);
+    }
+    
+    /* Recruiter Cursor Override */
+    .yRemoteSelectionHead[style*="border-color: #9d50bb"],
+    .yRemoteSelectionHead[style*="border-color: rgb(157, 80, 187)"] {
+        border-color: #9d50bb !important;
+    }
+    .yRemoteSelectionHead[style*="border-color: #9d50bb"]::after {
+        background: #9d50bb !important;
+    }
+
+    .text-purple { color: #9d50bb; }
+    .text-theme { color: #fff; }
+
+    @keyframes slideIn {
+        from { opacity: 0; transform: translateX(20px); }
+        to { opacity: 1; transform: translateX(0); }
+    }
+
+    /* Proctoring Widget Styles */
+    #proctor-widget {
+        cursor: default;
+        background: rgba(10, 11, 16, 0.85);
+        backdrop-filter: blur(15px);
+        border: 1px solid var(--neon-primary);
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0,210,255,0.2);
+        transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        margin-top: 20px;
+    }
+
+    #proctor-widget.warning {
+        border-color: #f79009;
+        box-shadow: 0 0 20px rgba(247, 144, 9, 0.4);
+    }
+
+    #proctor-video {
+        width: 100%;
+        height: auto;
+        display: block;
+        transform: scaleX(-1); /* Mirror effect */
+    }
+
+    .proctor-label {
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        background: rgba(0,210,255,0.1);
+        padding: 8px;
+        border-bottom: 1px solid var(--neon-primary);
+        color: var(--neon-primary);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    #proctor-alert {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        background: rgba(247, 144, 9, 0.9);
+        color: white;
+        font-size: 11px;
+        padding: 4px 8px;
+        text-align: center;
+        display: none;
+        animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+        0% { opacity: 0.8; }
+        50% { opacity: 1; }
+        100% { opacity: 0.8; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="session-container">
+    <header class="session-header">
+        <div class="candidate-info">
+            <h2>Live Session: {{ application.candidate.full_name }}</h2>
+            <small style="color: #64748b;">Round: Live Technical Interview</small>
+        </div>
+
+        <div class="header-tabs ms-4 me-auto d-flex gap-2">
+            <button class="btn btn-sm btn-outline-info active tab-btn" data-tab="editor-container">
+                <i class="fas fa-code me-2"></i>Code Editor
+            </button>
+            <button class="btn btn-sm btn-outline-info tab-btn" data-tab="architecture-container">
+                <i class="fas fa-drafting-compass me-2"></i>Architecture Design
+            </button>
+            <button class="btn btn-sm btn-outline-info tab-btn" data-tab="botanist-container">
+                <i class="fas fa-braille me-2"></i>Behavioral AI
+            </button>
+        </div>
+        
+        <div class="session-actions">
+            <div class="dropdown me-2">
+                <button class="btn btn-recruit border-info dropdown-toggle" type="button" id="languageSelect" data-bs-toggle="dropdown" aria-expanded="false" style="min-width: 140px;">
+                    <i class="fas fa-terminal me-2 text-info"></i><span id="current-lang">Python</span>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-dark glass-panel border-info border-opacity-25 shadow-lg" aria-labelledby="languageSelect">
+                    <li><a class="dropdown-item lang-opt" href="#" data-lang="python"><i class="fab fa-python me-2 text-primary"></i> Python</a></li>
+                    <li><a class="dropdown-item lang-opt" href="#" data-lang="javascript"><i class="fab fa-js-square me-2 text-warning"></i> JavaScript</a></li>
+                    <li><a class="dropdown-item lang-opt" href="#" data-lang="java"><i class="fab fa-java me-2 text-danger"></i> Java</a></li>
+                    <li><a class="dropdown-item lang-opt" href="#" data-lang="cpp"><i class="fas fa-file-code me-2 text-info"></i> C++</a></li>
+                    <li><a class="dropdown-item lang-opt" href="#" data-lang="go"><i class="fab fa-google me-2 text-cyan"></i> Go</a></li>
+                    <li><a class="dropdown-item lang-opt" href="#" data-lang="rust"><i class="fab fa-rust me-2 text-orange"></i> Rust</a></li>
+                </ul>
+            </div>
+
+            <span id="sync-status" class="badge rounded-pill bg-dark border border-info px-3 py-2">
+                <i class="fas fa-bolt text-info me-2"></i>Connecting...
+            </span>
+            
+            {% if is_recruiter %}
+            <button id="save-session" class="btn btn-recruit btn-save">
+                <i class="fas fa-save"></i> Save Session
+            </button>
+            {% else %}
+            <button id="run-code" class="btn btn-run">
+                <i class="fas fa-play"></i> Run Code
+            </button>
+            <button id="submit-code" class="btn btn-submit">
+                <i class="fas fa-paper-plane"></i> Submit
+            </button>
+            {% endif %}
+            
+            <a href="{% url 'dashboard' %}" class="btn btn-recruit border-danger text-danger">
+                <i class="fas fa-times-circle"></i> Leave
+            </a>
+        </div>
+    </header>
+
+    <main class="editor-wrapper p-0">
+        <div id="editor-container" class="session-tab-content active h-100 w-100">
+            <div id="monaco-container"></div>
+        </div>
+        <div id="architecture-container" class="session-tab-content h-100 w-100 p-3">
+            {% include 'jobs/architecture_design.html' %}
+        </div>
+        <div id="botanist-container" class="session-tab-content h-100 w-100 p-4">
+            <div class="text-center mb-4">
+                <h4 class="fw-bold text-theme">The Botanist <span class="badge bg-info bg-opacity-10 text-info ms-2 small">Behavioral Engine</span></h4>
+                <p class="text-theme-secondary small">Deep behavioral analysis via real-time conversational AI.</p>
+            </div>
+            
+            <div class="flex-grow-1 d-flex flex-column align-items-center justify-content-center">
+                <canvas id="pulse-wave"></canvas>
+                <div id="ai-status" class="mt-4 badge rounded-pill bg-dark border border-info px-4 py-2 text-uppercase tracking-widest" style="font-size: 0.7rem;">
+                    Botanist Initialized
+                </div>
+                <button id="start-botanist" class="btn btn-recruit mt-4 px-5 py-3 rounded-pill border-info">
+                    <i class="fas fa-microphone me-2"></i> Start Audio Interaction
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <aside class="session-sidebar">
+        <div class="presence-list">
+            <div class="presence-title">
+                <i class="fas fa-users"></i> Active Participants
+            </div>
+            <div id="user-list">
+                <!-- Injected via JS -->
+                <div class="user-pill">
+                    <div class="user-avatar" style="background: #3b82f6;">{{ user_name|slice:":1"|upper }}</div>
+                    <div class="flex-grow-1">
+                        <div class="fw-bold">{{ user_name }} (You)</div>
+                        <small class="text-info">Collaborating...</small>
+                    </div>
+                    <div class="user-status"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="session-details">
+            <div class="presence-title" style="margin-top: 20px;">
+                <i class="fas fa-info-circle"></i> Info
+            </div>
+            <div class="glass-panel p-3 rounded" style="background: rgba(255,255,255,0.02); border: 1px solid var(--glass-border);">
+                <div class="mb-2"><i class="fas fa-microchip me-2 text-info"></i> {{ application.job.title }}</div>
+                <div class="mb-1"><small class="text-muted">Real-time CRDT sync active</small></div>
+                <div><small class="text-muted">Latency: <span id="ping-stats" class="text-success">-- ms</span></small></div>
+            </div>
+
+            <div class="presence-title" style="margin-top: 20px;">
+                <i class="fas fa-stream"></i> Live Transcript
+            </div>
+            <div id="transcript-sidebar" class="transcript-sidebar">
+                <div class="text-muted text-center small py-4">Waiting for audio interaction...</div>
+            </div>
+
+            <!-- Proctoring Widget inside Side Panel -->
+            <div id="proctor-widget" class="glass-panel w-100 position-relative">
+                <div class="proctor-label"><i class="fas fa-eye"></i> AI is Monitoring</div>
+                <video id="proctor-video" autoplay muted playsinline></video>
+                <canvas id="proctor-canvas" style="display: none;"></canvas>
+                <div id="proctor-alert">Warning: Face not detected.</div>
+                
+                <!-- Floating Sentiment Bubble -->
+                <div id="session-sentiment-bubble" class="global-sentiment-bubble neutral" style="position: absolute; bottom: 10px; right: 10px; transform: scale(0.85); box-shadow: 0 4px 15px rgba(0,229,255,0.4);">
+                    <div id="session-sentiment-tooltip" class="bubble-tooltip">Live Sentiment Analytics</div>
+                    <span id="session-sentiment-text" class="global-sentiment-text text-info fw-bold" style="font-size: 0.8rem;">
+                        <i class="fas fa-circle-notch fa-spin me-2"></i>ANALYZING...
+                    </span>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- System Check Modal -->
+    <div class="modal fade" id="systemCheckModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content bg-dark border border-info border-opacity-25 rounded-4 overflow-hidden">
+                <div class="p-4 text-center">
+                    <div class="brand-mark mx-auto mb-3" style="width: 60px; height: 60px; font-size: 1.5rem;">
+                        <i class="fas fa-microphone-lines"></i>
+                    </div>
+                    <h5 class="fw-bold text-white mb-2">Neural Link Verification</h5>
+                    <p class="text-theme-secondary small mb-4">The Botanist requires microphone access to conduct the behavioral assessment. Please authorize your audio device to proceed.</p>
+                    
+                    <div id="mic-status-check" class="d-flex align-items-center justify-content-center gap-2 mb-4 p-2 rounded bg-white bg-opacity-5 border border-white border-opacity-10">
+                        <div class="spinner-grow spinner-grow-sm text-info" role="status"></div>
+                        <span class="small text-info">Waiting for authorization...</span>
+                    </div>
+
+                    <button id="authorize-mic" class="btn btn-recruit w-100 rounded-pill py-2 border-info">
+                        <i class="fas fa-shield-check me-2"></i> Authorize & Begin
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- Drawflow & Monaco resources -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jerosoler/Drawflow/dist/drawflow.min.css">
+<script src="https://cdn.jsdelivr.net/gh/jerosoler/Drawflow/dist/drawflow.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs/loader.js"></script>
+
+<script type="module">
+    // --- INTEGRATION: Yjs + Monaco + Django Channels ---
+    import * as Y from 'https://esm.sh/yjs@13.6.10'
+    import { MonacoBinding } from 'https://esm.sh/y-monaco@0.1.4'
+
+    const session_id = "{{ session_id }}";
+    const user_name = "{{ user_name }}";
+    const isRecruiter = "{{ is_recruiter }}" === "True";
+    
+    // 1. Initialize Yjs
+    const ydoc = new Y.Doc();
+    const ytext = ydoc.getText('monaco');
+    const awareness = new Y.Awareness(ydoc); // Critical: Added Awareness
+    
+    // 2. WebSocket Sync Logic (Adapted for binary relay in Django Channels)
+    const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+    const wsUrl = `${protocol}://${window.location.host}/ws/coding/${session_id}/`;
+    const socket = new WebSocket(wsUrl);
+    socket.binaryType = 'arraybuffer';
+
+    // 2.1 Awareness State Tracking
+    awareness.setLocalStateField('user', {
+        name: user_name,
+        color: isRecruiter ? '#9d50bb' : '#00d2ff', // Neon Purple for Recruiter, Cyan for Candidate
+        isRecruiter: isRecruiter
+    });
+
+    // Heartbeat & Stats
+    let lastPing = Date.now();
+    setInterval(() => {
+        lastPing = Date.now();
+        socket.send(JSON.stringify({type: 'ping'}));
+    }, 5000);
+
+    socket.onopen = () => {
+        document.getElementById('sync-status').className = 'badge rounded-pill bg-dark border border-success px-3 py-2';
+        document.getElementById('sync-status').innerHTML = '<i class="fas fa-check-circle text-success me-2"></i>Live Linked';
+        
+        // Initial sync request
+        const sv = Y.encodeStateVector(ydoc);
+        socket.send(sv);
+    };
+
+    socket.onclose = () => {
+        document.getElementById('sync-status').className = 'badge rounded-pill bg-dark border border-danger px-3 py-2';
+        document.getElementById('sync-status').innerHTML = '<i class="fas fa-exclamation-triangle text-danger me-2"></i>Link Broken';
+    };
+
+    socket.onmessage = (event) => {
+        if (event.data instanceof ArrayBuffer) {
+            // Binary Update: Distinguish between Yjs Doc update and Awareness update
+            const update = new Uint8Array(event.data);
+            
+            // Heuristic to detect awareness updates vs doc updates in this relay
+            // In a full provider this is handled by protocol tagging.
+            // Since we use a simple binary relay, we'll try applying as both if needed
+            // or rely on JSON for awareness if binary fails. 
+            // Better: We'll wrap updates in JSON if we need to distinguish or use multiple channels.
+            // For now, let's assume binary is for Doc and we'll use JSON for Awareness (easier for Django)
+            Y.applyUpdate(ydoc, update);
+        } else {
+            const data = JSON.parse(event.data);
+            if (data.type === 'aware_update') {
+               Y.applyAwarenessUpdate(awareness, new Uint8Array(data.update), socket);
+            } else if (data.type === 'pong') {
+                const latency = Date.now() - lastPing;
+                document.getElementById('ping-stats').textContent = `${latency} ms`;
+            } else if (data.type === 'language_change') {
+                applyLanguageUpdate(data.language, false);
+            } else if (data.type === 'user_joined' || data.type === 'user_left') {
+                // Presence triggers
+            }
+        }
+    };
+
+    ydoc.on('update', (update, origin) => {
+        if (origin !== socket) {
+            socket.send(update);
+        }
+    });
+
+    awareness.on('update', ({ added, updated, removed }, origin) => {
+        if (origin !== socket) {
+            const update = Y.encodeAwarenessUpdate(awareness, [ydoc.clientID]);
+            socket.send(JSON.stringify({
+                type: 'aware_update',
+                update: Array.from(update)
+            }));
+        }
+        refreshUserList();
+    });
+
+    // 3. Initialize Monaco
+    require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs' } });
+    require(['vs/editor/editor.main'], function () {
+        const editor = monaco.editor.create(document.getElementById('monaco-container'), {
+            value: '',
+            language: 'python',
+            theme: 'vs-dark',
+            fontSize: 14,
+            automaticLayout: true,
+            padding: { top: 20 },
+            minimap: { enabled: true },
+            lineNumbers: 'on',
+            roundedSelection: true,
+            scrollbar: { vertical: 'hidden', horizontal: 'hidden' }
+        });
+
+        // 4. Bind Yjs to Monaco with Awareness
+        const binding = new MonacoBinding(ytext, editor.getModel(), new Set([editor]), awareness);
+
+        // 4.5 Polyglot Switcher
+        window.applyLanguageUpdate = function(lang, broadcast = true) {
+            const labelMap = { 'python': 'Python', 'javascript': 'JavaScript', 'java': 'Java', 'cpp': 'C++', 'go': 'Go', 'rust': 'Rust' };
+            document.getElementById('current-lang').textContent = labelMap[lang] || lang;
+            monaco.editor.setModelLanguage(editor.getModel(), lang);
+            
+            if (broadcast) {
+                socket.send(JSON.stringify({ type: 'language_change', language: lang }));
+                if (ytext.toString().trim() === "") fetchBoilerplate(lang);
+            }
+        };
+
+        async function fetchBoilerplate(lang) {
+            try {
+                const res = await fetch(`/api/get-boilerplate/?lang=${lang}`);
+                const data = await res.json();
+                if (data.code) {
+                    ytext.delete(0, ytext.length);
+                    ytext.insert(0, data.code);
+                }
+            } catch (e) {}
+        }
+
+        document.querySelectorAll('.lang-opt').forEach(opt => {
+            opt.addEventListener('click', (e) => {
+                e.preventDefault();
+                applyLanguageUpdate(opt.dataset.lang, true);
+            });
+        });
+
+        // Track changes for auto-save
+        editor.onDidChangeModelContent(() => {
+            debounceSave();
+        });
+    });
+
+    // 5. Persistence & Presence UI Logic
+    let saveTimeout;
+    function debounceSave() {
+        clearTimeout(saveTimeout);
+        saveTimeout = setTimeout(saveSessionCode, 5000); // Auto-save every 5s of idle
+    }
+
+    async function saveSessionCode() {
+        const statusEl = document.getElementById('sync-status');
+        const originalHtml = statusEl.innerHTML;
+        
+        try {
+            const response = await fetch(`/api/save-live-code/{{ application.id }}/`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+                body: JSON.stringify({ code: ytext.toString() })
+            });
+            const result = await response.json();
+            if (result.status === 'success') {
+                statusEl.innerHTML = '<i class="fas fa-cloud-upload-alt text-success me-2"></i>Synced to DB';
+                setTimeout(() => { if (statusEl.innerHTML.includes('Synced')) statusEl.innerHTML = originalHtml; }, 2000);
+            }
+        } catch (e) { console.error("Auto-save failed", e); }
+    }
+
+    if (document.getElementById('save-session')) {
+        document.getElementById('save-session').addEventListener('click', saveSessionCode);
+    }
+
+    function refreshUserList() {
+        const list = document.getElementById('user-list');
+        list.innerHTML = '';
+        
+        awareness.getStates().forEach((state, clientID) => {
+            if (state.user) {
+                const isMe = clientID === ydoc.clientID;
+                const userPill = document.createElement('div');
+                userPill.className = 'user-pill';
+                userPill.innerHTML = `
+                    <div class="user-avatar" style="background: ${state.user.color}">${state.user.name.charAt(0).upperCase ? state.user.name.charAt(0) : state.user.name.charAt(0).toUpperCase()}</div>
+                    <div class="flex-grow-1">
+                        <div class="fw-bold text-theme small">${state.user.name} ${isMe ? '(You)' : ''}</div>
+                        <small class="${state.user.isRecruiter ? 'text-purple' : 'text-info'}" style="font-size: 0.7rem;">
+                            ${state.user.isRecruiter ? 'Pairing Lead' : 'Coding...'}
+                        </small>
+                    </div>
+                    <div class="user-status" style="background: ${state.user.color}; box-shadow: 0 0 8px ${state.user.color}"></div>
+                `;
+                list.appendChild(userPill);
+            }
+        });
+    }
+
+    // 6. Tab Switching Logic
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const target = btn.getAttribute('data-tab');
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            document.querySelectorAll('.session-tab-content').forEach(c => c.classList.remove('active'));
+            document.getElementById(target).classList.add('active');
+            
+            if (target === 'architecture-container' && typeof initDrawflow === 'function') {
+                if (!window.editor) initDrawflow();
+            }
+        });
+    });
+
+    // --- PROCTORING ENGINE INTEGRATION ---
+    const proctorVideo = document.getElementById('proctor-video');
+    const proctorCanvas = document.getElementById('proctor-canvas');
+    const proctorWidget = document.getElementById('proctor-widget');
+    const proctorAlert = document.getElementById('proctor-alert');
+
+    // 1. Initialize Webcam
+    async function initWebcam() {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 400, height: 300 } });
+            proctorVideo.srcObject = stream;
+        } catch (err) {
+            console.error("Camera access denied", err);
+            showProctorWarning("Camera access required for proctoring.");
+        }
+    }
+
+    // 2. Draggable Widget Logic
+    // Note: old dragging logic removed because widget is permanently embedded in the sidebar split-screen
+
+    // 4. Botanist Voice Engine (STT/TTS/Wave)
+    const botanistBtn = document.getElementById('start-botanist');
+    const aiStatus = document.getElementById('ai-status');
+    const transcriptSidebar = document.getElementById('transcript-sidebar');
+    const pulseCanvas = document.getElementById('pulse-wave');
+    const pulseCtx = pulseCanvas.getContext('2d');
+    
+    let isBotanistActive = false;
+    let audioContext, analyser, dataArray, source;
+    let recognition;
+    
+    // Wave Visualization
+    function initWave() {
+        pulseCanvas.width = pulseCanvas.parentElement.clientWidth;
+        pulseCanvas.height = 300;
+        
+        function drawWave() {
+            if (!isBotanistActive) return;
+            requestAnimationFrame(drawWave);
+            
+            analyser.getByteFrequencyData(dataArray);
+            pulseCtx.clearRect(0, 0, pulseCanvas.width, pulseCanvas.height);
+            
+            const centerX = pulseCanvas.width / 2;
+            const centerY = pulseCanvas.height / 2;
+            const radius = 80;
+            
+            pulseCtx.beginPath();
+            pulseCtx.strokeStyle = document.body.classList.contains('ai-speaking') ? '#9d50bb' : '#00d2ff';
+            pulseCtx.lineWidth = 3;
+            
+            let totalAmplitude = 0;
+            for (let i = 0; i < 360; i += 5) {
+                const angle = (i * Math.PI) / 180;
+                const index = Math.floor((i / 360) * dataArray.length);
+                const amplitude = dataArray[index] / 2;
+                totalAmplitude += amplitude;
+                const x = centerX + (radius + amplitude) * Math.cos(angle);
+                const y = centerY + (radius + amplitude) * Math.sin(angle);
+                
+                if (i === 0) pulseCtx.moveTo(x, y);
+                else pulseCtx.lineTo(x, y);
+            }
+            pulseCtx.closePath();
+            pulseCtx.stroke();
+
+            // Voice-reactive glowing border for video
+            let avgAmp = totalAmplitude / (360/5);
+            let glowIntensity = Math.min(avgAmp * 0.5, 40); // Max 40px glow
+            if (avgAmp > 10) {
+                proctorVideo.style.boxShadow = `0 0 ${glowIntensity}px ${glowIntensity/2}px rgba(0, 210, 255, 0.7)`;
+                proctorVideo.style.borderColor = 'rgba(0, 210, 255, 0.9)';
+            } else {
+                proctorVideo.style.boxShadow = 'none';
+                proctorVideo.style.borderColor = 'transparent';
+            }
+        }
+        drawWave();
+    }
+
+    // Botanist Core
+    const systemCheckModal = new bootstrap.Modal(document.getElementById('systemCheckModal'));
+    const authorizeBtn = document.getElementById('authorize-mic');
+    const micStatus = document.getElementById('mic-status-check');
+    
+    botanistBtn.addEventListener('click', () => {
+        if (!isBotanistActive) {
+            systemCheckModal.show();
+        } else {
+            window.location.reload();
+        }
+    });
+
+    authorizeBtn.addEventListener('click', async () => {
+        micStatus.innerHTML = '<div class="spinner-border spinner-border-sm text-success"></div> <span class="small text-success">Authorizing...</span>';
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            systemCheckModal.hide();
+            startBotanist(stream);
+        } catch (err) {
+            micStatus.innerHTML = '<i class="fas fa-times-circle text-danger"></i> <span class="small text-danger">Permission Denied</span>';
+        }
+    });
+
+    async function startBotanist(stream) {
+        try {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            analyser = audioContext.createAnalyser();
+            source = audioContext.createMediaStreamSource(stream);
+            source.connect(analyser);
+            analyser.fftSize = 256;
+            dataArray = new Uint8Array(analyser.frequencyBinCount);
+            
+            isBotanistActive = true;
+            botanistBtn.innerHTML = '<i class="fas fa-stop me-2"></i> Stop Interaction';
+            botanistBtn.classList.replace('border-info', 'border-danger');
+            aiStatus.textContent = "Listening...";
+            
+            initWave();
+            initSTT();
+            
+            // Initial Bot Greeting
+            speakBotanist("Hello. I am The Botanist. I'll be conducting your behavioral assessment today. Ready to begin?");
+            
+        } catch (err) {
+            console.error("Botanist initialization failed", err);
+        }
+    }
+
+    function initSTT() {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRecognition) return;
+        
+        recognition = new SpeechRecognition();
+        recognition.continuous = true;
+        recognition.interimResults = false;
+        
+        recognition.onresult = async (event) => {
+            const transcript = event.results[event.results.length - 1][0].transcript;
+            addTranscript('You', transcript, 'user');
+            
+            // Send to AI for behavioral follow-up
+            aiStatus.textContent = " botanist is thinking...";
+            const response = await fetch('/api/botanist/chat/', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}'},
+                body: JSON.stringify({ text: transcript, interview_id: "{{ interview.id }}" })
+            });
+            const data = await response.json();
+            if (data.reply) {
+                speakBotanist(data.reply);
+            }
+        };
+        
+        recognition.start();
+    }
+
+    function speakBotanist(text) {
+        document.body.classList.add('ai-speaking');
+        aiStatus.textContent = "Botanist Speaking...";
+        addTranscript('Botanist', text, 'bot');
+        
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.rate = 0.9;
+        utterance.pitch = 0.8; // Sophisticated tone
+        utterance.onend = () => {
+            document.body.classList.remove('ai-speaking');
+            aiStatus.textContent = "Listening...";
+        };
+        window.speechSynthesis.speak(utterance);
+    }
+
+    function addTranscript(sender, text, type) {
+        if (transcriptSidebar.innerHTML.includes('Waiting for')) transcriptSidebar.innerHTML = '';
+        const entry = document.createElement('div');
+        entry.className = `transcript-entry transcript-${type}`;
+        entry.innerHTML = `<strong>${sender}:</strong> ${text}`;
+        transcriptSidebar.prepend(entry);
+    }
+
+    // Initialize Sidebar Tabs
+    const tabBtns = document.querySelectorAll('.tab-btn');
+    tabBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.session-tab-content').forEach(c => c.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById(btn.dataset.tab).classList.add('active');
+        });
+    });
+
+    // Initialize Webcam & Analytics
+    initWebcam();
+    
+    // Bridge to 2_AI_Modules Sentiment API
+    async function analyzeFrame() {
+        if (!proctorVideo || proctorVideo.readyState !== 4) return;
+        const sCanvas = document.createElement('canvas');
+        sCanvas.width = proctorVideo.videoWidth;
+        sCanvas.height = proctorVideo.videoHeight;
+        sCanvas.getContext('2d').drawImage(proctorVideo, 0, 0, sCanvas.width, sCanvas.height);
+        const frameBase64 = sCanvas.toDataURL('image/jpeg', 0.6);
+        
+        try {
+            const response = await fetch("/jobs/api/global-sentiment-stream/", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({ frame_base64: frameBase64 })
+            });
+            const data = await response.json();
+            
+            if (data.status === 'success' && data.emotion) {
+                const liveEmo = data.emotion.toLowerCase();
+                const emotionMap = {
+                    'happy': { i: 'fa-smile', c: 'positive', textClr: 'text-success' },
+                    'sad': { i: 'fa-frown', c: 'negative', textClr: 'text-danger' },
+                    'angry': { i: 'fa-angry', c: 'negative', textClr: 'text-danger' },
+                    'fear': { i: 'fa-flushed', c: 'negative', textClr: 'text-danger' },
+                    'fearful': { i: 'fa-flushed', c: 'negative', textClr: 'text-danger' },
+                    'disgust': { i: 'fa-grimace', c: 'negative', textClr: 'text-danger' },
+                    'surprise': { i: 'fa-surprise', c: 'neutral', textClr: 'text-info' },
+                    'neutral': { i: 'fa-meh', c: 'neutral', textClr: 'text-info' },
+                    'no_face': { i: 'fa-user-slash', c: 'negative', textClr: 'text-danger', label: 'FACE NOT FOUND' },
+                    'multiple_faces': { i: 'fa-user-friends', c: 'negative', textClr: 'text-warning', label: 'MULTIPLE FACES' },
+                    'mobile_phone': { i: 'fa-mobile-alt', c: 'negative', textClr: 'text-danger', label: 'PHONE DETECTED' }
+                };
+                const mapped = emotionMap[liveEmo] || emotionMap['neutral'];
+                const displayLabel = mapped.label ? mapped.label : liveEmo.toUpperCase();
+                
+                const sb = document.getElementById('session-sentiment-bubble');
+                const st = document.getElementById('session-sentiment-text');
+                const tip = document.getElementById('session-sentiment-tooltip');
+                
+                if (sb && st) {
+                    sb.className = `global-sentiment-bubble active-float ${mapped.c}`;
+                    // Add pulsing effect based on confidence score (if > 80 it pulses stronger)
+                    if (data.score > 80) sb.classList.add('loading'); 
+                    else sb.classList.remove('loading');
+                    
+                    st.className = `global-sentiment-text ${mapped.textClr} fw-bold`;
+                    st.innerHTML = `<i class="fas ${mapped.i} me-2"></i>${displayLabel} (${data.score}%)`;
+                    tip.textContent = `AI Confidence: ${data.score}%`;
+                }
+            }
+        } catch (err) {
+            console.warn('Sentiment Analytics Check Failed:', err);
+        }
+    }
+    
+    // Start interval
+    setInterval(analyzeFrame, 3500);
+    
+    // Timer Logic
+    let timeLeft = 3000; // 50 mins
+    const timerContainer = document.querySelector('.header-tabs');
+    const timerEl = document.createElement('div');
+    timerEl.id = 'session-timer';
+    timerContainer.parentElement.insertBefore(timerEl, document.querySelector('.session-actions'));
+
+    setInterval(() => {
+        if(timeLeft <= 0) return;
+        timeLeft--;
+        let mins = Math.floor(timeLeft / 60);
+        let secs = timeLeft % 60;
+        timerEl.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+        if (timeLeft < 300 && !timerEl.classList.contains('timer-danger')) {
+            timerEl.classList.add('timer-danger');
+        }
+    }, 1000);
+
+    // Page Visibility API (Proctoring Tab Switch Detection)
+    document.addEventListener("visibilitychange", () => {
+        if (document.hidden) {
+            console.warn("Proctoring Alert: Candidate switched tabs!");
+            document.getElementById('sync-status').className = 'badge rounded-pill bg-danger text-white border-0 px-3 py-2';
+            document.getElementById('sync-status').innerHTML = '<i class="fas fa-exclamation-triangle"></i> Tab Switch Detected';
+        } else {
+            document.getElementById('sync-status').className = 'badge rounded-pill bg-dark border border-success px-3 py-2 text-white';
+            document.getElementById('sync-status').innerHTML = '<i class="fas fa-check-circle text-success me-2"></i>Live Linked';
+        }
+    });
+</script>
+{% endblock %}

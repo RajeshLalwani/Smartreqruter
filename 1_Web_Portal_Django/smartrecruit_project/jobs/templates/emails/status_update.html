@@ -1,0 +1,146 @@
+{% autoescape off %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Application Update</title>
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: #f4f7f6;
+            margin: 0;
+            padding: 0;
+            color: #333333;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 40px auto;
+            background: #ffffff;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            border: 1px solid #e2e8f0;
+        }
+
+        .header {
+                {
+                % if status_type=='success' %
+            }
+
+            background: linear-gradient(135deg, #00C853, #00E676);
+
+                {
+                % else %
+            }
+
+            background: linear-gradient(135deg, #FF5252, #FF1744);
+
+                {
+                % endif %
+            }
+
+            padding: 30px 40px;
+            text-align: center;
+        }
+
+        .header h1 {
+            color: #ffffff;
+            margin: 0;
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+
+        .content {
+            padding: 40px;
+            line-height: 1.6;
+        }
+
+        .greeting {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #1e293b;
+        }
+
+        .message-box {
+            background: #f8fafc;
+
+            border-left: 4px solid {
+                % if status_type=='success' %
+            }
+
+            #00C853 {
+                % else %
+            }
+
+            #FF5252 {
+                % endif %
+            }
+
+            ;
+            padding: 20px;
+            border-radius: 0 8px 8px 0;
+            margin: 25px 0;
+        }
+
+        .footer {
+            background: #f8fafc;
+            padding: 20px 40px;
+            text-align: center;
+            border-top: 1px solid #e2e8f0;
+            color: #64748b;
+            font-size: 12px;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 12px 30px;
+            margin-top: 25px;
+            background-color: #1e293b;
+            color: #ffffff !important;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>SMARTRECRUIT AI</h1>
+        </div>
+        <div class="content">
+            <div class="greeting">Hello {{ candidate_name }},</div>
+            <p>We are reaching out regarding your application for the <strong>{{ job_title }}</strong> position at IR
+                Info Tech.</p>
+
+            <div class="message-box">
+                {{ email_body|safe }}
+            </div>
+
+            {% if status_type == 'success' %}
+            <p>Our team was highly impressed with your profile, and we are excited to move forward.</p>
+            <div style="text-align: center;">
+                <a href="{{ portal_url }}" class="btn">Access Candidate Portal</a>
+            </div>
+            {% else %}
+            <p>While we won't be moving forward with your application at this time, we were impressed by your background
+                and will keep your resume on file for future opportunities.</p>
+            <p>We wish you the absolute best in your career journey.</p>
+            {% endif %}
+        </div>
+        <div class="footer">
+            <p>&copy; 2026 IR Info Tech. All rights reserved.</p>
+            <p>This is an automated neural message. Please do not reply directly to this email.</p>
+        </div>
+    </div>
+</body>
+
+</html>
+{% endautoescape %}

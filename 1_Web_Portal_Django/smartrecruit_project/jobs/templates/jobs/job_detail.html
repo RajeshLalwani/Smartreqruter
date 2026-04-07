@@ -1,0 +1,449 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ job.title }} | SmartRecruit{% endblock %}
+
+{% block content %}
+<style>
+    /* Z-INDEX SAFEGUARDS */
+    .modal { z-index: 2000 !important; }
+    .modal-backdrop { z-index: 1050 !important; }
+</style>
+
+<div class="container-fluid">
+    <!-- Hero Section -->
+    <section class="page-hero mb-4 glass-panel p-5 border-info border-opacity-10 shadow-lg position-relative overflow-hidden" data-aos="fade-down">
+        <!-- Floating Backdrop Icon -->
+        <div class="position-absolute top-0 end-0 p-4 opacity-10">
+            <i class="fas fa-briefcase fa-8x text-info"></i>
+        </div>
+        
+        <div class="row align-items-center g-4 position-relative z-2">
+            <div class="col-lg-8">
+                <!-- Badges -->
+                <div class="d-flex flex-wrap gap-2 mb-4">
+                    <span class="badge bg-secondary bg-opacity-25 text-theme border border-secondary border-opacity-50 px-3 py-2 rounded-pill shadow-inner"><i class="fas fa-tag me-2"></i>{{ job.get_job_type_display }}</span>
+                    <span class="badge bg-secondary bg-opacity-25 text-info border border-info border-opacity-25 px-3 py-2 rounded-pill shadow-inner"><i class="fas fa-code me-2"></i>{{ job.technology_stack }}</span>
+                    {% if job.status == 'OPEN' %}
+                    <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-50 px-3 py-2 rounded-pill shadow-inner"><i class="fas fa-broadcast-tower me-2 pulse-animation"></i>Accepting Profiles</span>
+                    {% else %}
+                    <span class="badge bg-danger bg-opacity-25 text-danger border border-danger border-opacity-50 px-3 py-2 rounded-pill shadow-inner"><i class="fas fa-lock me-2"></i>Closed</span>
+                    {% endif %}
+                </div>
+                
+                <!-- Title & Meta -->
+                <h1 class="display-5 fw-bold text-theme mb-2 tracking-tight">{{ job.title }}</h1>
+                <p class="lead text-theme-secondary mb-3 d-flex align-items-center gap-3">
+                    <span><i class="fas fa-map-marker-alt text-info me-2"></i>{{ job.location }}</span>
+                    {% if job.salary_range %}<span class="text-theme opacity-50">|</span><span><i class="fas fa-money-bill-wave text-success me-2"></i>{{ job.salary_range }}</span>{% endif %}
+                </p>
+                <p class="text-theme-secondary small d-none d-md-block opacity-75">Review the role summary, requirements, and hiring checkpoints before you proceed.</p>
+            </div>
+            
+            <div class="col-lg-4">
+                <div class="glass-panel p-4 bg-secondary bg-opacity-10 border-secondary border-opacity-25 shadow-inner rounded-4 h-100 d-flex flex-column justify-content-center">
+                    <div class="d-grid gap-3">
+                        {% if user.is_candidate %}
+                            {% if has_applied %}
+                            <button class="btn btn-secondary btn-lg rounded-pill text-white fw-bold d-flex justify-content-center align-items-center cursor-not-allowed opacity-50" style="background-color: var(--bs-secondary); border: none;" disabled>
+                                <i class="fas fa-check-double me-2"></i> Already Applied
+                            </button>
+                            {% elif job.status == 'CLOSED' %}
+                            <button class="btn btn-danger btn-lg rounded-pill text-white fw-bold d-flex justify-content-center align-items-center cursor-not-allowed opacity-75" style="border: none;" disabled>
+                                <i class="fas fa-lock me-2"></i> Application Closed
+                            </button>
+                            {% else %}
+                            <button data-bs-toggle="modal" data-bs-target="#applyModal" class="btn btn-primary btn-lg rounded-pill fw-bold shadow-lg hover-scale d-flex justify-content-center align-items-center pulse-neon border-0">
+                                <i class="fas fa-paper-plane me-2"></i> Submit Application
+                            </button>
+                            {% endif %}
+                        {% elif is_owner %}
+                        <a href="{% url 'candidate_list' %}?job_id={{ job.id }}" class="btn btn-info btn-lg rounded-pill text-dark fw-bold shadow-lg hover-scale d-flex justify-content-center align-items-center">
+                            <i class="fas fa-users-viewfinder me-2"></i> Review Candidates
+                        </a>
+                        {% endif %}
+                        <a href="{% url 'job_list' %}" class="btn border border-secondary border-opacity-50 text-theme rounded-pill fw-bold hover-scale shadow-sm d-flex justify-content-center align-items-center transition-all">
+                            <i class="fas fa-chevron-left me-2 small"></i> Back to Matrix
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <section class="row g-4 pb-5">
+        <!-- Left Column: Details -->
+        <div class="col-lg-8">
+            <div class="d-flex flex-column gap-4">
+                <!-- Role Overview -->
+                <div class="glass-panel p-4 p-lg-5 border-secondary border-opacity-25 shadow-sm hover-lift" data-aos="fade-up">
+                    <div class="d-flex align-items-center mb-4 pb-3 border-bottom border-light border-opacity-10">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center shadow-inner me-3" style="width: 45px; height: 45px; background: rgba(13, 202, 240, 0.1);">
+                            <i class="fas fa-align-left text-info fs-5"></i>
+                        </div>
+                        <div>
+                            <h4 class="fw-bold text-theme mb-0">Role Overview</h4>
+                            <p class="small text-theme-secondary mb-0 text-uppercase tracking-widest fw-bold">Primary Responsibilities</p>
+                        </div>
+                    </div>
+                    
+                    <div class="text-theme" style="white-space: pre-line; line-height: 1.8; font-size: 1.05rem;">{{ job.description }}</div>
+                </div>
+
+                <!-- Core Expectations -->
+                <div class="glass-panel p-4 p-lg-5 border-secondary border-opacity-25 shadow-sm hover-lift" data-aos="fade-up" data-aos-delay="100">
+                    <div class="d-flex align-items-center mb-4 pb-3 border-bottom border-light border-opacity-10">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center shadow-inner me-3" style="width: 45px; height: 45px; background: rgba(255, 193, 7, 0.1);">
+                            <i class="fas fa-clipboard-check text-warning fs-5"></i>
+                        </div>
+                        <div>
+                            <h4 class="fw-bold text-theme mb-0">Core Expectations</h4>
+                            <p class="small text-theme-secondary mb-0 text-uppercase tracking-widest fw-bold">Prerequisites & Skills</p>
+                        </div>
+                    </div>
+
+                    <!-- Skills Matrix -->
+                    <div class="mb-5">
+                        <h6 class="text-theme-secondary small fw-bold text-uppercase tracking-widest mb-3"><i class="fas fa-project-diagram text-primary me-2"></i>Required Skill Matrix</h6>
+                        <div class="d-flex flex-wrap gap-2">
+                            {% for skill in job.skills_list %}
+                            <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25 px-3 py-2 fw-normal shadow-inner hover-scale transition-all" style="font-size: 0.9rem;">{{ skill }}</span>
+                            {% empty %}
+                            <div class="w-100 p-3 bg-secondary bg-opacity-10 rounded-4 border border-secondary border-opacity-25 text-center">
+                                <span class="text-secondary small"><i class="fas fa-fingerprint me-2"></i>No structured skill vector defined for this role.</span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- Evaluation Process -->
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <div class="p-4 rounded-4 bg-secondary bg-opacity-10 border border-secondary border-opacity-25 shadow-inner h-100 position-relative group mb-0 hover-scale-card">
+                                <div class="position-absolute top-0 end-0 p-3 opacity-10"><i class="fas fa-history fa-2x text-theme-secondary"></i></div>
+                                <div class="text-theme-secondary small fw-bold text-uppercase tracking-widest mb-2 position-relative z-2">Experience</div>
+                                <div class="display-6 fw-bold text-theme mb-0 position-relative z-2">{{ job.min_experience }}<span class="fs-4 text-warning">+ Yrs</span></div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="p-4 rounded-4 bg-secondary bg-opacity-10 border border-secondary border-opacity-25 shadow-inner h-100 position-relative group mb-0 hover-scale-card">
+                                <div class="position-absolute top-0 end-0 p-3 opacity-10"><i class="fas fa-brain fa-2x text-info"></i></div>
+                                <div class="text-theme-secondary small fw-bold text-uppercase tracking-widest mb-2 position-relative z-2">Aptitude</div>
+                                <h4 class="fw-bold text-theme mb-1 position-relative z-2">{{ job.passing_score_r1 }}<span class="fs-5 text-theme-secondary">% Pass</span></h4>
+                                <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25 fw-normal float-start mt-1 position-relative z-2">{{ job.get_aptitude_difficulty_display }}</span>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="p-4 rounded-4 bg-secondary bg-opacity-10 border border-secondary border-opacity-25 shadow-inner h-100 position-relative group mb-0 hover-scale-card">
+                                <div class="position-absolute top-0 end-0 p-3 opacity-10"><i class="fas fa-laptop-code fa-2x text-success"></i></div>
+                                <div class="text-theme-secondary small fw-bold text-uppercase tracking-widest mb-2 position-relative z-2">Practical</div>
+                                <h4 class="fw-bold text-theme mb-1 position-relative z-2">{{ job.passing_score_r2 }}<span class="fs-5 text-theme-secondary">% Pass</span></h4>
+                                <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 fw-normal float-start mt-1 position-relative z-2">{{ job.get_practical_difficulty_display }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Meta & Actions -->
+        <div class="col-lg-4">
+            <!-- Job Facts -->
+            <div class="glass-panel p-4 mb-4 border-secondary border-opacity-25 shadow-sm hover-lift" data-aos="fade-up" data-aos-delay="200">
+                <h5 class="fw-bold text-theme mb-4 d-flex align-items-center">
+                    <i class="fas fa-fingerprint text-success me-2"></i> Hiring Snapshot
+                </h5>
+                
+                <div class="d-flex flex-column gap-0">
+                    <div class="d-flex justify-content-between align-items-center border-bottom border-light border-opacity-10 py-3">
+                        <div class="d-flex align-items-center">
+                            <div class="rounded bg-secondary bg-opacity-10 p-2 me-3 border border-secondary border-opacity-25 shadow-inner text-center" style="width: 35px;"><i class="fas fa-map-marker-alt text-info"></i></div>
+                            <div>
+                                <h6 class="fw-bold text-theme mb-0 fs-6">Location</h6>
+                                <div class="text-secondary small">{{ job.location }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center border-bottom border-light border-opacity-10 py-3">
+                        <div class="d-flex align-items-center">
+                            <div class="rounded bg-secondary bg-opacity-10 p-2 me-3 border border-secondary border-opacity-25 shadow-inner text-center" style="width: 35px;"><i class="fas fa-money-bill-wave text-success"></i></div>
+                            <div>
+                                <h6 class="fw-bold text-theme mb-0 fs-6">Compensation</h6>
+                                <div class="text-secondary small">{{ job.salary_range|default:"Competitive / Shared in process" }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center border-bottom border-light border-opacity-10 py-3">
+                        <div class="d-flex align-items-center">
+                            <div class="rounded bg-secondary bg-opacity-10 p-2 me-3 border border-secondary border-opacity-25 shadow-inner text-center" style="width: 35px;"><i class="fas fa-calendar-day text-primary"></i></div>
+                            <div>
+                                <h6 class="fw-bold text-theme mb-0 fs-6">Posted On</h6>
+                                <div class="text-secondary small">{{ job.created_at|date:"d M Y" }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center border-bottom border-light border-opacity-10 py-3">
+                        <div class="d-flex align-items-center">
+                            <div class="rounded bg-secondary bg-opacity-10 p-2 me-3 border border-secondary border-opacity-25 shadow-inner text-center" style="width: 35px;"><i class="fas fa-hourglass-end text-warning"></i></div>
+                            <div>
+                                <h6 class="fw-bold text-theme mb-0 fs-6">Deadline</h6>
+                                <div class="text-secondary small">{% if job.deadline %}{{ job.deadline|date:"d M Y" }}{% else %}<span class="text-success fw-bold">Open until filled</span>{% endif %}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center py-3">
+                        <div class="d-flex align-items-center">
+                            <div class="rounded bg-secondary bg-opacity-10 p-2 me-3 border border-secondary border-opacity-25 shadow-inner text-center" style="width: 35px;"><i class="fas fa-user-tie text-secondary"></i></div>
+                            <div>
+                                <h6 class="fw-bold text-theme mb-0 fs-6">Recruiter</h6>
+                                <div class="text-theme-secondary small">{{ job.recruiter.get_full_name|default:job.recruiter.username }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Candidate Helper -->
+            {% if user.is_candidate and not has_applied %}
+            <div class="glass-panel p-4 bg-secondary bg-opacity-10 border-primary border-opacity-50 shadow-glow" data-aos="fade-up" data-aos-delay="300">
+                <div class="d-flex align-items-center mb-3">
+                    <i class="fas fa-info-circle fs-4 text-primary me-3"></i>
+                    <h6 class="fw-bold text-theme mb-0">Pre-Application Scan</h6>
+                </div>
+                <p class="small text-theme-secondary mb-4 lh-base">Upload an updated resume maximizing token overlap with the defined skill matrix. The neural engine evaluates profiles instantaneously upon submission.</p>
+                <button data-bs-toggle="modal" data-bs-target="#applyModal" class="btn btn-primary rounded-pill w-100 fw-bold shadow-sm hover-scale pulse-neon border-0">Initiate Application <i class="fas fa-arrow-right ms-2"></i></button>
+            </div>
+            {% endif %}
+        </div>
+    </section>
+</div>
+
+<!-- Progressive Multi-step Apply Modal -->
+<div class="modal fade" id="applyModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content glass-panel border-info border-opacity-50 bg-dark shadow-cyan-glow" style="backdrop-filter: blur(20px);">
+            <div class="modal-header border-bottom border-light border-opacity-10 align-items-center p-4 bg-secondary bg-opacity-10">
+                <h5 class="modal-title fw-bold text-white d-flex align-items-center gap-3">
+                    <i class="fas fa-bolt text-info pulse-animation"></i> Neural Selection Protocol
+                </h5>
+                <button type="button" class="btn-close btn-close-white opacity-75 hover-opacity-100" data-bs-dismiss="modal" aria-label="Abort"></button>
+            </div>
+            
+            <form method="post" action="{% url 'apply_job' job.id %}" enctype="multipart/form-data" id="multiStepApplyForm">
+                {% csrf_token %}
+                <div class="modal-body p-0 position-relative">
+                    
+                    <!-- Progress Tracker Navigation -->
+                    <div class="d-flex justify-content-between px-5 pt-4 pb-3 position-relative z-2">
+                        <!-- Connecting Line Behind -->
+                        <div class="position-absolute top-50 start-50 translate-middle w-75 bg-secondary bg-opacity-25" style="height: 2px; margin-top: 5px;">
+                            <div class="bg-info bg-opacity-75 transition-all" id="stepProgressLine" style="height: 100%; width: 0%;"></div>
+                        </div>
+                        
+                        <div class="step-indicator active text-center position-relative z-3" id="ind-step-1">
+                            <div class="step-circle bg-info text-dark rounded-circle d-flex align-items-center justify-content-center shadow-inner fw-bold mx-auto mb-2" style="width: 40px; height: 40px;">1</div>
+                            <div class="small fw-bold text-white tracking-widest text-uppercase" style="font-size: 0.65rem;">Vector DB</div>
+                        </div>
+                        <div class="step-indicator text-center position-relative z-3 opacity-50" id="ind-step-2">
+                            <div class="step-circle bg-secondary bg-opacity-10 text-theme-secondary border border-secondary border-opacity-50 rounded-circle d-flex align-items-center justify-content-center shadow-inner fw-bold mx-auto mb-2 transition-all" style="width: 40px; height: 40px;">2</div>
+                            <div class="small fw-bold text-white tracking-widest text-uppercase" style="font-size: 0.65rem;">Parameters</div>
+                        </div>
+                        <div class="step-indicator text-center position-relative z-3 opacity-50" id="ind-step-3">
+                            <div class="step-circle bg-secondary bg-opacity-10 text-theme-secondary border border-secondary border-opacity-50 rounded-circle d-flex align-items-center justify-content-center shadow-inner fw-bold mx-auto mb-2 transition-all" style="width: 40px; height: 40px;">3</div>
+                            <div class="small fw-bold text-white tracking-widest text-uppercase" style="font-size: 0.65rem;">Deploy</div>
+                        </div>
+                    </div>
+
+                    <!-- Step 1: Resume Upload -->
+                    <div class="step-pane p-4 p-md-5 active" id="pane-step-1">
+                        <div class="text-center mb-4">
+                            <i class="fas fa-file-pdf fa-3x text-info mb-3 opacity-75"></i>
+                            <h4 class="fw-bold text-white">Upload Neural Blueprint (Resume)</h4>
+                            <p class="text-secondary small">The RAG engine processes PDF and DOCX files to extract structural vectors.</p>
+                        </div>
+                        <div class="p-4 rounded-4 bg-secondary bg-opacity-10 border border-info border-opacity-25 shadow-inner mb-0">
+                            <label for="resumeInput" class="form-label text-info small fw-bold text-uppercase tracking-widest"><i class="fas fa-cloud-upload-alt me-2"></i> Select File Array</label>
+                            <input type="file" id="resumeInput" name="resume" class="form-control form-control-lg glass-input text-secondary border-secondary border-opacity-50" accept=".pdf,.doc,.docx" required>
+                            <div class="form-text text-secondary mt-2 small fst-italic"><i class="fas fa-exclamation-triangle me-1 text-warning"></i> Max Payload Capacity: 5.0 MB</div>
+                        </div>
+                    </div>
+
+                    <!-- Step 2: Initial Screening Data -->
+                    <div class="step-pane p-4 p-md-5 d-none" id="pane-step-2">
+                        <div class="text-center mb-4">
+                            <i class="fas fa-comment-dots fa-3x text-warning mb-3 opacity-75"></i>
+                            <h4 class="fw-bold text-white">Calibrate Screening Parameters</h4>
+                            <p class="text-secondary small">Provide context to enhance token overlap probabilities.</p>
+                        </div>
+                        <div class="p-4 rounded-4 bg-secondary bg-opacity-10 border border-warning border-opacity-25 shadow-inner mb-0">
+                            <label class="form-label text-warning small fw-bold text-uppercase tracking-widest"><i class="fas fa-code me-2"></i> Relevant Stack Alignment</label>
+                            <textarea class="form-control glass-input text-light border-secondary border-opacity-50" rows="3" placeholder="Identify specific libraries/frameworks overlapping with requirements..."></textarea>
+                            <div class="form-text text-secondary mt-2 small fst-italic">This injects supplemental weighting into your score matrix. (Optional)</div>
+                        </div>
+                    </div>
+
+                    <!-- Step 3: Confirmation -->
+                    <div class="step-pane p-4 p-md-5 d-none" id="pane-step-3">
+                        <div class="text-center py-4">
+                            <div class="position-relative d-inline-block mb-4">
+                                <i class="fas fa-satellite-dish fa-4x text-success pulse-animation"></i>
+                            </div>
+                            <h3 class="fw-bold text-white mb-2">Sequence Finalization</h3>
+                            <p class="text-secondary small px-4">Your payload is pre-compiled. Executing transmission binds your digital footprint to the recruiter's node.</p>
+                            <div class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-3 py-2 mt-2 rounded-pill shadow-inner">
+                                <i class="fas fa-lock me-2"></i> Secure P2P Transmission Ready
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+                
+                <div class="modal-footer border-top border-light border-opacity-10 bg-secondary bg-opacity-10 p-4 d-flex justify-content-between">
+                    <button type="button" class="btn btn-outline-secondary rounded-pill px-4 hover-scale d-none" id="btnPrevStep"><i class="fas fa-arrow-left me-2"></i> Step Back</button>
+                    <div class="ms-auto">
+                        <button type="button" class="btn btn-info text-dark fw-bold rounded-pill px-5 hover-scale shadow-sm" id="btnNextStep">Advance Sequence <i class="fas fa-arrow-right ms-2"></i></button>
+                        <button type="submit" class="btn btn-success fw-bold rounded-pill px-5 hover-scale shadow-glow d-none pulse-neon border-0" id="btnSubmitApply" style="box-shadow: 0 0 15px rgba(25, 135, 84, 0.5);"><i class="fas fa-rocket me-2"></i> Execute Submission</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Custom utility for group hover effect (simulated tailwind aspect) */
+.group:hover .group-hover-opacity-10 { opacity: 0.1 !important; }
+.shadow-cyan-glow { box-shadow: 0 0 25px rgba(0, 210, 255, 0.2) inset !important; }
+.pulse-animation { animation: pulse 2s infinite; }
+@keyframes pulse { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(1.1); } 100% { opacity: 1; transform: scale(1); } }
+.pulse-neon { animation: neonPulse 1.5s infinite alternate; }
+@keyframes neonPulse { 
+    from { box-shadow: 0 0 5px #00d2ff, 0 0 10px #00d2ff; } 
+    to { box-shadow: 0 0 20px #0052cc, 0 0 30px #00d2ff; } 
+}
+
+/* Silicon Valley Modal Overrides */
+input[type="file"]::file-selector-button {
+    background-color: rgba(13, 202, 240, 0.1); color: #0dcaf0; border: 1px solid rgba(13, 202, 240, 0.2);
+    border-radius: 4px; padding: 0.4rem 1rem; margin-right: 1rem; transition: all 0.2s ease; cursor: pointer;
+}
+input[type="file"]::file-selector-button:hover { background-color: rgba(13, 202, 240, 0.2); }
+.glass-input { background: rgba(0, 0, 0, 0.2) !important; color: #fff !important; }
+.glass-input:focus { background: rgba(0, 0, 0, 0.4) !important; border-color: rgba(13, 202, 240, 0.5) !important; box-shadow: 0 0 10px rgba(13, 202, 240, 0.2) inset !important; }
+</style>
+
+<!-- Multi-step Modal Logic via JS -->
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    let currentStep = 1;
+    const maxSteps = 3;
+    const form = document.getElementById('multiStepApplyForm');
+    const btnNext = document.getElementById('btnNextStep');
+    const btnPrev = document.getElementById('btnPrevStep');
+    const btnSubmit = document.getElementById('btnSubmitApply');
+    const fileInput = document.getElementById('resumeInput');
+    const progressBar = document.getElementById('stepProgressLine');
+
+    function updateUI() {
+        // Toggle Panes
+        for (let i = 1; i <= maxSteps; i++) {
+            const pane = document.getElementById('pane-step-' + i);
+            if (i === currentStep) pane.classList.remove('d-none');
+            else pane.classList.add('d-none');
+        }
+
+        // Toggle Indicators
+        for (let i = 1; i <= maxSteps; i++) {
+            const ind = document.getElementById('ind-step-' + i);
+            const circle = ind.querySelector('.step-circle');
+            if (i < currentStep) {
+                ind.classList.remove('opacity-50');
+                circle.classList.remove('bg-dark', 'text-secondary', 'border', 'border-secondary', 'border-opacity-50');
+                circle.classList.add('bg-success', 'text-dark', 'border-0');
+                circle.innerHTML = '<i class="fas fa-check"></i>';
+            } else if (i === currentStep) {
+                ind.classList.remove('opacity-50');
+                circle.classList.remove('bg-dark', 'text-secondary', 'border', 'bg-success', 'border-secondary', 'border-opacity-50');
+                circle.classList.add('bg-info', 'text-dark', 'border-0');
+                circle.innerHTML = i;
+            } else {
+                ind.classList.add('opacity-50');
+                circle.classList.remove('bg-info', 'bg-success', 'text-dark', 'border-0');
+                circle.classList.add('bg-dark', 'text-secondary', 'border', 'border-secondary', 'border-opacity-50');
+                circle.innerHTML = i;
+            }
+        }
+
+        // Update Progress Line
+        progressBar.style.width = ((currentStep - 1) * 50) + '%';
+        if(currentStep === maxSteps) { progressBar.classList.replace('bg-info', 'bg-success'); }
+        else { progressBar.classList.replace('bg-success', 'bg-info'); }
+
+        // Buttons
+        if (currentStep === 1) {
+            btnPrev.classList.add('d-none');
+            btnNext.classList.remove('d-none');
+            btnSubmit.classList.add('d-none');
+        } else if (currentStep === maxSteps) {
+            btnPrev.classList.remove('d-none');
+            btnNext.classList.add('d-none');
+            btnSubmit.classList.remove('d-none');
+        } else {
+            btnPrev.classList.remove('d-none');
+            btnNext.classList.remove('d-none');
+            btnSubmit.classList.add('d-none');
+        }
+    }
+
+    btnNext.addEventListener('click', () => {
+        // Validation on Step 1
+        if (currentStep === 1 && !fileInput.files.length) {
+            fileInput.style.borderColor = '#dc3545';
+            fileInput.style.boxShadow = '0 0 10px rgba(220, 53, 69, 0.3) inset';
+            setTimeout(() => { fileInput.style.borderColor = ''; fileInput.style.boxShadow = ''; }, 2000);
+            return;
+        }
+        if (currentStep < maxSteps) { currentStep++; updateUI(); }
+    });
+
+    btnPrev.addEventListener('click', () => {
+        if (currentStep > 1) { currentStep--; updateUI(); }
+    });
+    
+    // Auto-disable button upon form yield and show Thunder Preloader
+    form.addEventListener('submit', (e) => {
+        btnSubmit.disabled = true;
+        btnSubmit.innerHTML = '<i class="fas fa-circle-notch fa-spin me-2"></i> Deploying...';
+        
+        // Activate Thunder Preloader
+        document.documentElement.classList.add("preloader-active");
+        
+        const stat = document.getElementById('preloader-status');
+        const bar = document.getElementById('thunder-progress-bar');
+        const val = document.getElementById('thunder-progress-value');
+        
+        if (stat) stat.innerText = "Initializing Neural Resume Parser...";
+        if (bar) bar.style.width = "20%";
+        if (val) val.innerText = "20%";
+        
+        let progress = 20;
+        const interval = setInterval(() => {
+            progress += Math.random() * 10 + 5;
+            if (progress >= 95) {
+                progress = 95;
+                clearInterval(interval);
+            }
+            if (bar) bar.style.width = progress + "%";
+            if (val) val.innerText = Math.floor(progress) + "%";
+            
+            if (progress > 40 && progress < 70 && stat) stat.innerText = "Extracting Matrix Vectors...";
+            if (progress >= 70 && stat) stat.innerText = "Running Gemini-RAG Evaluation...";
+        }, 800);
+    });
+});
+</script>
+{% endblock %}

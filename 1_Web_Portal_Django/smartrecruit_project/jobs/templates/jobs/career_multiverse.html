@@ -1,0 +1,197 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Career Path Multiverse | SmartRecruit AI{% endblock %}
+
+{% block content %}
+<style>
+    /* Z-INDEX SAFEGUARDS */
+    .modal { z-index: 2000 !important; }
+    .modal-backdrop { z-index: 1050 !important; }
+    .tracking-widest { letter-spacing: 0.15em; }
+    .x-small { font-size: 0.75rem; }
+    .xx-small { font-size: 0.65rem; }
+    .italic { font-style: italic; }
+
+    /* Path card */
+    .path-card { border-radius: 1rem; transition: transform 0.2s ease, box-shadow 0.2s ease; }
+    .path-card:hover { transform: translateY(-6px) scale(1.01); box-shadow: 0 20px 50px rgba(124,77,255,0.2) !important; }
+
+    /* Milestone timeline */
+    .milestone-timeline { padding-left: 1.25rem; border-left: 1px solid rgba(255,255,255,0.08); }
+    .milestone-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-left: -1.55rem; margin-right: 0.65rem; opacity: 0.6; flex-shrink: 0; }
+
+    /* Bar chart */
+    .bar-smart { background: linear-gradient(180deg, rgba(41,121,255,0.6) 0%, rgba(41,121,255,0.2) 100%); }
+    .bar-avg { background: rgba(255,255,255,0.08); }
+</style>
+
+<div class="container-fluid px-4 mt-4 fade-up">
+
+    <!-- ─── Hero ─── -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-5 gap-3" data-aos="fade-down">
+        <div class="d-flex align-items-center gap-3">
+            <div class="rounded-circle d-flex align-items-center justify-content-center text-primary fw-bold flex-shrink-0" style="width: 56px; height: 56px; background: rgba(124,77,255,0.12); border: 1px solid rgba(124,77,255,0.25); font-size: 1.25rem;">
+                <i class="fas fa-random"></i>
+            </div>
+            <div>
+                <div class="badge px-3 py-1 rounded-pill tracking-widest text-uppercase x-small fw-bold mb-2" style="background: rgba(124,77,255,0.12); color: #ce93d8; border: 1px solid rgba(124,77,255,0.3);">Future Trajectory Simulator v4.1</div>
+                <h1 class="display-6 fw-bold text-white mb-0" style="font-family: 'Space Grotesk', sans-serif;">Career Path <span style="background: linear-gradient(90deg, #7C4DFF, #00B8D4); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">Multiverse</span></h1>
+                <p class="text-secondary small mt-1 mb-0"><i class="fas fa-bolt-lightning me-2 text-warning"></i>Explore 5-year career outcomes and trajectory paths at IR Info Tech.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ─── Paths Grid ─── -->
+    <div class="row g-4 mb-5">
+        {% for path in paths %}
+        <div class="col-xl-4 col-md-6" data-aos="flip-left" data-aos-delay="{{ forloop.counter0 }}00">
+            <div class="glass-panel p-4 h-100 position-relative overflow-hidden path-card" style="border-top: 4px solid var(--path-color, #7C4DFF); --this-color: {{ path.color }};">
+
+                <!-- Growth badge -->
+                <div class="position-absolute top-0 end-0 p-3">
+                    <div class="rounded-pill px-2 py-1 xx-small fw-bold text-white shadow-sm" style="background: var(--this-color); opacity: 0.6;">{{ path.growth }} Growth</div>
+                </div>
+
+                <!-- Path Header -->
+                <div class="d-flex align-items-center gap-2 mb-4">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center fw-bold text-white flex-shrink-0" style="width: 38px; height: 38px; background: var(--this-color);">{{ path.name|first }}</div>
+                    <h6 class="fw-bold text-white mb-0">{{ path.name }}</h6>
+                </div>
+
+                <!-- Strategic Outcome -->
+                <div class="p-3 rounded-4 mb-4" style="background: rgba(255,255,255,0.025); border: 1px solid rgba(255,255,255,0.06);">
+                    <div class="text-secondary x-small tracking-widest text-uppercase fw-bold mb-1">Potential 5-Year Outcome</div>
+                    <div class="fw-bold" style="font-size: 1.1rem; color: {{ path.color }}; font-family: 'Space Grotesk', sans-serif;">{{ path.outcome }}</div>
+                </div>
+
+                <!-- Milestones Timeline -->
+                <div class="mb-5">
+                    <h6 class="text-secondary xx-small tracking-widest text-uppercase fw-bold mb-3 border-bottom border-secondary border-opacity-10 pb-2">Key Career Milestones</h6>
+                    <div class="milestone-timeline d-flex flex-column gap-2">
+                        {% for milestone in path.milestones %}
+                        <div class="d-flex align-items-baseline">
+                            <span class="milestone-dot" style="background: {{ path.color }};"></span>
+                            <span class="x-small text-secondary">{{ milestone }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <button class="btn btn-sm w-100 rounded-pill shadow-sm py-2 fw-bold x-small hover-scale" style="border: 1px solid {{ path.color }}88; color: {{ path.color }}; background: {{ path.color }}11;">
+                    <i class="fas fa-route me-2"></i>Select This Career Path
+                </button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- ─── Competitive Leaderboard ─── -->
+    <div class="row g-4 mb-5" data-aos="fade-up">
+        <div class="col-12">
+            <div class="glass-panel p-4 border-primary border-opacity-10 overflow-hidden position-relative">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h5 class="fw-bold text-white mb-0" style="font-family: 'Space Grotesk', sans-serif;">
+                            <i class="fas fa-medal me-2 text-warning"></i>GLOBAL TALENT LEADERBOARD
+                        </h5>
+                        <p class="text-secondary xx-small tracking-widest text-uppercase fw-bold mb-0">Ranked by Neural Power Score™</p>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-dark table-hover align-middle mb-0">
+                        <thead>
+                            <tr class="text-secondary xx-small tracking-widest text-uppercase fw-bold border-bottom border-light border-opacity-10">
+                                <th class="py-3 px-4">Rank</th>
+                                <th class="py-3">Candidate</th>
+                                <th class="py-3">Achievements</th>
+                                <th class="py-3 text-end">Power Score</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for entry in leaderboard %}
+                            <tr class="border-bottom border-light border-opacity-5">
+                                <td class="py-3 px-4">
+                                    {% if entry.rank == 1 %}
+                                    <div class="rank-badge rank-1"><i class="fas fa-crown"></i> 1</div>
+                                    {% elif entry.rank == 2 %}
+                                    <div class="rank-badge rank-2">2</div>
+                                    {% elif entry.rank == 3 %}
+                                    <div class="rank-badge rank-3">3</div>
+                                    {% else %}
+                                    <span class="ps-2 text-secondary fw-bold">{{ entry.rank }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="fw-bold text-white">{{ entry.pseudonym }}</div>
+                                    <div class="xx-small text-muted opacity-50">Verified AI Score</div>
+                                </td>
+                                <td>
+                                    <div class="d-flex gap-1" title="{{ entry.badges }} Badges Earned">
+                                        {% for _ in "12345"|slice:entry.badges %}
+                                        <i class="fas fa-certificate text-info x-small"></i>
+                                        {% endfor %}
+                                        {% if entry.badges > 5 %}
+                                        <span class="xx-small text-info fw-bold">+{{ entry.badges|add:"-5" }}</span>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                                <td class="text-end py-3">
+                                    <span class="power-score-display">{{ entry.power_score }}</span>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center py-5 text-muted">
+                                    <i class="fas fa-users fa-3x mb-3 opacity-20"></i>
+                                    <p class="small mb-0">Leaderboard initializing... Complete assessments to set the pace!</p>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .rank-badge {
+            width: 32px; height: 32px; border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 800; font-size: 0.8rem;
+        }
+        .rank-1 { background: linear-gradient(135deg, #FFD700, #FFA000); color: #000; box-shadow: 0 0 15px rgba(255,215,0,0.4); }
+        .rank-2 { background: linear-gradient(135deg, #C0C0C0, #9E9E9E); color: #000; }
+        .rank-3 { background: linear-gradient(135deg, #CD7F32, #8D6E63); color: #000; }
+        
+        .power-score-display {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 800; color: #818cf8;
+            font-size: 1.1rem; text-shadow: 0 0 10px rgba(129,140,248,0.3);
+        }
+        .table-hover tbody tr:hover {
+            background-color: rgba(255,255,255,0.03) !important;
+        }
+    </style>
+
+    <!-- ─── Industry Comparison ─── -->
+    <div class="glass-panel p-5 text-center mb-5 shadow-lg border-primary border-opacity-10 rounded-4" style="background: radial-gradient(circle at center, rgba(124,77,255,0.05), transparent);" data-aos="fade-up">
+        <div class="badge px-3 py-2 rounded-pill tracking-widest text-uppercase x-small fw-bold mb-3" style="background: rgba(124,77,255,0.1); color: #ce93d8; border: 1px solid rgba(124,77,255,0.25);">Trajectory Comparison Engine</div>
+        <h5 class="fw-bold text-white mb-4" style="font-family: 'Space Grotesk', sans-serif;">Compare Trajectories with Industry Average</h5>
+        <div class="row justify-content-center mt-3">
+            <div class="col-md-6">
+                <div class="d-flex align-items-end justify-content-center gap-6" style="height: 160px; gap: 2rem;">
+                    <div class="d-flex flex-column align-items-center gap-2">
+                        <div class="bar-smart rounded-top text-white x-small fw-bold d-flex align-items-end justify-content-center pb-2" style="height: 140px; width: 80px;">SmartRecruit</div>
+                    </div>
+                    <div class="d-flex flex-column align-items-center gap-2">
+                        <div class="bar-avg rounded-top text-secondary x-small d-flex align-items-end justify-content-center pb-2" style="height: 80px; width: 80px;">Industry Avg</div>
+                    </div>
+                </div>
+                <p class="text-secondary x-small mt-4 italic">"Growth at SmartRecruit is <strong class="text-white">42% faster</strong> than average tech hubs due to our accelerated AI learning cycles."</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

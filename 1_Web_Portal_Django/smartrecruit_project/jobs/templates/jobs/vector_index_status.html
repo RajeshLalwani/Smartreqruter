@@ -1,0 +1,48 @@
+{% extends 'base.html' %}{% load static %}
+{% block title %}Vector Engine Synchronization | SmartRecruit{% endblock %}
+{% block content %}
+<div class="container d-flex align-items-center justify-content-center min-vh-100">
+    <div class="glass-panel p-5 text-center shadow-lg border border-primary border-opacity-20"
+        style="max-width: 500px;">
+        <div
+            class="mb-4 d-inline-block p-4 rounded-circle bg-success bg-opacity-10 border border-success border-opacity-20">
+            <i class="fas fa-microchip text-success fs-1"></i>
+        </div>
+        <h2 class="fw-bold text-theme mb-3">Sync Complete</h2>
+        <p class="text-muted mb-4 fs-5">
+            <strong>{{ count }}</strong> Talent Nodes have been conceptually embedded into the AI Vector Space.
+        </p>
+        <div class="p-3 mb-4 rounded-4 bg-dark bg-opacity-25 border border-secondary border-opacity-10">
+            <div class="d-flex justify-content-between x-small mb-2">
+                <span class="text-muted uppercase fw-bold">Embedding Model</span>
+                <span class="text-info">models/embedding-001</span>
+            </div>
+            <div class="d-flex justify-content-between x-small mb-2">
+                <span class="text-muted uppercase fw-bold">Dimension Depth</span>
+                <span class="text-info">768</span>
+            </div>
+            <div class="d-flex justify-content-between x-small mb-0">
+                <span class="text-muted uppercase fw-bold">Status</span>
+                <span class="text-success"><i class="fas fa-check-circle me-1"></i> Synchronized</span>
+            </div>
+        </div>
+        <div class="d-grid gap-2">
+            <a href="{% url 'semantic_hunter' %}" class="btn btn-primary rounded-pill py-3 fw-bold shadow-sm">
+                Return to Semantic Search
+            </a>
+            <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary rounded-pill py-3 x-small fw-bold">
+                Go to Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+<style>
+    .x-small {
+        font-size: 0.72rem;
+    }
+
+    .uppercase {
+        text-transform: uppercase;
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,163 @@
+{% extends 'base.html' %}{% load static %}
+{% block title %}Video Pitch Analyser | SmartRecruit{% endblock %}
+{% block content %}
+<div class="container-fluid px-4 mt-4">
+    <div class="glass-panel p-4 mb-4"
+        style="background:linear-gradient(135deg,rgba(255,64,129,0.08),rgba(41,121,255,0.08));border:1px solid rgba(255,64,129,0.25);">
+        <h2 class="fw-bold text-theme mb-1"><i class="fas fa-video me-2" style="color:#FF4081;"></i>Video Pitch Analyser
+        </h2>
+        <p class="text-muted mb-0">Record a 60-second pitch — AI analyses your confidence, clarity, fluency, and
+            keywords in real-time</p>
+    </div>
+    <div class="row g-4">
+        <div class="col-lg-5">
+            <div class="glass-panel p-4 text-center mb-4">
+                <video id="videoPreview" class="w-100 rounded-3 mb-3"
+                    style="max-height:280px;background:#000;display:none;" autoplay muted></video>
+                <div id="placeholderCam" class="d-flex align-items-center justify-content-center rounded-3 mb-3"
+                    style="height:200px;background:rgba(255,255,255,0.03);border:2px dashed rgba(255,255,255,0.12);">
+                    <div class="text-center">
+                        <i class="fas fa-camera fa-3x text-muted mb-3 d-block" style="opacity:0.4;"></i>
+                        <div class="text-muted small">Camera preview will appear here</div>
+                    </div>
+                </div>
+                <div class="d-flex gap-2 justify-content-center flex-wrap">
+                    <button id="startBtn" onclick="startRecording()"
+                        class="btn btn-success rounded-pill px-4 fw-bold"><i class="fas fa-circle me-2"></i>Start
+                        Recording</button>
+                    <button id="stopBtn" onclick="stopRecording()" class="btn btn-danger rounded-pill px-4 fw-bold"
+                        disabled><i class="fas fa-stop me-2"></i>Stop</button>
+                </div>
+                <div id="timer" class="mt-3 fw-bold text-warning" style="font-size:1.4rem;display:none;">00:00</div>
+                <div id="statusMsg" class="small text-muted mt-2">Click "Start Recording" to begin your 60-second pitch
+                </div>
+            </div>
+            <div class="glass-panel p-4">
+                <h6 class="fw-bold text-theme mb-3"><i class="fas fa-lightbulb text-warning me-2"></i>Pitch Tips</h6>
+                <div class="d-flex gap-2 mb-2"><i class="fas fa-check text-success flex-shrink-0 mt-1"
+                        style="font-size:0.8rem;"></i><span class="small text-theme">Start with your name and target
+                        role</span></div>
+                <div class="d-flex gap-2 mb-2"><i class="fas fa-check text-success flex-shrink-0 mt-1"
+                        style="font-size:0.8rem;"></i><span class="small text-theme">Mention 2–3 key skills with
+                        examples</span></div>
+                <div class="d-flex gap-2 mb-2"><i class="fas fa-check text-success flex-shrink-0 mt-1"
+                        style="font-size:0.8rem;"></i><span class="small text-theme">State why you're excited about this
+                        role</span></div>
+                <div class="d-flex gap-2 mb-2"><i class="fas fa-check text-success flex-shrink-0 mt-1"
+                        style="font-size:0.8rem;"></i><span class="small text-theme">End with a confident call to
+                        action</span></div>
+                <div class="d-flex gap-2"><i class="fas fa-check text-success flex-shrink-0 mt-1"
+                        style="font-size:0.8rem;"></i><span class="small text-theme">Speak clearly at moderate
+                        pace</span></div>
+            </div>
+        </div>
+        <div class="col-lg-7">
+            <div id="transcriptPanel" class="glass-panel p-4 mb-4" style="display:none;">
+                <h6 class="fw-bold text-theme mb-2"><i class="fas fa-file-alt text-info me-2"></i>Transcript</h6>
+                <div id="transcriptText" class="text-theme small p-2 rounded-2"
+                    style="background:rgba(255,255,255,0.03);min-height:60px;"></div>
+                <button onclick="analyseTranscript()" id="analyseBtn"
+                    class="btn btn-primary rounded-pill mt-3 fw-bold w-100" disabled>
+                    <i class="fas fa-brain me-2"></i>Analyse My Pitch
+                </button>
+            </div>
+            <div id="resultPanel" style="display:none;">
+                <div class="row g-3 mb-4">
+                    <div class="col-6">
+                        <div class="glass-panel p-4 text-center">
+                            <div class="fw-bold text-primary" id="overallScore" style="font-size:2.5rem;">—</div>
+                            <div class="small text-muted">Overall Score</div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="glass-panel p-4 text-center">
+                            <div class="fw-bold text-warning" id="verdict" style="font-size:1.2rem;">—</div>
+                            <div class="small text-muted">Verdict</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="glass-panel p-4 mb-4" id="scoreBreakdown"></div>
+                <div class="row g-3" id="insightPanels"></div>
+            </div>
+            <div id="waitingPanel" class="glass-panel p-5 text-center">
+                <i class="fas fa-video fa-4x mb-4 d-block" style="color:#FF4081;opacity:0.25;"></i>
+                <h5 class="text-theme">Record your 60-second video pitch</h5>
+                <p class="text-muted">AI will analyse your confidence, clarity, fluency, and keyword richness after
+                    recording.</p>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    let mediaRecorder, stream, transcript = '', timerInt, seconds = 0;
+    const recognition = window.SpeechRecognition || window.webkitSpeechRecognition
+        ? new (window.SpeechRecognition || window.webkitSpeechRecognition)() : null;
+
+    if (recognition) {
+        recognition.continuous = true; recognition.interimResults = true;
+        recognition.onresult = e => {
+            transcript = Array.from(e.results).map(r => r[0].transcript).join(' ');
+            document.getElementById('transcriptText').innerText = transcript;
+            document.getElementById('analyseBtn').disabled = transcript.length < 10;
+        };
+    }
+
+    async function startRecording() {
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+            const vid = document.getElementById('videoPreview');
+            vid.srcObject = stream; vid.style.display = ''; document.getElementById('placeholderCam').style.display = 'none';
+            document.getElementById('transcriptPanel').style.display = '';
+            document.getElementById('waitingPanel').style.display = 'none';
+            document.getElementById('startBtn').disabled = true; document.getElementById('stopBtn').disabled = false;
+            document.getElementById('timer').style.display = ''; document.getElementById('statusMsg').innerText = 'Recording...';
+            seconds = 0;
+            timerInt = setInterval(() => {
+                seconds++; const m = String(Math.floor(seconds / 60)).padStart(2, '0'), s = String(seconds % 60).padStart(2, '0');
+                document.getElementById('timer').innerText = `${m}:${s}`;
+                if (seconds >= 60) stopRecording();
+            }, 1000);
+            if (recognition) recognition.start();
+        } catch (e) { document.getElementById('statusMsg').innerText = 'Camera/mic access denied.'; }
+    }
+
+    function stopRecording() {
+        clearInterval(timerInt);
+        if (stream) stream.getTracks().forEach(t => t.stop());
+        if (recognition) recognition.stop();
+        document.getElementById('startBtn').disabled = false; document.getElementById('stopBtn').disabled = true;
+        document.getElementById('statusMsg').innerText = 'Recording stopped. Review your transcript and click Analyse.';
+    }
+
+    async function analyseTranscript() {
+        const btn = document.getElementById('analyseBtn');
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Analysing...'; btn.disabled = true;
+        try {
+            const resp = await fetch('/jobs/api/analyse-pitch/', {
+                method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+                body: JSON.stringify({ transcript, duration: seconds || 60 })
+            });
+            const data = await resp.json();
+            if (data.ok) renderResult(data.result);
+        } catch (e) { btn.innerHTML = 'Analysis failed. Retry.'; btn.disabled = false; }
+    }
+
+    function renderResult(r) {
+        document.getElementById('resultPanel').style.display = '';
+        document.getElementById('overallScore').innerText = r.overall_score + '%';
+        document.getElementById('verdict').innerText = r.verdict;
+        const metrics = [
+            ['Confidence', r.confidence_score, '#FF4081'], ['Clarity', r.clarity_score, '#2979FF'],
+            ['Fluency', r.fluency_score, '#00C853'], ['Keywords', r.keyword_richness, '#FF6D00']
+        ];
+        document.getElementById('scoreBreakdown').innerHTML = '<h6 class="fw-bold text-theme mb-3">Score Breakdown</h6>' +
+            metrics.map(([label, val, color]) => `<div class="mb-3"><div class="d-flex justify-content-between mb-1"><span class="small text-theme">${label}</span><span class="small fw-bold" style="color:${color};">${val}%</span></div><div class="progress" style="height:8px;"><div class="progress-bar" style="width:${val}%;background:${color};border-radius:6px;"></div></div></div>`).join('');
+        const insights = document.getElementById('insightPanels');
+        insights.innerHTML = '';
+        if (r.key_strengths?.length) insights.innerHTML += `<div class="col-md-6"><div class="glass-panel p-3"><h6 class="fw-bold text-success mb-2 small">&#10003; Strengths</h6>${r.key_strengths.map(s => `<div class="small text-theme mb-1">${s}</div>`).join('')}</div></div>`;
+        if (r.improvements?.length) insights.innerHTML += `<div class="col-md-6"><div class="glass-panel p-3"><h6 class="fw-bold text-warning mb-2 small">&#9679; Improvements</h6>${r.improvements.map(s => `<div class="small text-theme mb-1">${s}</div>`).join('')}</div></div>`;
+    }
+
+    function getCookie(name) { return document.cookie.split(';').map(c => c.trim()).filter(c => c.startsWith(name + '=')).map(c => c.split('=')[1])[0] || ''; }
+</script>
+{% endblock %}

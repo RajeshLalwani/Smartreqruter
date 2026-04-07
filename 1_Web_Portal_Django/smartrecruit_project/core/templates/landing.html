@@ -1,0 +1,494 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>SmartRecruit | Smart Hiring System</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚀</text></svg>">
+    
+    <!-- Ultra-modern Typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    
+    <style>
+        :root {
+            --brand-primary: #00E5FF;
+            --brand-secondary: #9D00FF;
+            --bg-dark: #05050A;
+            --bg-glass: rgba(15, 15, 20, 0.4);
+            --bg-glass-solid: rgba(20, 20, 30, 0.8);
+            --text-main: #FFFFFF;
+            --text-muted: #8A8D98;
+            --border-glow: rgba(0, 229, 255, 0.2);
+            --font-display: 'Space Grotesk', sans-serif;
+            --font-body: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        [data-bs-theme="light"] {
+            --bg-dark: #F5F7FA;
+            --bg-glass: rgba(255, 255, 255, 0.6);
+            --bg-glass-solid: rgba(255, 255, 255, 0.9);
+            --text-main: #0B0F19;
+            --text-muted: #4A5060;
+            --brand-primary: #0066FF;
+            --brand-secondary: #7000FF;
+            --border-glow: rgba(0, 102, 255, 0.2);
+        }
+
+        body {
+            font-family: var(--font-body);
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            overflow-x: hidden;
+            transition: background-color 0.8s ease, color 0.8s ease;
+        }
+
+        ::selection {
+            background: rgba(0, 229, 255, 0.3);
+            color: #fff;
+        }
+
+        /* ═══ MESH GRADIENT BACKGROUND ═══ */
+        .mesh-bg {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            z-index: -2; pointer-events: none;
+            background-color: var(--bg-dark);
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(157, 0, 255, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 0%, rgba(0, 229, 255, 0.1) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(157, 0, 255, 0.1) 0px, transparent 50%),
+                radial-gradient(at 0% 100%, rgba(0, 229, 255, 0.15) 0px, transparent 50%);
+            transition: background-image 0.5s ease;
+        }
+
+        .noise-texture {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+            opacity: 0.04; mix-blend-mode: overlay; z-index: -1; pointer-events: none;
+        }
+
+        /* ═══ NAVBAR ═══ */
+        .smart-nav {
+            background: var(--bg-glass);
+            backdrop-filter: blur(24px) saturate(180%);
+            border-bottom: 1px solid var(--border-glow);
+            padding: 18px 0;
+            transition: all 0.4s ease;
+        }
+
+        .hero-title {
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: clamp(3rem, 6vw, 5.5rem);
+            line-height: 1.05;
+            letter-spacing: -0.04em;
+        }
+
+        .text-gradient {
+            background: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-size: 200% auto;
+            animation: gradientMove 5s ease infinite alternate;
+        }
+
+        @keyframes gradientMove {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 100% 50%; }
+        }
+
+        /* ═══ NEON BUTTONS ═══ */
+        .btn-neon {
+            position: relative;
+            display: inline-flex; align-items: center; justify-content: center;
+            gap: 12px; padding: 16px 36px;
+            font-weight: 700; font-family: var(--font-display);
+            font-size: 1.1rem; text-transform: uppercase; letter-spacing: 1px;
+            color: #fff; text-decoration: none;
+            background: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary));
+            border-radius: 12px; border: none;
+            box-shadow: 0 0 20px rgba(0, 229, 255, 0.4);
+            overflow: hidden; transition: all 0.4s cubic-bezier(0.2, 1, 0.22, 1);
+        }
+        .btn-neon::before {
+            content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: 0.5s;
+        }
+        .btn-neon:hover {
+            transform: translateY(-4px) scale(1.02);
+            box-shadow: 0 10px 40px rgba(157, 0, 255, 0.6);
+            color: #fff;
+        }
+        .btn-neon:hover::before { left: 100%; }
+
+        .btn-glass {
+            position: relative;
+            background: var(--bg-glass-solid); backdrop-filter: blur(10px);
+            border: 1px solid var(--border-glow); color: var(--text-main);
+            padding: 16px 36px; border-radius: 12px; font-weight: 600; font-family: var(--font-display);
+            transition: all 0.4s ease; text-decoration: none; display: inline-flex; align-items: center; gap: 10px;
+        }
+        .btn-glass:hover {
+            background: rgba(255, 255, 255, 0.1); border-color: var(--brand-primary);
+            color: var(--text-main); transform: translateY(-4px);
+        }
+
+        /* ═══ ISOMETRIC 3D HERO VISUAL ═══ */
+        .isometric-wrapper {
+            perspective: 2000px;
+            position: relative;
+            width: 100%; height: 600px;
+            display: flex; justify-content: center; align-items: center;
+        }
+        .isometric-card {
+            position: absolute;
+            width: 500px; height: 320px;
+            background: var(--bg-glass-solid);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 20px;
+            box-shadow: -20px 30px 60px rgba(0,0,0,0.5), inset 0 0 0 1px rgba(255,255,255,0.05);
+            backdrop-filter: blur(20px);
+            overflow: hidden;
+            transform-style: preserve-3d;
+            transition: transform 0.1s ease;
+            animation: float3D 6s ease-in-out infinite alternate;
+        }
+        
+        .isometric-card.layer-1 { transform: rotateX(55deg) rotateZ(-40deg) translateZ(0px); z-index: 1; }
+        .isometric-card.layer-2 { transform: rotateX(55deg) rotateZ(-40deg) translateZ(80px); width: 350px; height: 220px; right: 20%; background: linear-gradient(135deg, rgba(0,229,255,0.1), rgba(157,0,255,0.1)); border-color: var(--brand-primary); z-index: 2; animation-delay: -1s;}
+        .isometric-card.layer-3 { transform: rotateX(55deg) rotateZ(-40deg) translateZ(140px); width: 200px; height: 150px; left: 15%; top: 20%; border-color: var(--brand-secondary); z-index: 3; animation-delay: -2s; background: rgba(157,0,255,0.1) }
+
+        @keyframes float3D {
+            0% { transform: rotateX(55deg) rotateZ(-40deg) translateZ(calc(var(--z, 0px) - 15px)); }
+            100% { transform: rotateX(55deg) rotateZ(-40deg) translateZ(calc(var(--z, 0px) + 15px)); }
+        }
+
+        /* ═══ SCROLLING MARQUEE ═══ */
+        .marquee-container {
+            width: 100vw; overflow: hidden; white-space: nowrap; position: relative; padding: 40px 0;
+            background: linear-gradient(90deg, transparent, rgba(0,229,255,0.05) 50%, transparent);
+            border-top: 1px solid var(--border-glow); border-bottom: 1px solid var(--border-glow);
+        }
+        .marquee-content {
+            display: inline-block;
+            animation: marquee 30s linear infinite;
+        }
+        .marquee-item {
+            display: inline-flex; align-items: center; justify-content: center;
+            font-family: var(--font-display); font-weight: 800; font-size: 1.5rem;
+            color: var(--text-muted); padding: 0 40px; letter-spacing: 2px;
+            transition: color 0.3s;
+        }
+        .marquee-item:hover { color: var(--brand-primary); }
+        .marquee-item i { font-size: 2rem; margin-right: 12px; }
+        
+        @keyframes marquee {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+
+        /* ═══ BENTO GRID ═══ */
+        .bento-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-top: 50px;
+        }
+        .bento-card {
+            background: var(--bg-glass);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 24px;
+            padding: 30px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s ease;
+            display: flex; flex-direction: column; justify-content: center;
+        }
+        [data-bs-theme="light"] .bento-card { border-color: rgba(0,0,0,0.05); }
+
+        .bento-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--brand-primary);
+            box-shadow: 0 10px 40px rgba(0,229,255,0.15);
+            background: var(--bg-glass-solid);
+        }
+        .bento-wide { grid-column: span 2; }
+        .bento-tall { grid-row: span 2; }
+        
+        .bento-icon-box {
+            width: 60px; height: 60px; border-radius: 16px;
+            background: linear-gradient(135deg, rgba(0,229,255,0.1), rgba(157,0,255,0.1));
+            display: flex; align-items: center; justify-content: center; margin-bottom: 24px;
+            font-size: 24px; color: var(--brand-primary);
+            border: 1px solid var(--border-glow);
+        }
+
+        .pulse-orb {
+            position: absolute; width: 300px; height: 300px; border-radius: 50%;
+            background: radial-gradient(circle, var(--brand-primary) 0%, transparent 70%);
+            opacity: 0.1; filter: blur(40px); pointer-events: none;
+            right: -100px; top: -100px; transition: 0.5s;
+        }
+        .bento-card:hover .pulse-orb { opacity: 0.3; transform: scale(1.2); }
+
+    </style>
+</head>
+<body>
+
+    <!-- ⚡ NEURAL PRELOADER -->
+    <div id="landing-preloader" style="position:fixed; inset:0; z-index:9999; background: var(--bg-dark); display:flex; flex-direction:column; align-items:center; justify-content:center; transition: 0.6s cubic-bezier(0.2, 1, 0.22, 1);">
+        <svg width="80" height="80" viewBox="0 0 100 100" style="filter: drop-shadow(0 0 15px var(--brand-primary)); animation: spin 4s linear infinite;">
+            <circle cx="50" cy="50" r="45" fill="none" stroke="var(--border-glow)" stroke-width="2"/>
+            <path d="M 50 5 A 45 45 0 0 1 95 50" fill="none" stroke="var(--brand-primary)" stroke-width="4" stroke-linecap="round" style="animation: dash 1.5s ease-in-out infinite alternate;"/>
+        </svg>
+        <div style="margin-top: 20px; font-family: var(--font-display); font-weight: 700; letter-spacing: 4px; color: var(--brand-primary); font-size: 0.8rem; animation: pulse 2s infinite;">LOADING...</div>
+    </div>
+
+    <!-- BACKGROUNDS -->
+    <div class="mesh-bg"></div>
+    <div class="noise-texture"></div>
+
+    <!-- NAVBAR -->
+    <nav class="navbar navbar-expand-lg fixed-top smart-nav">
+        <div class="container d-flex justify-content-between align-items-center">
+            <a class="navbar-brand d-flex align-items-center gap-3" href="{% url 'home' %}">
+                <i class="fa-solid fa-microchip fs-3 text-gradient"></i>
+                <span class="fw-bolder fs-4" style="font-family: var(--font-display); color: var(--text-main); letter-spacing: -1px;">Smart<span style="color: var(--brand-primary);">Recruit</span></span>
+            </a>
+            
+            <div class="d-flex align-items-center gap-4">
+                <button id="themeToggle" class="btn btn-glass px-3 py-2" style="border-radius: 50px; font-size: 0.85rem;" title="Toggle Theme">
+                    <i class="fas fa-magic me-2 text-gradient"></i> <span id="themeToggleText">Light Mode</span>
+                </button>
+                <div class="d-none d-md-flex">
+                    <a href="{% url 'login' %}" class="btn-neon" style="padding: 10px 24px; font-size: 0.9rem; border-radius: 50px;"><i class="fas fa-fingerprint me-2"></i>Login</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- HERO SECTION -->
+    <section class="position-relative" style="padding: 180px 0 100px;">
+        <div class="container position-relative z-2">
+            <div class="row align-items-center">
+                <div class="col-lg-6" data-aos="fade-right" data-aos-duration="1200">
+                    <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill mb-4" style="background: rgba(0,229,255,0.1); border: 1px solid var(--border-glow); font-family: var(--font-display); font-weight: 600; font-size: 0.85rem; color: var(--brand-primary);">
+                        <span class="spinner-grow spinner-grow-sm" role="status" aria-hidden="true" style="animation-duration: 2s;"></span>
+                        Status: Online
+                    </div>
+                    
+                    <h1 class="hero-title mb-4">
+                        Automatic <br>
+                        <span class="text-gradient">Hiring.</span>
+                    </h1>
+                    
+                    <p class="lead mb-5" style="color: var(--text-muted); font-size: 1.25rem; max-width: 90%; line-height: 1.6;">
+                        Stop wasting time on manual screening. Use AI that interviews, scores, and finds the best candidates fairly and quickly.
+                    </p>
+                    
+                    <div class="d-flex flex-wrap gap-4">
+                        <a href="{% url 'register' %}?type=recruiter" class="btn-neon">
+                            <i class="fas fa-rocket"></i> Start Hiring
+                        </a>
+                        <a href="{% url 'register' %}?type=candidate" class="btn-glass">
+                            <i class="fas fa-user-astronaut"></i> Get a Job
+                        </a>
+                    </div>
+                    
+                    <div class="mt-5 d-flex align-items-center gap-3" style="color: var(--text-muted); font-size: 0.9rem; font-weight: 600;">
+                        <span><i class="fas fa-check-circle text-gradient"></i> GDPR Compliant</span>
+                        <span><i class="fas fa-check-circle text-gradient"></i> AES-256 Auth</span>
+                        <span><i class="fas fa-check-circle text-gradient"></i> 99.9% Uptime</span>
+                    </div>
+                </div>
+                
+                <!-- 3D ISOMETRIC VISUALS -->
+                <div class="col-lg-6 d-none d-lg-block" data-aos="fade-left" data-aos-duration="1500" data-aos-delay="200">
+                    <div class="isometric-wrapper" id="isometricContainer">
+                        <!-- Main Dashboard -->
+                        <div class="isometric-card layer-1 p-3" style="--z: 0px">
+                            <div class="d-flex flex-column h-100 opacity-75">
+                                <div class="d-flex justify-content-between border-bottom pb-2 border-secondary mb-3">
+                                    <div class="bg-secondary rounded" style="width: 100px; height: 10px;"></div>
+                                    <div class="d-flex gap-2">
+                                        <div class="rounded-circle bg-danger" style="width: 12px; height: 12px;"></div>
+                                        <div class="rounded-circle bg-warning" style="width: 12px; height: 12px;"></div>
+                                        <div class="rounded-circle bg-success" style="width: 12px; height: 12px;"></div>
+                                    </div>
+                                </div>
+                                <div class="row h-100 gap-2">
+                                    <div class="col-3 rounded bg-secondary bg-opacity-25 h-100"></div>
+                                    <div class="col rounded bg-secondary bg-opacity-25 h-100"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Analytics Overlay -->
+                        <div class="isometric-card layer-2 p-3 d-flex flex-column justify-content-center align-items-center" style="--z: 80px">
+                            <i class="fas fa-chart-line fs-1 mb-2" style="color: var(--brand-primary)"></i>
+                            <h5 style="color: var(--brand-primary); font-family: var(--font-display);">99.4% Match</h5>
+                            <div class="progress w-75 bg-dark mt-2" style="height: 6px;">
+                                <div class="progress-bar bg-info" style="width: 99%"></div>
+                            </div>
+                        </div>
+                        <!-- Eye Tracker Overlay -->
+                        <div class="isometric-card layer-3 d-flex justify-content-center align-items-center" style="--z: 140px">
+                            <i class="fas fa-eye fa-spin" style="font-size: 3rem; color: var(--brand-secondary)"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- INFINITE MARQUEE -->
+    <div class="marquee-container" data-aos="fade-up">
+        <div class="marquee-content">
+            <span class="marquee-item"><i class="fa-brands fa-aws"></i> POWERED BY AWS</span>
+            <span class="marquee-item"><i class="fa-brands fa-python"></i> DJANGO CORE</span>
+            <span class="marquee-item"><i class="fa-solid fa-microchip"></i> AI SKILLS TEST</span>
+            <span class="marquee-item"><i class="fa-solid fa-eye"></i> COMPUTER VISION</span>
+            <span class="marquee-item"><i class="fa-brands fa-docker"></i> READY TO SCALE</span>
+            <!-- Duplicate for infinite loop -->
+            <span class="marquee-item"><i class="fa-brands fa-aws"></i> POWERED BY AWS</span>
+            <span class="marquee-item"><i class="fa-brands fa-python"></i> DJANGO CORE</span>
+            <span class="marquee-item"><i class="fa-solid fa-microchip"></i> AI SKILLS TEST</span>
+            <span class="marquee-item"><i class="fa-solid fa-eye"></i> COMPUTER VISION</span>
+            <span class="marquee-item"><i class="fa-brands fa-docker"></i> READY TO SCALE</span>
+        </div>
+    </div>
+
+    <!-- BENTO GRID SECTION -->
+    <section class="py-5 my-5" id="architecture">
+        <div class="container">
+            <div class="text-center mb-5" data-aos="fade-up">
+                <h2 class="hero-title mb-3 fs-1">How it <span class="text-gradient">Works.</span></h2>
+                <p class="lead mx-auto" style="color: var(--text-muted); max-width: 600px;">Simple tools built to speed up your hiring process.</p>
+            </div>
+
+            <div class="bento-grid">
+                
+                <!-- BENTO 1 -->
+                <div class="bento-card bento-tall bento-wide" data-aos="fade-up" data-aos-delay="100">
+                    <div class="pulse-orb"></div>
+                    <div class="bento-icon-box" style="width: 80px; height: 80px; font-size: 32px;"><i class="fas fa-brain"></i></div>
+                    <h3 style="font-family: var(--font-display); font-weight: 700;">Smart Resume Review</h3>
+                    <p style="color: var(--text-muted); line-height: 1.7;">Our AI tool reads resumes instantly and picks the best candidates fairly, based on their actual skills.</p>
+                </div>
+
+                <!-- BENTO 2 -->
+                <div class="bento-card bento-wide" data-aos="fade-up" data-aos-delay="200">
+                    <div class="pulse-orb" style="background: radial-gradient(circle, var(--brand-secondary) 0%, transparent 70%);"></div>
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <div class="bento-icon-box m-0"><i class="fas fa-camera"></i></div>
+                        <h4 style="font-family: var(--font-display); font-weight: 700; margin:0;">Attention Monitoring</h4>
+                    </div>
+                    <p style="color: var(--text-muted); margin:0;">Our AI camera checks if the candidate is paying attention during tests and alerts you of anything unusual.</p>
+                </div>
+
+                <!-- BENTO 3 -->
+                <div class="bento-card" data-aos="fade-up" data-aos-delay="300">
+                    <div class="bento-icon-box"><i class="fas fa-code"></i></div>
+                    <h5 style="font-family: var(--font-display); font-weight: 700;">Coding Tests</h5>
+                    <span style="color: var(--text-muted); font-size: 0.9rem;">Real coding tasks to check technical skills.</span>
+                </div>
+
+                <!-- BENTO 4 -->
+                <div class="bento-card" data-aos="fade-up" data-aos-delay="400">
+                    <div class="bento-icon-box" style="color: var(--brand-secondary)"><i class="fas fa-chart-pie"></i></div>
+                    <h5 style="font-family: var(--font-display); font-weight: 700;">Career Insights</h5>
+                    <span style="color: var(--text-muted); font-size: 0.9rem;">Data-driven scores for long-term success.</span>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <footer class="py-5 border-top" style="border-color: var(--border-glow) !important; margin-top: 100px;">
+        <div class="container text-center text-md-start">
+            <div class="row align-items-center">
+                <div class="col-md-6 mb-3 mb-md-0">
+                    <a class="d-flex align-items-center gap-2 text-decoration-none" href="#">
+                        <i class="fa-solid fa-microchip fs-4 text-gradient"></i>
+                        <span class="fw-bolder" style="font-family: var(--font-display); color: var(--text-main);">SmartRecruit OS</span>
+                    </a>
+                    <p class="mt-2 mb-0" style="color: var(--text-muted); font-size: 0.85rem;">© 2026 Tech Elecon. All rights reserved.</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <div class="d-flex gap-3 justify-content-center justify-content-md-end">
+                        <a href="#" style="color: var(--text-muted); font-size: 1.2rem; transition: 0.3s;"><i class="fa-brands fa-github"></i></a>
+                        <a href="#" style="color: var(--text-muted); font-size: 1.2rem; transition: 0.3s;"><i class="fa-brands fa-twitter"></i></a>
+                        <a href="#" style="color: var(--text-muted); font-size: 1.2rem; transition: 0.3s;"><i class="fa-brands fa-linkedin"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script>
+        // Init AOS
+        AOS.init({ duration: 1000, once: true, offset: 50 });
+
+        // Smooth Preloader Execution
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                const lp = document.getElementById('landing-preloader');
+                if (lp) {
+                    lp.style.opacity = '0';
+                    lp.style.pointerEvents = 'none';
+                    setTimeout(() => lp.remove(), 800);
+                }
+            }, 600); // Super fast 600ms boot
+        });
+
+        // 3D Isometric Mouse Parallax
+        document.addEventListener('mousemove', (e) => {
+            const container = document.getElementById('isometricContainer');
+            if(!container) return;
+            const x = (e.clientX - window.innerWidth / 2) / 40;
+            const y = (e.clientY - window.innerHeight / 2) / 40;
+            
+            const layers = container.querySelectorAll('.isometric-card');
+            layers.forEach((layer, index) => {
+                const depth = (index + 1) * 0.5;
+                layer.style.transform = `rotateX(${55 - y*depth}deg) rotateZ(${-40 + x*depth}deg) translateZ(calc(var(--z, 0px)))`;
+            });
+        });
+
+        // Interactive Theme Switcher
+        const toggleBtn = document.getElementById('themeToggle');
+        const toggleText = document.getElementById('themeToggleText');
+        
+        function updateTheme(theme) {
+            document.documentElement.setAttribute('data-bs-theme', theme);
+            if(theme === 'light') {
+                toggleText.innerHTML = 'Dark Mode';
+                toggleBtn.querySelector('i').className = 'fas fa-moon text-gradient';
+            } else {
+                toggleText.innerHTML = 'Light Mode';
+                toggleBtn.querySelector('i').className = 'fas fa-sun text-gradient';
+            }
+        }
+        
+        let currentTheme = localStorage.getItem('smartrecruit-theme') || 'midnight';
+        updateTheme(currentTheme === 'clean' ? 'light' : 'dark');
+        
+        toggleBtn.addEventListener('click', () => {
+            currentTheme = currentTheme === 'midnight' ? 'clean' : 'midnight';
+            localStorage.setItem('smartrecruit-theme', currentTheme);
+            updateTheme(currentTheme === 'clean' ? 'light' : 'dark');
+        });
+    </script>
+</body>
+</html>

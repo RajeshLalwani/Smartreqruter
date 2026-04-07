@@ -1,0 +1,46 @@
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+
+msgid "Command"
+msgstr "आदेश"
+
+msgid "Requisitions"
+msgstr "मांग"
+
+msgid "Interviews"
+msgstr "साक्षात्कार"
+
+msgid "System"
+msgstr "प्रणाली"
+
+msgid "Find Jobs"
+msgstr "नौकरियां खोजें"
+
+msgid "Applications"
+msgstr "आवेदन"
+
+msgid "My Interviews"
+msgstr "मेरे साक्षात्कार"
+
+msgid "Neural Chat"
+msgstr "न्यूरल चैट"
+
+msgid "Architecture Design"
+msgstr "आर्किटेक्चर डिजाइन"
+
+msgid "Terminate Session"
+msgstr "सत्र समाप्त करें"
+
+msgid "Send"
+msgstr "भेजें"
+
+msgid "Save"
+msgstr "सहेजें"
+
+msgid "Submit Code"
+msgstr "कोड सबमिट करें"
+
+msgid "Start Voice Round"
+msgstr "वॉयस राउंड शुरू करें"
+

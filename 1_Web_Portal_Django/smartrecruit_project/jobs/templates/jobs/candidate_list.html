@@ -1,0 +1,340 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block sidebar %}
+    {% include 'jobs/_recruiter_sidebar.html' %}
+{% endblock %}
+
+{% block content %}
+<div class="candidate-wrapper d-flex flex-grow-1" style="background: #0a0b10; min-height: 100vh;">
+    <div class="main-content flex-grow-1 p-4" style="max-height: 100vh; overflow-y: auto; scrollbar-width: none;">
+<style>
+    /* Z-INDEX SAFEGUARDS */
+    .modal { z-index: 2000 !important; }
+    .modal-backdrop { z-index: 1050 !important; }
+</style>
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-1 text-theme">Candidate Management</h2>
+            <p class="text-secondary mb-0">Review and manage applications for your job postings.</p>
+        </div>
+        <div class="d-flex gap-3">
+            <a href="{% url 'post_job' %}" class="btn btn-primary glass-panel text-white border-0 shadow-sm hover-scale">
+                <i class="fas fa-plus me-2"></i> Post Job
+            </a>
+            <a href="{% url 'export_candidates_csv' %}" class="btn btn-outline-success border-success glass-panel text-success shadow-sm hover-scale">
+                <i class="fas fa-file-csv me-2"></i> Export CSV
+            </a>
+            <a href="{% url 'recruiter_analytics' %}" class="btn btn-outline-warning border-warning glass-panel text-warning shadow-sm hover-scale">
+                <i class="fas fa-chart-line me-2"></i> Analytics
+            </a>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="glass-panel p-0 overflow-hidden shadow-lg border-primary border-opacity-10">
+        <form method="post" action="{% url 'bulk_action' %}" id="bulkForm">
+            {% csrf_token %}
+
+            <div class="p-4 border-bottom border-light border-opacity-10 d-flex justify-content-between align-items-center bg-dark bg-opacity-25">
+                <h5 class="fw-bold mb-0 text-white"><i class="fas fa-users me-2 text-primary"></i>All Candidates</h5>
+                <div class="d-flex align-items-center gap-3">
+                        <option value="BLOCKCHAIN">Blockchain Verified</option>
+                    </select>
+                    <div class="input-group glass-input rounded-pill overflow-hidden shadow-sm" style="width: 300px;">
+                        <span class="input-group-text bg-transparent border-0 text-secondary px-3"><i class="fas fa-search"></i></span>
+                        <input type="text" id="candidateSearch" class="form-control bg-transparent border-0 text-white shadow-none" placeholder="Search candidates...">
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table align-middle mb-0 table-hover table-borderless text-white">
+                    <thead class="bg-light bg-opacity-5 border-bottom border-light border-opacity-10">
+                        <tr>
+                            <th scope="col" class="ps-4 py-3" style="width: 50px;">
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input bg-dark border-secondary" id="selectAll">
+                                </div>
+                            </th>
+                            <th scope="col" class="py-3 text-secondary fw-bold text-uppercase small tracking-widest">Candidate</th>
+                            <th scope="col" class="py-3 text-secondary fw-bold text-uppercase small tracking-widest">Applied For</th>
+                            <th scope="col" class="py-3 text-secondary fw-bold text-uppercase small tracking-widest">Match Score</th>
+                            <th scope="col" class="py-3 text-secondary fw-bold text-uppercase small tracking-widest">Retention</th>
+                            <th scope="col" class="py-3 text-secondary fw-bold text-uppercase small tracking-widest">Status</th>
+                            <th scope="col" class="py-3 text-secondary fw-bold text-uppercase small tracking-widest">Applied Date</th>
+                            <th scope="col" class="text-end pe-4 py-3 text-secondary fw-bold text-uppercase small tracking-widest">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for app in candidates %}
+                        <tr class="border-bottom border-light border-opacity-10 transition-all hover-bg-light-5" 
+                            style="{% if app.candidate.is_verified_on_chain %}border-left: 3px solid #00ff88 !important; box-shadow: inset 5px 0 10px rgba(0, 255, 136, 0.1);{% endif %}">
+                            <td class="ps-4 py-3">
+                                <div class="form-check">
+                                    <input type="checkbox" name="selected_ids" value="{{ app.id }}" class="form-check-input candidate-checkbox bg-dark border-secondary">
+                                </div>
+                            </td>
+                            <td class="py-3">
+                                <div class="d-flex align-items-center">
+                                    <div class="rounded-circle text-white d-flex align-items-center justify-content-center me-3 fw-bold shadow-sm border border-light border-opacity-25" style="width: 40px; height: 40px; background: linear-gradient(135deg, #6366f1, #8b5cf6);">
+                                        {{ app.candidate.full_name|slice:":1" }}
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold text-white">
+                                            {{ app.candidate.full_name }}
+                                            {% if app.candidate.is_verified_on_chain %}
+                                            <i class="fas fa-shield-alt text-success ms-1 small" title="Blockchain Verified"></i>
+                                            {% endif %}
+                                        </div>
+                                        <small class="text-muted">{{ app.candidate.email }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="py-3">
+                                <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25 fw-normal px-3 py-2 rounded-pill shadow-sm">{{ app.job.title }}</span>
+                            </td>
+                            <td class="py-3">
+                                <div class="d-flex align-items-center">
+                                    <div class="progress flex-grow-1 me-2 shadow-inner" style="height: 6px; width: 60px; background-color: rgba(0,0,0,0.3);">
+                                        <div class="progress-bar {% if app.ai_score >= 80 %}bg-success{% elif app.ai_score >= 50 %}bg-warning{% else %}bg-danger{% endif %}" role="progressbar" style="width: {{ app.ai_score }}%"></div>
+                                    </div>
+                                    <span class="small fw-bold {% if app.ai_score >= 80 %}text-success{% elif app.ai_score >= 50 %}text-warning{% else %}text-danger{% endif %}">{{ app.ai_score }}%</span>
+                                </div>
+                            </td>
+                            <td class="py-3">
+                                {% if app.retention %}
+                                <span class="badge {% if app.retention.risk_level == 'LOW' %}bg-success{% elif app.retention.risk_level == 'MEDIUM' %}bg-warning text-dark{% else %}bg-danger{% endif %} bg-opacity-10 
+                                    {% if app.retention.risk_level == 'LOW' %}text-success border-success{% elif app.retention.risk_level == 'MEDIUM' %}text-warning border-warning{% else %}text-danger border-danger{% endif %} 
+                                    border border-opacity-25 px-3 py-2 rounded-pill shadow-inner x-small fw-bold">
+                                    {{ app.retention.risk_level }} RISK ({{ app.retention.retention_score }}%)
+                                </span>
+                                {% else %}
+                                <span class="text-secondary xx-small italic opacity-50"><i class="fas fa-microchip me-1"></i> ANALYZING...</span>
+                                {% endif %}
+                            </td>
+                            <td class="py-3">
+                                <span class="badge rounded-pill px-3 py-2 shadow-sm {% if 'PASSED' in app.status or 'SELECTED' in app.status %}bg-success bg-opacity-10 text-success border border-success border-opacity-25{% elif 'REJECTED' in app.status or 'FAILED' in app.status %}bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25{% else %}bg-info bg-opacity-10 text-info border border-info border-opacity-25{% endif %}">{{ app.get_status_display }}</span>
+                            </td>
+                            <td class="text-secondary small py-3">
+                                <i class="far fa-calendar-alt me-1"></i> {{ app.applied_at|date:"M d, Y" }}
+                            </td>
+                                <td class="text-end pe-4 py-3">
+                                    <div class="d-flex gap-2 justify-content-end">
+                                        {% if app.interview %}
+                                        <button type="button" class="btn btn-sm btn-outline-info rounded-pill px-3 shadow-sm hover-scale" onclick="window.openProctorReplay({{ app.interview.id }})">
+                                            <i class="fas fa-video me-1"></i> Review
+                                        </button>
+                                        {% endif %}
+                                        <a href="{% url 'application_details' app.id %}" class="btn btn-sm btn-outline-light rounded-pill px-3 shadow-sm hover-scale">
+                                            <i class="fas fa-user-astronaut me-1"></i> View
+                                        </a>
+                                        <a href="{% url 'skill_gap_analysis' app.id %}" class="btn btn-sm btn-outline-warning rounded-circle shadow-sm hover-scale" title="AI Skill Gap Analysis" style="width: 32px; height: 32px; padding: 0; line-height: 30px; text-align: center;">
+                                            <i class="fas fa-brain"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="7" class="text-center py-5 text-muted">
+                                    <div class="p-4 bg-dark bg-opacity-25 rounded-4 d-inline-block border border-secondary border-opacity-10">
+                                        <i class="fas fa-users-slash fa-3x mb-3 text-secondary opacity-50"></i>
+                                        <h5 class="fw-bold text-white mb-1">No Candidates Yet</h5>
+                                        <p class="mb-0 small">When candidates apply, they will appear here.</p>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/ProctorReplay.js' %}"></script>
+
+            <!-- Bulk Action Toolbar (Floating Glassmorphism) -->
+            <div id="bulkActionToolbar" class="position-fixed bottom-0 start-50 translate-middle-x mb-4 glass-panel border border-primary border-opacity-25 shadow-lg px-4 py-3 rounded-pill d-flex align-items-center gap-3 flex-wrap justify-content-center" style="transform: translateY(150%); transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); min-width: max-content; z-index: 1040;">
+                <span class="fw-bold text-white"><span id="selectedCount" class="text-primary fs-5">0</span> Selected</span>
+                <div class="vr bg-secondary mx-2 opacity-50"></div>
+
+                <div class="d-flex gap-2">
+                    <button type="submit" name="action" value="shortlist" class="btn btn-success btn-sm rounded-pill px-3 shadow-sm hover-scale">
+                        <i class="fas fa-check me-1"></i> Shortlist
+                    </button>
+                    <button type="submit" name="action" value="reject" class="btn btn-danger btn-sm rounded-pill px-3 shadow-sm hover-scale">
+                        <i class="fas fa-times me-1"></i> Reject
+                    </button>
+                    <button type="button" class="btn btn-primary btn-sm rounded-pill px-3 shadow-sm hover-scale" data-bs-toggle="modal" data-bs-target="#bulkEmailModal">
+                        <i class="fas fa-envelope-open-text me-1"></i> Blast Email
+                    </button>
+                    <button type="button" class="btn btn-warning btn-sm rounded-pill px-3 text-dark fw-bold shadow-sm hover-scale" onclick="compareCandidates()">
+                        <i class="fas fa-balance-scale-right me-1"></i> Neural Compare
+                    </button>
+                </div>
+
+                <div class="ms-3 ps-3 border-start border-secondary border-opacity-25">
+                    <button type="button" class="btn-close btn-close-white opacity-50 hover-opacity-100" onclick="clearSelection()"></button>
+                </div>
+            </div>
+
+            <!-- Bulk Email Modal (Z-Index Secured) -->
+            <div class="modal fade" id="bulkEmailModal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content glass-panel border border-secondary border-opacity-25 shadow-lg blur-card">
+                        <div class="modal-header border-bottom border-light border-opacity-10 bg-dark bg-opacity-50">
+                            <h5 class="modal-title fw-bold text-primary"><i class="fas fa-paper-plane me-2"></i>Bulk Email Candidates</h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body p-4">
+                            <div class="mb-4">
+                                <label class="form-label text-info small text-uppercase fw-bold ls-1"><i class="fas fa-heading me-1"></i> Subject Line</label>
+                                <input type="text" name="email_subject" class="form-control glass-input text-white shadow-inner" placeholder="e.g., Next Steps in the Interview Process" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-info small text-uppercase fw-bold ls-1"><i class="fas fa-align-left me-1"></i> Message Body</label>
+                                <textarea name="email_body" rows="6" class="form-control glass-input text-white shadow-inner" placeholder="Dear Candidate..." required></textarea>
+                            </div>
+                        </div>
+                        <div class="modal-footer border-top border-light border-opacity-10 bg-dark bg-opacity-25">
+                            <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" name="action" value="email" class="btn btn-sm btn-primary rounded-pill px-4 shadow-sm">
+                                <i class="fas fa-rocket me-2"></i> Dispatch Emails
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Comparison Modal (Z-Index Secured) -->
+            <div class="modal fade" id="compareModal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-xl modal-dialog-centered">
+                    <div class="modal-content glass-panel border border-primary border-opacity-25 shadow-lg blur-card" style="background: rgba(10, 10, 15, 0.95);">
+                        <div class="modal-header border-bottom border-light border-opacity-10 bg-dark bg-opacity-50">
+                            <h5 class="modal-title fw-bold text-warning"><i class="fas fa-dna me-2"></i>Neural Candidate Comparison</h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body p-4" id="compareBody">
+                            <!-- Populated via JS -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </form>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const selectAll = document.getElementById('selectAll');
+        const checkboxes = document.querySelectorAll('.candidate-checkbox');
+        const toolbar = document.getElementById('bulkActionToolbar');
+        const countSpan = document.getElementById('selectedCount');
+        const searchInput = document.getElementById('candidateSearch');
+
+        function updateToolbar() {
+            const checked = document.querySelectorAll('.candidate-checkbox:checked');
+            const count = checked.length;
+            countSpan.innerText = count;
+            toolbar.style.transform = count > 0 ? 'translate(-50%, 0)' : 'translate(-50%, 150%)';
+        }
+
+        if (selectAll) {
+            selectAll.addEventListener('change', function () {
+                checkboxes.forEach(cb => {
+                    if (cb.closest('tr').style.display !== 'none') {
+                        cb.checked = this.checked;
+                    }
+                });
+                updateToolbar();
+            });
+        }
+
+        checkboxes.forEach(cb => {
+            cb.addEventListener('change', updateToolbar);
+        });
+
+        window.clearSelection = function () {
+            checkboxes.forEach(cb => cb.checked = false);
+            if (selectAll) selectAll.checked = false;
+            updateToolbar();
+        }
+
+        if (searchInput) {
+            searchInput.addEventListener('keyup', function () {
+                const value = this.value.toLowerCase();
+                const rows = document.querySelectorAll('tbody tr');
+
+                rows.forEach(row => {
+                    const text = row.innerText.toLowerCase();
+                    row.style.display = text.indexOf(value) > -1 ? '' : 'none';
+                });
+            });
+        }
+
+        window.compareCandidates = function () {
+            const checked = document.querySelectorAll('.candidate-checkbox:checked');
+            if (checked.length < 2) {
+                // Assuming showToast is globally available from base.html
+                if (typeof showToast === "function") {
+                    showToast("Select at least 2 candidates to compare", "warning");
+                } else {
+                    alert("Select at least 2 candidates to compare");
+                }
+                return;
+            }
+
+            const modal = new bootstrap.Modal(document.getElementById('compareModal'));
+            const body = document.getElementById('compareBody');
+            body.innerHTML = '<div class="text-center py-5"><i class="fas fa-circle-notch fa-spin fa-3x text-warning mb-3"></i><h5 class="text-white">SmartRecruit Neural Engine is analyzing parameters...</h5></div>';
+            modal.show();
+
+            setTimeout(() => {
+                let html = '<div class="row g-4">';
+                checked.forEach(cb => {
+                    const row = cb.closest('tr');
+                    const name = row.querySelector('.fw-bold.text-white').innerText;
+                    const score = row.querySelectorAll('.small.fw-bold')[0].innerText;
+                    const role = row.querySelector('.badge.bg-secondary').innerText;
+
+                    html += `
+                        <div class="col-md">
+                            <div class="p-4 rounded-4 border border-light border-opacity-10 bg-dark bg-opacity-50 shadow-inner h-100 position-relative overflow-hidden">
+                                <div class="position-absolute top-0 end-0 p-3 opacity-10"><i class="fas fa-fingerprint fa-4x text-white"></i></div>
+                                <h4 class="fw-bold mb-1 text-white position-relative z-2">${name}</h4>
+                                <div class="badge bg-primary bg-opacity-25 text-primary border border-primary border-opacity-25 mb-4 position-relative z-2">${role}</div>
+                                
+                                <div class="mb-4 position-relative z-2">
+                                    <div class="d-flex justify-content-between mb-2 small text-uppercase tracking-widest text-secondary fw-bold">
+                                        <span>AI Fitment Score</span>
+                                        <span class="text-white">${score}</span>
+                                    </div>
+                                    <div class="progress shadow-inner" style="height: 8px; background: rgba(0,0,0,0.5);">
+                                        <div class="progress-bar bg-gradient-success" style="width: ${score}"></div>
+                                    </div>
+                                </div>
+                                
+                                <div class="small position-relative z-2">
+                                    <h6 class="text-uppercase text-secondary fw-bold ls-1 mb-3">Neural Discoveries</h6>
+                                    <div class="mb-2 p-2 rounded bg-success bg-opacity-10 border border-success border-opacity-25 text-success"><i class="fas fa-check-circle me-2"></i> Strong Technical Core</div>
+                                    <div class="mb-2 p-2 rounded bg-success bg-opacity-10 border border-success border-opacity-25 text-success"><i class="fas fa-check-circle me-2"></i> Excellent Communication</div>
+                                    <div class="mb-2 p-2 rounded bg-info bg-opacity-10 border border-info border-opacity-25 text-info"><i class="fas fa-shield-alt me-2"></i> Vision Proctoring: Stable</div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+                body.innerHTML = html;
+            }, 1200);
+        }
+    });
+</script>
+    </div>
+</div>
+{% endblock %}

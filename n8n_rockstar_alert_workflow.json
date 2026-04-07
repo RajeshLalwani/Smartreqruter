@@ -1,0 +1,113 @@
+{
+  "name": "SmartRecruit - High Score Alert",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "smartrecruit",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "e4a2fb67-e9bd-49af-bcc3-b78990117ffb",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        380,
+        240
+      ],
+      "webhookId": "1a2b3c4d-5e6f-7g8h-9i0j-1k2l3m4n5o6p"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{ $json.body.data.ai_score }}",
+              "operation": "largerEqual",
+              "value2": 80
+            }
+          ]
+        }
+      },
+      "id": "ab12cd34-ef56-gh78-ij90-kl12mn34op56",
+      "name": "Check Score >= 80",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        600,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "recruiter@smartrecruit.com",
+        "subject": "=🚨 Rockstar Candidate Alert: {{ $json.body.data.candidate_name }}",
+        "message": "=Hi Team,\\n\\nA highly qualified candidate just applied!\\n\\nName: {{ $json.body.data.candidate_name }}\\nRole: {{ $json.body.data.job_title }}\\nAI Score: {{ $json.body.data.ai_score }}%\\n\\nPlease review their profile immediately.",
+        "options": {}
+      },
+      "id": "qr78st90-uv12-wx34-yz56-ab78cd90ef12",
+      "name": "Send Email Alert",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [
+        860,
+        140
+      ]
+    },
+    {
+      "parameters": {
+        "channel": "hiring-alerts",
+        "text": "=🔥 *New Rockstar Candidate* 🔥\\n*{{ $json.body.data.candidate_name }}* just applied for *{{ $json.body.data.job_title }}* with an AI Score of *{{ $json.body.data.ai_score }}%*!",
+        "otherOptions": {}
+      },
+      "id": "gh56ij78-kl90-mn12-op34-qr56st78uv90",
+      "name": "Send Slack Alert",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 1,
+      "position": [
+        860,
+        340
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Check Score >= 80",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Score >= 80": {
+      "main": [
+        [
+          {
+            "node": "Send Email Alert",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send Slack Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "f041dc56-ab99-4ba1-9e7f-b88d4078864f",
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "tags": []
+}

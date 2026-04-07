@@ -1,0 +1,143 @@
+{% extends 'base.html' %}{% load static %}
+{% block title %}30-60-90 Day Success Blueprint | SmartRecruit AI{% endblock %}
+{% block content %}
+<div class="container-fluid px-4 mt-4">
+    <!-- Header -->
+    <div class="glass-panel p-4 mb-4 border-success border-opacity-25 shadow-lg"
+        style="background:linear-gradient(135deg,rgba(0,200,81,0.08),rgba(41,121,255,0.08));">
+        <div class="d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center gap-3">
+                <div class="bg-success bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center text-success fw-bold shadow-sm"
+                    style="width: 56px; height: 56px; font-size: 1.25rem;">
+                    <i class="fas fa-calendar-check"></i>
+                </div>
+                <div>
+                    <h2 class="fw-bold text-theme mb-1">Onboarding Success Blueprint</h2>
+                    <p class="text-muted mb-0 small"><i class="fas fa-sparkles me-2 text-primary"></i>Generative AI
+                        Roadmap for <strong>{{ candidate.full_name }}</strong> &middot; {{ application.job.title }}</p>
+                </div>
+            </div>
+            <div class="text-end">
+                <span
+                    class="badge rounded-pill bg-success px-4 py-2 fs-7 shadow-sm border border-success border-opacity-20 uppercase">
+                    ACCELERATED ONBOARDING v3.0
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Blueprint Grid -->
+    <div class="row g-4 mb-5">
+        <!-- Month 1: The Integration -->
+        <div class="col-lg-4" data-aos="fade-up">
+            <div class="glass-panel p-4 h-100 border-primary border-opacity-10 position-relative overflow-hidden">
+                <div class="position-absolute top-0 end-0 p-3 opacity-10"><i class="fas fa-1 fa-4x text-primary"></i>
+                </div>
+                <h6 class="text-primary xx-small uppercase fw-bold mb-4">Day 1 - 30: Integration Phase</h6>
+                <div class="p-3 rounded-4 bg-primary bg-opacity-5 border border-primary border-opacity-20 mb-4">
+                    <div class="text-muted xx-small uppercase fw-bold mb-1">Strategic Focus</div>
+                    <div class="h5 fw-bold text-theme">{{ blueprint.month_1.focus }}</div>
+                </div>
+                <h6
+                    class="text-theme xx-small uppercase fw-bold mb-3 border-bottom border-secondary border-opacity-10 pb-2">
+                    Critical Milestones</h6>
+                <div class="ps-3 border-start border-primary border-opacity-20">
+                    {% for milestone in blueprint.month_1.milestones %}
+                    <div class="mb-3 position-relative">
+                        <i class="fas fa-check-circle x-small position-absolute top-0 translate-middle-x"
+                            style="left: -16px; color: var(--accent-primary);"></i>
+                        <p class="small text-muted mb-0">{{ milestone }}</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Month 2: The Execution -->
+        <div class="col-lg-4" data-aos="fade-up" data-aos-delay="100">
+            <div class="glass-panel p-4 h-100 border-info border-opacity-10 position-relative overflow-hidden">
+                <div class="position-absolute top-0 end-0 p-3 opacity-10"><i class="fas fa-2 fa-4x text-info"></i></div>
+                <h6 class="text-info xx-small uppercase fw-bold mb-4">Day 31 - 60: Execution Phase</h6>
+                <div class="p-3 rounded-4 bg-info bg-opacity-5 border border-info border-opacity-20 mb-4">
+                    <div class="text-muted xx-small uppercase fw-bold mb-1">Strategic Focus</div>
+                    <div class="h5 fw-bold text-theme">{{ blueprint.month_2.focus }}</div>
+                </div>
+                <h6
+                    class="text-theme xx-small uppercase fw-bold mb-3 border-bottom border-secondary border-opacity-10 pb-2">
+                    Critical Milestones</h6>
+                <div class="ps-3 border-start border-info border-opacity-20">
+                    {% for milestone in blueprint.month_2.milestones %}
+                    <div class="mb-3 position-relative">
+                        <i class="fas fa-rocket x-small position-absolute top-0 translate-middle-x"
+                            style="left: -16px; color: #00bcd4;"></i>
+                        <p class="small text-muted mb-0">{{ milestone }}</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Month 3: The Innovation -->
+        <div class="col-lg-4" data-aos="fade-up" data-aos-delay="200">
+            <div class="glass-panel p-4 h-100 border-warning border-opacity-10 position-relative overflow-hidden">
+                <div class="position-absolute top-0 end-0 p-3 opacity-10"><i class="fas fa-3 fa-4x text-warning"></i>
+                </div>
+                <h6 class="text-warning xx-small uppercase fw-bold mb-4">Day 61 - 90: Innovation Phase</h6>
+                <div class="p-3 rounded-4 bg-warning bg-opacity-5 border border-warning border-opacity-20 mb-4">
+                    <div class="text-muted xx-small uppercase fw-bold mb-1">Strategic Focus</div>
+                    <div class="h5 fw-bold text-theme">{{ blueprint.month_3.focus }}</div>
+                </div>
+                <h6
+                    class="text-theme xx-small uppercase fw-bold mb-3 border-bottom border-secondary border-opacity-10 pb-2">
+                    Critical Milestones</h6>
+                <div class="ps-3 border-start border-warning border-opacity-20">
+                    {% for milestone in blueprint.month_3.milestones %}
+                    <div class="mb-3 position-relative">
+                        <i class="fas fa-bolt x-small position-absolute top-0 translate-middle-x"
+                            style="left: -16px; color: #ffbb33;"></i>
+                        <p class="small text-muted mb-0">{{ milestone }}</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Growth Stack / Gap Mitigation Layer -->
+    <div class="glass-panel p-5 text-center mt-5 mb-5 shadow-lg border-primary border-opacity-10"
+        style="background: radial-gradient(circle at center, rgba(124,77,255,0.05), transparent);" data-aos="zoom-in">
+        <h5 class="fw-bold text-theme mb-3">AI Gap Mitigation: Recommended Learning Path</h5>
+        <div class="d-flex flex-wrap justify-content-center gap-3 mt-4">
+            {% for tech in blueprint.growth_stack %}
+            <div class="p-4 rounded-4 bg-dark bg-opacity-25 border border-secondary border-opacity-20 shadow-sm transition-all hover-glow"
+                style="width: 200px;">
+                <i class="fas fa-brain text-primary fa-lg mb-3"></i>
+                <div class="text-theme small fw-bold">{{ tech }}</div>
+                <p class="xx-small text-muted mt-2 mb-0 italic">Certified Learning Node</p>
+            </div>
+            {% endfor %}
+        </div>
+        <p class="text-muted small mt-5 italic">"This blueprint is dynamically modeled based on <strong>{{                 candidate.full_name }}'s</strong> interview performance data."</p>
+    </div>
+</div>
+
+<style>
+    .x-small {
+        font-size: 0.72rem;
+    }
+
+    .xx-small {
+        font-size: 0.6rem;
+    }
+
+    .uppercase {
+        text-transform: uppercase;
+    }
+
+    .hover-glow:hover {
+        border-color: rgba(124, 77, 255, 0.4) !important;
+        transform: translateY(-5px);
+        box-shadow: 0 15px 40px rgba(124, 77, 255, 0.08) !important;
+    }
+</style>
+{% endblock %}

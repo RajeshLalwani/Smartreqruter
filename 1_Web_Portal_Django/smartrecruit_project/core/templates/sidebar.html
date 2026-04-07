@@ -1,0 +1,188 @@
+{% if user.is_recruiter %}
+<div class="sidebar-content" data-entrance>
+    <section class="sidebar-section">
+        <p class="sidebar-section__title">Main Pipeline</p>
+        <nav aria-label="Recruiter workspace">
+            <ul class="sidebar-nav">
+                <li>
+                    <a href="{% url 'dashboard' %}" class="sidebar-nav__link {% if request.resolver_match.url_name == 'dashboard' %}is-active{% endif %}">
+                        <span class="sidebar-nav__icon"><i class="fa-solid fa-table-cells-large"></i></span>
+                        <span class="sidebar-nav__copy">
+                            <strong>Dashboard</strong>
+                            <span>Live hiring command center</span>
+                        </span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'job_list' %}" class="sidebar-nav__link {% if request.resolver_match.url_name == 'job_list' or request.resolver_match.url_name == 'job_detail' %}is-active{% endif %}">
+                        <span class="sidebar-nav__icon"><i class="fa-solid fa-briefcase"></i></span>
+                        <span class="sidebar-nav__copy">
+                            <strong>Roles</strong>
+                            <span>Manage open requisitions</span>
+                        </span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'interview_list' %}" class="sidebar-nav__link {% if request.resolver_match.url_name == 'interview_list' %}is-active{% endif %}">
+                        <span class="sidebar-nav__icon"><i class="fa-solid fa-video"></i></span>
+                        <span class="sidebar-nav__copy">
+                            <strong>Interviews</strong>
+                            <span>Monitor scheduled sessions</span>
+                        </span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'candidate_list' %}" class="sidebar-nav__link {% if request.resolver_match.url_name == 'candidate_list' %}is-active{% endif %}">
+                        <span class="sidebar-nav__icon"><i class="fa-solid fa-users-viewfinder"></i></span>
+                        <span class="sidebar-nav__copy">
+                            <strong>Talent Pool</strong>
+                            <span>Review scored applicants</span>
+                        </span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'question_list' %}" class="sidebar-nav__link {% if request.resolver_match.url_name == 'question_list' %}is-active{% endif %}">
+                        <span class="sidebar-nav__icon"><i class="fa-solid fa-circle-question"></i></span>
+                        <span class="sidebar-nav__copy">
+                            <strong>Question Bank</strong>
+                            <span>Curate assessment prompts</span>
+                        </span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'kanban_board' %}" class="sidebar-nav__link {% if request.resolver_match.url_name == 'kanban_board' %}is-active{% endif %}">
+                        <span class="sidebar-nav__icon"><i class="fa-solid fa-table-columns"></i></span>
+                        <span class="sidebar-nav__copy">
+                            <strong>Kanban Board</strong>
+                            <span>Move candidates across stages</span>
+                        </span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </section>
+
+    <section class="sidebar-section">
+        <p class="sidebar-section__title">Intelligence</p>
+        <nav aria-label="Recruiter intelligence">
+            <ul class="sidebar-nav">
+                <li>
+                    <a href="{% url 'recruiter_analytics' %}" class="sidebar-nav__link {% if request.resolver_match.url_name == 'recruiter_analytics' %}is-active{% endif %}">
+                        <span class="sidebar-nav__icon"><i class="fa-solid fa-chart-line"></i></span>
+                        <span class="sidebar-nav__copy">
+                            <strong>Analytics</strong>
+                            <span>Track velocity and conversion</span>
+                        </span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'ethics_dashboard' %}" class="sidebar-nav__link {% if request.resolver_match.url_name == 'ethics_dashboard' %}is-active{% endif %}">
+                        <span class="sidebar-nav__icon"><i class="fa-solid fa-scale-balanced"></i></span>
+                        <span class="sidebar-nav__copy">
+                            <strong>Ethics & Diversity</strong>
+                            <span>Audit fairness signals</span>
+                        </span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'settings' %}" class="sidebar-nav__link {% if request.resolver_match.url_name == 'settings' %}is-active{% endif %}">
+                        <span class="sidebar-nav__icon"><i class="fa-solid fa-sliders"></i></span>
+                        <span class="sidebar-nav__copy">
+                            <strong>Settings</strong>
+                            <span>Configure system behavior</span>
+                        </span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </section>
+
+    <div class="sidebar-install">
+        <button type="button" class="sidebar-install__button" onclick="window.installPWA && window.installPWA()">
+            <i class="fa-solid fa-mobile-screen-button"></i>
+            <span>Install SmartRecruit</span>
+        </button>
+        <p class="sidebar-install__note">Pin the glass workspace for faster launch and native-like access.</p>
+    </div>
+</div>
+{% else %}
+<div class="sidebar-content" data-entrance>
+    <section class="sidebar-section">
+        <p class="sidebar-section__title">My Career</p>
+        <nav aria-label="Candidate workspace">
+            <ul class="sidebar-nav">
+                <li>
+                    <a href="{% url 'dashboard' %}" class="sidebar-nav__link {% if request.resolver_match.url_name == 'dashboard' %}is-active{% endif %}">
+                        <span class="sidebar-nav__icon"><i class="fa-solid fa-compass"></i></span>
+                        <span class="sidebar-nav__copy">
+                            <strong>Overview</strong>
+                            <span>Track your hiring trajectory</span>
+                        </span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'job_list' %}" class="sidebar-nav__link {% if request.resolver_match.url_name == 'job_list' or request.resolver_match.url_name == 'job_detail' %}is-active{% endif %}">
+                        <span class="sidebar-nav__icon"><i class="fa-solid fa-briefcase"></i></span>
+                        <span class="sidebar-nav__copy">
+                            <strong>Find Jobs</strong>
+                            <span>Browse live opportunities</span>
+                        </span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'candidate_applications' %}" class="sidebar-nav__link {% if request.resolver_match.url_name == 'candidate_applications' %}is-active{% endif %}">
+                        <span class="sidebar-nav__icon"><i class="fa-solid fa-layer-group"></i></span>
+                        <span class="sidebar-nav__copy">
+                            <strong>Applications</strong>
+                            <span>Review your active pipeline</span>
+                        </span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'interview_list' %}" class="sidebar-nav__link {% if request.resolver_match.url_name == 'interview_list' %}is-active{% endif %}">
+                        <span class="sidebar-nav__icon"><i class="fa-solid fa-calendar-check"></i></span>
+                        <span class="sidebar-nav__copy">
+                            <strong>Interviews</strong>
+                            <span>Open your session queue</span>
+                        </span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </section>
+
+    <section class="sidebar-section">
+        <p class="sidebar-section__title">Growth</p>
+        <nav aria-label="Candidate growth tools">
+            <ul class="sidebar-nav">
+                <li>
+                    <a href="{% url 'candidate_profile' %}" class="sidebar-nav__link {% if request.resolver_match.url_name == 'candidate_profile' %}is-active{% endif %}">
+                        <span class="sidebar-nav__icon"><i class="fa-solid fa-dna"></i></span>
+                        <span class="sidebar-nav__copy">
+                            <strong>Neural Profile</strong>
+                            <span>Refine your candidate signal</span>
+                        </span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'interview_prep' %}" class="sidebar-nav__link {% if request.resolver_match.url_name == 'interview_prep' %}is-active{% endif %}">
+                        <span class="sidebar-nav__icon"><i class="fa-solid fa-graduation-cap"></i></span>
+                        <span class="sidebar-nav__copy">
+                            <strong>Prep Lab</strong>
+                            <span>Sharpen interview readiness</span>
+                        </span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </section>
+
+    <div class="sidebar-install">
+        <button type="button" class="sidebar-install__button" onclick="window.installPWA && window.installPWA()">
+            <i class="fa-solid fa-mobile-screen-button"></i>
+            <span>Install SmartRecruit</span>
+        </button>
+        <p class="sidebar-install__note">Keep your candidate dashboard one tap away on desktop or mobile.</p>
+    </div>
+</div>
+{% endif %}

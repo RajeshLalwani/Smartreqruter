@@ -1,0 +1,133 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid py-4" style="background: #0a0a0c; min-height: 100vh; color: #e0e0e0;">
+    <!-- Dashboard Header -->
+    <div class="d-flex justify-content-between align-items-center mb-5">
+        <div>
+            <h2 class="fw-bold mb-1 text-white">Infra-Health Monitor</h2>
+            <p class="text-muted small mb-0">Private Execution Cluster Status</p>
+        </div>
+        <div class="d-flex gap-2">
+            <div class="glass-panel px-3 py-2 d-flex align-items-center gap-2">
+                <div class="rounded-circle {% if health.status == 'online' %}bg-success{% elif health.status == 'degraded' %}bg-warning{% else %}bg-danger{% endif %} shadow-sm" style="width: 10px; height: 10px;"></div>
+                <span class="small fw-bold">{{ health.status|upper }}</span>
+            </div>
+            <button class="btn btn-outline-light btn-sm" onclick="location.reload()">Refresh</button>
+        </div>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="row g-4 mb-5">
+        <div class="col-md-3">
+            <div class="glass-panel p-4 text-center border-top-glow" style="--glow-color: #00d2ff;">
+                <h6 class="text-muted small mb-3">Engine Type</h6>
+                <h4 class="fw-bold text-white mb-0">{{ health.engine|upper }}</h4>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="glass-panel p-4 text-center border-top-glow" style="--glow-color: #7C4DFF;">
+                <h6 class="text-muted small mb-3">Active Tasks</h6>
+                <h4 class="fw-bold text-white mb-0">{{ health.active_containers }}</h4>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="glass-panel p-4 text-center border-top-glow" style="--glow-color: #33e0ff;">
+                <h6 class="text-muted small mb-3">Memory Limit</h6>
+                <h4 class="fw-bold text-white mb-0">128MB / Unit</h4>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="glass-panel p-4 text-center border-top-glow" style="--glow-color: #ff3333;">
+                <h6 class="text-muted small mb-3">CPU Quota</h6>
+                <h4 class="fw-bold text-white mb-0">0.5 Cores</h4>
+            </div>
+        </div>
+    </div>
+
+    <!-- Node Status & Charts -->
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="glass-panel p-4 h-100">
+                <h6 class="fw-bold text-white mb-4">Cluster Latency (Last 10 executions)</h6>
+                <canvas id="latencyChart" style="max-height: 250px;"></canvas>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="glass-panel p-4 h-100">
+                <h6 class="fw-bold text-white mb-4">Node Health Map</h6>
+                <div class="d-grid gap-3" style="grid-template-columns: repeat(4, 1fr);">
+                    {% for i in "1234567890123456" %}
+                    <div class="node-indicator {% if forloop.counter <= health.active_containers %}active{% else %}idle{% endif %}" 
+                         title="Node {{ forloop.counter }}"></div>
+                    {% endfor %}
+                </div>
+                <div class="mt-4 pt-4 border-top border-secondary">
+                    <p class="small text-muted mb-2"><i class="fas fa-info-circle me-2"></i> Nodes scale automatically based on concurrency.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.glass-panel {
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+}
+.border-top-glow {
+    border-top: 3px solid var(--glow-color, #00d2ff);
+    box-shadow: 0 -10px 20px -10px var(--glow-color);
+}
+.node-indicator {
+    aspect-ratio: 1;
+    border-radius: 4px;
+    background: #333;
+    transition: all 0.3s ease;
+}
+.node-indicator.active {
+    background: #00d2ff;
+    box-shadow: 0 0 10px #00d2ff;
+}
+.node-indicator.idle {
+    background: #1a1a1e;
+    border: 1px solid #333;
+}
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('latencyChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: ['Task 1', 'Task 2', 'Task 3', 'Task 4', 'Task 5', 'Task 6', 'Task 7', 'Task 8', 'Task 9', 'Task 10'],
+            datasets: [{
+                label: 'Speed (ms)',
+                data: [120, 150, 110, 180, 130, 140, 160, 120, 115, 125],
+                borderColor: '#00d2ff',
+                backgroundColor: 'rgba(0, 210, 255, 0.1)',
+                fill: true,
+                tension: 0.4,
+                pointRadius: 4,
+                pointBackgroundColor: '#fff'
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#888' } },
+                x: { grid: { display: false }, ticks: { color: '#888' } }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

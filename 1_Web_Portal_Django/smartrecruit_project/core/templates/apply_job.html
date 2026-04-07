@@ -1,0 +1,123 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-7 col-md-9">
+
+            <div class="glass-panel">
+                <div class="text-center mb-4">
+                    <i class="fas fa-file-upload fa-3x mb-3 text-gradient"></i>
+                    <h3 class="fw-bold text-theme">Candidate Application</h3>
+                    <p class="text-muted opacity-75">Upload your details to be analyzed by AI.</p>
+                </div>
+
+                <form method="POST" enctype="multipart/form-data" id="applyForm" novalidate>
+                    {% csrf_token %}
+
+                    <div class="mb-3">
+                        <label class="fw-bold mb-1 ms-1 text-theme">Full Name <span class="text-danger">*</span></label>
+                        <input type="text" name="full_name" class="form-control glass-input" required minlength="3"
+                            pattern="[A-Za-z\s]+" placeholder="Enter full name">
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="fw-bold mb-1 ms-1 text-theme">Email <span class="text-danger">*</span></label>
+                            <input type="email" name="email" class="form-control glass-input" required
+                                placeholder="name@example.com">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="fw-bold mb-1 ms-1 text-theme">Phone <span class="text-danger">*</span></label>
+                            <input type="text" name="phone" class="form-control glass-input" required
+                                pattern="[0-9]{10}" placeholder="10-digit Mobile">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="fw-bold mb-1 ms-1 text-theme">Years of Experience <span
+                                class="text-danger">*</span></label>
+                        <input type="number" name="experience_years" class="form-control glass-input" required min="0"
+                            max="50" step="0.1">
+                    </div>
+
+                    <!-- ── BLOCKCHAIN EDUCATION VERIFICATION (NEW) ── -->
+                    <div class="glass-panel p-3 mb-4 border-primary border-opacity-25">
+                        <h6 class="text-primary fw-bold mb-3">
+                            <i class="fas fa-university me-2"></i> Academic Credentials & Verification
+                        </h6>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="fw-bold mb-1 ms-1 text-theme small text-uppercase">Institution <span class="text-danger">*</span></label>
+                                <input type="text" name="institution" class="form-control glass-input" required placeholder="University Name">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="fw-bold mb-1 ms-1 text-theme small text-uppercase">Degree <span class="text-danger">*</span></label>
+                                <input type="text" name="degree" class="form-control glass-input" required placeholder="B.S. Computer Science">
+                            </div>
+                        </div>
+                        <div class="mb-0">
+                            <label class="fw-bold mb-1 ms-1 text-theme small text-uppercase">
+                                <i class="fas fa-link me-1 text-success"></i> Digital Certificate ID / Transaction Hash
+                            </label>
+                            <input type="text" name="verification_hash" class="form-control glass-input" 
+                                placeholder="SR_VERIFY_XXXX or CERT_XXXX">
+                            <div class="form-text text-muted x-small mt-1">
+                                <i class="fas fa-info-circle me-1"></i> Use your blockchain-issued hash for instant AI verification.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="fw-bold mb-1 ms-1 text-theme">
+                            <i class="fas fa-paperclip me-1 text-primary"></i> Upload Resume (PDF/DOC) <span
+                                class="text-danger">*</span>
+                        </label>
+                        <input type="file" name="resume_file" id="resumeFile" class="form-control glass-input" required
+                            accept=".pdf,.doc,.docx">
+                        <div class="invalid-feedback text-danger" id="fileError" style="display:none;">Valid Resume file
+                            (Max 2MB) is required.</div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100 py-3" id="submitBtn">
+                        <span id="btnText">Submit Application</span>
+                        <span id="btnLoader" class="spinner-border spinner-border-sm d-none"></span>
+                    </button>
+                </form>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('applyForm').addEventListener('submit', function (event) {
+        let form = this;
+        let fileInput = document.getElementById('resumeFile');
+        let fileError = document.getElementById('fileError');
+        let isValid = true;
+
+        if (!form.checkValidity()) {
+            event.preventDefault(); event.stopPropagation(); isValid = false;
+        }
+
+        if (fileInput.files.length > 0) {
+            const fileSize = fileInput.files[0].size / 1024 / 1024;
+            const fileType = fileInput.files[0].name.split('.').pop().toLowerCase();
+            if (fileSize > 2 || !['pdf', 'doc', 'docx'].includes(fileType)) {
+                fileInput.setCustomValidity('Invalid');
+                fileError.style.display = 'block'; isValid = false; event.preventDefault();
+            } else {
+                fileInput.setCustomValidity(''); fileError.style.display = 'none';
+            }
+        }
+
+        form.classList.add('was-validated');
+        if (isValid) {
+            document.getElementById('submitBtn').disabled = true;
+            document.getElementById('btnText').textContent = "Processing...";
+            document.getElementById('btnLoader').classList.remove('d-none');
+        }
+    });
+</script>
+{% endblock %}

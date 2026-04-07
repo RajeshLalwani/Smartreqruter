@@ -1,0 +1,112 @@
+{% extends 'base.html' %}{% load static %}
+{% block title %}Smart Question Generator | SmartRecruit{% endblock %}
+{% block content %}
+<div class="container-fluid px-4 mt-4">
+    <div class="glass-panel p-4 mb-4"
+        style="background:linear-gradient(135deg,rgba(124,77,255,0.08),rgba(41,121,255,0.08));border:1px solid rgba(124,77,255,0.25);">
+        <h2 class="fw-bold text-theme mb-1"><i class="fas fa-comments text-purple me-2" style="color:#7C4DFF;"></i>Smart
+            Interview Question Generator</h2>
+        <p class="text-muted mb-0">AI-generated personalised question bank tailored to each candidate and job</p>
+    </div>
+    <div class="row g-4">
+        <div class="col-lg-4">
+            <div class="glass-panel p-4">
+                <form method="post">{% csrf_token %}
+                    <h6 class="fw-bold text-theme mb-3">Target Role</h6>
+                    <div class="mb-3">
+                        <label class="form-label small text-muted">Select Job</label>
+                        <select name="job_id" class="form-select form-select-sm"
+                            style="background:rgba(255,255,255,0.05);color:var(--text-color);border:1px solid rgba(255,255,255,0.12);">
+                            <option value="">— All Jobs —</option>
+                            {% for job in jobs %}<option value="{{ job.id }}">{{ job.title }}</option>{% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small text-muted">Select Candidate (optional)</label>
+                        <select name="application_id" class="form-select form-select-sm"
+                            style="background:rgba(255,255,255,0.05);color:var(--text-color);border:1px solid rgba(255,255,255,0.12);">
+                            <option value="">— Generic Questions —</option>
+                            {% for app in applications %}<option value="{{ app.id }}">{{ app.candidate.full_name }} — {{                                 app.job.title }}</option>{% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small text-muted">Focus Area</label>
+                        <select name="focus" class="form-select form-select-sm"
+                            style="background:rgba(255,255,255,0.05);color:var(--text-color);border:1px solid rgba(255,255,255,0.12);">
+                            <option value="all">All Dimensions</option>
+                            <option value="technical">Technical Only</option>
+                            <option value="hr">HR & Soft Skills</option>
+                            <option value="behavioral">Behavioral (STAR)</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small text-muted">Difficulty</label>
+                        <select name="difficulty" class="form-select form-select-sm"
+                            style="background:rgba(255,255,255,0.05);color:var(--text-color);border:1px solid rgba(255,255,255,0.12);">
+                            <option value="easy">Easy</option>
+                            <option value="medium" selected>Medium</option>
+                            <option value="hard">Hard</option>
+                        </select>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label small text-muted">Number of Questions</label>
+                        <input type="number" name="count" class="form-control form-control-sm" value="8" min="3"
+                            max="20"
+                            style="background:rgba(255,255,255,0.05);color:var(--text-color);border:1px solid rgba(255,255,255,0.12);">
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100 rounded-pill fw-bold"><i
+                            class="fas fa-magic me-2"></i>Generate Questions</button>
+                </form>
+            </div>
+        </div>
+        <div class="col-lg-8">
+            {% if result %}
+            <div class="glass-panel p-3 mb-4 d-flex align-items-center justify-content-between flex-wrap gap-2">
+                <div>
+                    <span class="fw-bold text-theme">{{ result.total }} questions</span>
+                    <span class="text-muted small"> for <strong class="text-primary">{{ result.job_title }}</strong>
+                        {% if result.candidate_name != 'Candidate' %} — tailored to <strong class="text-info">{{                             result.candidate_name }}</strong>{% endif %}</span>
+                </div>
+                <button onclick="window.print()" class="btn btn-outline-secondary btn-sm rounded-pill"><i
+                        class="fas fa-print me-1"></i>Print</button>
+            </div>
+            {% for q in result.questions %}
+            <div class="glass-panel p-4 mb-3">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <span class="fw-bold text-theme">Q{{ forloop.counter }}. {{ q.question }}</span>
+                    <div class="d-flex gap-1 flex-shrink-0 ms-2">
+                        <span class="badge rounded-pill px-2"
+                            style="background:rgba(41,121,255,0.15);color:#82b1ff;font-size:0.7rem;">{{ q.category                             }}</span>
+                        <span class="badge rounded-pill px-2"
+                            style="background:rgba(124,77,255,0.15);color:#ce93d8;font-size:0.7rem;">{{ q.difficulty                             }}</span>
+                    </div>
+                </div>
+                {% if q.expected_answer_points %}
+                <div class="mb-2">
+                    <div class="small text-muted fw-bold mb-1">Look for:</div>
+                    {% for pt in q.expected_answer_points %}
+                    <div class="d-flex gap-2 small text-theme"><i class="fas fa-check text-success mt-1 flex-shrink-0"
+                            style="font-size:0.75rem;"></i>{{ pt }}</div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                {% if q.follow_up %}
+                <div class="p-2 rounded-2 mt-2"
+                    style="background:rgba(255,109,0,0.06);border-left:3px solid rgba(255,109,0,0.4);">
+                    <span class="small text-warning fw-bold">Follow-up: </span><span class="small text-theme">{{                         q.follow_up }}</span>
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+            {% else %}
+            <div class="glass-panel p-5 text-center">
+                <i class="fas fa-comments fa-4x mb-4 d-block" style="color:#7C4DFF;opacity:0.3;"></i>
+                <h5 class="text-theme">Generate personalised interview questions</h5>
+                <p class="text-muted">Select a job and optionally a candidate to get AI-tailored questions with answer
+                    guides and follow-ups.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,296 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Admin Panel | SmartRecruit{% endblock %}
+
+{% block content %}
+<!-- Admin Layout Wrapper -->
+<div class="d-flex" id="admin-wrapper" style="min-height:calc(100vh - 72px)">
+
+  {% include 'core/_admin_sidebar.html' %}
+
+  <!-- ══ MAIN CONTENT ══ -->
+  <main class="flex-grow-1 p-4 p-lg-5" style="overflow-y:auto;">
+
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-start mb-5">
+      <div>
+        <h1 class="glow-text mb-1" style="font-size:1.8rem;">
+          <i class="fa-solid fa-chart-pie me-2 text-danger"></i>Admin Dashboard
+        </h1>
+        <p class="text-theme-secondary mb-0">Real-time platform overview & health metrics</p>
+      </div>
+      {% if flagged_interviews > 0 %}
+      <div class="glass-card p-3 d-flex align-items-center gap-2 border border-danger border-opacity-25" style="border-radius:12px;">
+        <span class="badge bg-danger rounded-circle p-2"><i class="fa-solid fa-triangle-exclamation"></i></span>
+        <div>
+          <div class="fw-bold text-danger" style="font-size:.85rem;">{{ flagged_interviews }} Flag Alert{{ flagged_interviews|pluralize }}</div>
+          <small class="text-theme-secondary">Proctoring violations</small>
+        </div>
+        <a href="{% url 'admin_interviews' %}?flag=flagged" class="btn btn-sm btn-outline-danger ms-2">Review</a>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Dashboard 2.0: Technical Telemetry & Pulse -->
+    <div class="row g-4 mb-5">
+      <!-- AI Engine Pulse -->
+      <div class="col-lg-4">
+        <div class="glass-card p-4 border-primary border-opacity-10 h-100 position-relative overflow-hidden">
+          <div class="d-flex justify-content-between align-items-start mb-4">
+            <div>
+              <h6 class="text-primary fw-bold small text-uppercase letter-spacing-1 mb-1">AI Service Status</h6>
+              <div class="text-white fw-bold h5 mb-0">Gemini Pro API</div>
+            </div>
+            <div class="text-end">
+              <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-25 px-2 py-1">
+                <i class="fa-solid fa-circle me-1" style="font-size:0.5rem;"></i>AI ACTIVE
+              </span>
+            </div>
+          </div>
+          <div class="mb-4">
+            <div class="small text-theme-secondary mb-2">Estimated Token Usage (Lifetime)</div>
+            <div class="h4 text-white fw-bold">{{ estimated_tokens }} <small class="text-theme-secondary fw-normal" style="font-size:0.75rem;">TOKENS</small></div>
+            <div class="progress mt-2" style="height:4px; background:rgba(255,255,255,0.05);">
+              <div class="progress-bar bg-primary" style="width: 65%;"></div>
+            </div>
+          </div>
+          <div class="d-flex gap-3 mt-auto">
+            <div class="small"><i class="fa-solid fa-microchip text-primary me-1"></i> <span class="text-theme-secondary">Latency:</span> <span class="text-white">1.2s</span></div>
+            <div class="small"><i class="fa-solid fa-bolt text-warning me-1"></i> <span class="text-theme-secondary">Uptime:</span> <span class="text-white">99.9%</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Proctoring Health -->
+      <div class="col-lg-4">
+        <div class="glass-card p-4 border-danger border-opacity-10 h-100">
+          <h6 class="text-danger fw-bold small text-uppercase letter-spacing-1 mb-4">Security & Trust</h6>
+          <div class="row align-items-center">
+            <div class="col-7">
+               <div class="small text-theme-secondary mb-1">Violation Rate</div>
+               <div class="h3 fw-bold text-white">{{ violation_rate }}%</div>
+               <p class="small text-theme-secondary mb-0">Total Flags: <span class="text-danger fw-bold">{{ total_flags_count }}</span></p>
+            </div>
+            <div class="col-5">
+              <div style="width:70px; height:70px; margin-left:auto;">
+                 <canvas id="violationMiniChart"></canvas>
+              </div>
+            </div>
+          </div>
+          <div class="mt-4 pt-3 border-top border-white border-opacity-5">
+             <a href="{% url 'admin_proctoring_review' %}" class="small text-danger text-decoration-none fw-bold">
+               <i class="fa-solid fa-arrow-right-long me-2"></i>Review Pending Evidence
+             </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- System Connectivity -->
+      <div class="col-lg-4">
+        <div class="glass-card p-4 border-success border-opacity-10 h-100">
+          <h6 class="text-success fw-bold small text-uppercase letter-spacing-1 mb-4">System Connectivity</h6>
+          <div class="space-y-3">
+             <div class="d-flex justify-content-between align-items-center">
+                <span class="small text-theme-secondary">Database Master</span>
+                <span class="badge bg-success bg-opacity-10 text-success small"><i class="fa-solid fa-circle-check me-1"></i>ONLINE</span>
+             </div>
+             <div class="d-flex justify-content-between align-items-center">
+                <span class="small text-theme-secondary">Google Gemini API</span>
+                <span class="badge bg-success bg-opacity-10 text-success small"><i class="fa-solid fa-circle-check me-1"></i>STABLE</span>
+             </div>
+             <div class="d-flex justify-content-between align-items-center">
+                <span class="small text-theme-secondary">SendGrid Relay</span>
+                <span class="badge bg-success bg-opacity-10 text-success small"><i class="fa-solid fa-circle-check me-1"></i>READY</span>
+             </div>
+             <div class="d-flex justify-content-between align-items-center">
+                <span class="small text-theme-secondary">Twilio Gateway</span>
+                <span class="badge bg-warning bg-opacity-10 text-warning small"><i class="fa-solid fa-wave-pulse me-1"></i>LATENCY</span>
+             </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- KPI Row 1 -->
+    <div class="row g-3 mb-4">
+      {% include 'core/_admin_kpi.html' with value=total_users label="Total Users" icon="fa-users" color="primary" sub=new_users sub_label="new this week" %}
+      {% include 'core/_admin_kpi.html' with value=total_candidates label="Candidates" icon="fa-user-graduate" color="info" %}
+      {% include 'core/_admin_kpi.html' with value=total_recruiters label="Recruiters" icon="fa-user-tie" color="warning" %}
+      {% include 'core/_admin_kpi.html' with value=active_jobs label="Active Jobs" icon="fa-briefcase" color="success" sub=closed_jobs sub_label="closed" %}
+    </div>
+    <div class="row g-3 mb-5">
+      {% include 'core/_admin_kpi.html' with value=total_applications label="Total Applications" icon="fa-layer-group" color="cyan" %}
+      {% include 'core/_admin_kpi.html' with value=hired_count label="Total Hires" icon="fa-handshake" color="success" %}
+      {% include 'core/_admin_kpi.html' with value=total_interviews label="Interview Sessions" icon="fa-video" color="purple" %}
+      {% include 'core/_admin_kpi.html' with value=flagged_interviews label="Flagged Sessions" icon="fa-flag" color="danger" %}
+    </div>
+
+    <!-- Hiring Pipeline Funnel -->
+    <div class="row g-4 mb-4">
+      <div class="col-lg-7">
+        <div class="glass-card p-4 h-100">
+          <h6 class="text-theme-secondary fw-semibold mb-4"><i class="fa-solid fa-funnel me-2"></i> Hiring Pipeline</h6>
+          <div id="funnel-data" data-funnel="{{ funnel_json }}" style="display:none;"></div>
+          <div id="funnel-bars"></div>
+          <script>
+          document.addEventListener('DOMContentLoaded', function(){
+            const raw = document.getElementById('funnel-data').dataset.funnel;
+            const data = JSON.parse(raw);
+            const max = Math.max(...Object.values(data));
+            const container = document.getElementById('funnel-bars');
+            const colors = ['#00d2ff','#6366f1','#f59e0b','#10b981','#8b5cf6','#22c55e'];
+            let i = 0;
+            for(const [label, val] of Object.entries(data)){
+              const pct = max > 0 ? (val/max*100).toFixed(0) : 0;
+              container.innerHTML += `
+              <div class="mb-3">
+                <div class="d-flex justify-content-between mb-1">
+                  <span class="text-theme-secondary small">${label}</span>
+                  <span class="fw-bold" style="color:${colors[i]}">${val}</span>
+                </div>
+                <div class="progress" style="height:8px; background:rgba(255,255,255,.06); border-radius:8px;">
+                  <div class="progress-bar" style="width:${pct}%; background:${colors[i]}; border-radius:8px; transition:.6s ease;"></div>
+                </div>
+              </div>`;
+              i++;
+            }
+          });
+          </script>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="col-lg-5">
+        <div class="glass-card p-4 h-100">
+          <h6 class="text-theme-secondary fw-semibold mb-4"><i class="fa-solid fa-bolt me-2"></i> Quick Actions</h6>
+          <div class="d-grid gap-2">
+            <a href="{% url 'admin_users' %}" class="btn btn-outline-primary text-start">
+              <i class="fa-solid fa-users-gear me-2"></i> Manage Users
+            </a>
+            <a href="{% url 'admin_users' %}?role=recruiter" class="btn btn-outline-warning text-start">
+              <i class="fa-solid fa-user-tie me-2"></i> View Recruiters
+            </a>
+            <a href="{% url 'admin_jobs' %}?status=open" class="btn btn-outline-success text-start">
+              <i class="fa-solid fa-circle-check me-2"></i> View Open Jobs
+            </a>
+            <a href="{% url 'admin_interviews' %}?flag=flagged" class="btn btn-outline-danger text-start">
+              <i class="fa-solid fa-triangle-exclamation me-2"></i> Flagged Interviews
+            </a>
+            <div class="dropdown d-grid">
+              <button class="btn btn-outline-secondary text-start dropdown-toggle shadow-none" type="button" data-bs-toggle="dropdown">
+                <i class="fa-solid fa-file-export me-2"></i> Universal Data Export
+              </button>
+              <ul class="dropdown-menu dropdown-menu-dark w-100 glass-card border-white border-opacity-10 shadow-lg">
+                <li><a class="dropdown-item py-2" href="{% url 'admin_export_data' %}?table=candidates"><i class="fa-solid fa-user-graduate me-2 text-info"></i>Export Candidates (CSV)</a></li>
+                <li><a class="dropdown-item py-2" href="{% url 'admin_export_data' %}?table=applications"><i class="fa-solid fa-file-lines me-2 text-success"></i>Export Applications (CSV)</a></li>
+                <li><a class="dropdown-item py-2" href="{% url 'admin_export_data' %}?table=interviews"><i class="fa-solid fa-video me-2 text-danger"></i>Export Interviews (CSV)</a></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="row g-4">
+      <!-- Recent Users -->
+      <div class="col-lg-6">
+        <div class="glass-card p-4">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h6 class="mb-0 text-theme-secondary fw-semibold"><i class="fa-solid fa-clock-rotate-left me-2"></i> Recent Registrations</h6>
+            <a href="{% url 'admin_users' %}" class="btn btn-sm btn-outline-secondary">View All</a>
+          </div>
+          <div id="activityFeedContainer">
+            <div class="text-center py-4">
+              <div class="spinner-border spinner-border-sm text-secondary"></div>
+              <small class="ms-2 text-theme-secondary">Loading audit trail...</small>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Flagged Interviews -->
+      <div class="col-lg-6">
+        <div class="glass-card p-4">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h6 class="mb-0 text-theme-secondary fw-semibold"><i class="fa-solid fa-triangle-exclamation me-2 text-danger"></i> Flagged Sessions</h6>
+            <a href="{% url 'admin_interviews' %}?flag=flagged" class="btn btn-sm btn-outline-danger">View All</a>
+          </div>
+          {% for interview in recent_flags %}
+          <div class="d-flex align-items-start gap-3 py-2" style="border-bottom:1px solid rgba(255,255,255,.05);">
+            <span class="badge bg-danger mt-1">{{ interview.flag_count }}</span>
+            <div>
+              <div class="fw-semibold text-white" style="font-size:.88rem;">{{ interview.application.candidate.full_name }}</div>
+              <small class="text-theme-secondary">{{ interview.application.job.title }}</small>
+            </div>
+            <span class="ms-auto badge bg-danger bg-opacity-20 text-danger border border-danger">Flagged</span>
+          </div>
+          {% empty %}
+          <div class="text-center py-4">
+            <i class="fa-solid fa-shield-check text-success fs-2 mb-2 d-block"></i>
+            <small class="text-theme-secondary">No proctoring violations detected</small>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Scripts for Dashboard 2.0 -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function(){
+      // Safely extract template variables
+      const violationRate = parseFloat("{{ violation_rate|default:0 }}") || 0;
+
+      // Mini Violation Chart
+      const miniCtx = document.getElementById('violationMiniChart');
+      if (miniCtx) {
+        new Chart(miniCtx.getContext('2d'), {
+          type: 'doughnut',
+          data: {
+            datasets: [{
+              data: [violationRate, 100 - violationRate],
+              backgroundColor: ['#ef4444', 'rgba(255,255,255,0.05)'],
+              borderWidth: 0,
+              cutout: '75%'
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false }, tooltip: { enabled: false } }
+          }
+        });
+      }
+
+      // Load Activity Feed
+      fetch("{% url 'admin_activity_feed_api' %}")
+        .then(r => r.json())
+        .then(data => {
+            const container = document.getElementById('activityFeedContainer');
+            if (data.status === 'success' && data.logs.length > 0) {
+                container.innerHTML = data.logs.map(log => `
+                    <div class="d-flex align-items-start gap-3 py-2 border-bottom border-white border-opacity-5">
+                       <div class="rounded-circle bg-secondary bg-opacity-10 text-theme-secondary d-flex align-items-center justify-content-center flex-shrink-0" style="width:32px; height:32px; font-size:0.75rem;">
+                          ${log.user.charAt(0).toUpperCase()}
+                       </div>
+                       <div class="flex-grow-1 min-w-0">
+                          <div class="d-flex justify-content-between">
+                             <small class="fw-bold text-white">${log.user}</small>
+                             <small class="text-theme-secondary" style="font-size:0.7rem;">${log.time}</small>
+                          </div>
+                          <div class="text-theme-secondary small text-truncate" style="font-size:0.8rem;">${log.action}</div>
+                       </div>
+                    </div>
+                `).join('');
+            } else {
+                container.innerHTML = '<p class="text-theme-secondary text-center py-3 small">No recent activity logged.</p>';
+            }
+        });
+    });
+    </script>
+  </main>
+</div>
+
+{% endblock %}

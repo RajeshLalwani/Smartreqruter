@@ -1,0 +1,204 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}The ROI Oracle | Strategic Financial Intelligence | SmartRecruit{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header: The Executive Briefing -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="glass-panel p-4 d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="fw-bold text-gradient mb-1">The ROI Oracle™</h2>
+                    <p class="text-muted small mb-0 uppercase tracking-widest"><i
+                            class="fas fa-eye text-primary me-2"></i>Strategic Talent Capitalization Analysis</p>
+                </div>
+                <div class="d-flex gap-3">
+                    <div class="glass-card px-4 py-2 text-center">
+                        <div class="xx-small text-muted uppercase">Global Talent ROI</div>
+                        <div class="h4 fw-bold text-success mb-0">+312%</div>
+                    </div>
+                    <div class="glass-card px-4 py-2 text-center border-info border-opacity-30">
+                        <div class="xx-small text-muted uppercase">Opportunity Cost</div>
+                        <div class="h4 fw-bold text-danger mb-0">₹12.4M</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Main Chart: The Value Trajectory -->
+        <div class="col-lg-8">
+            <div class="glass-panel p-4 h-100">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h5 class="fw-bold text-theme mb-0">Talent Value Projection (Next 3 Years)</h5>
+                    <div class="btn-group">
+                        <button class="btn btn-sm btn-outline-secondary active">Cumulative ROI</button>
+                        <button class="btn btn-sm btn-outline-secondary">Break-Even</button>
+                    </div>
+                </div>
+                <canvas id="roiChart" style="height: 400px;"></canvas>
+            </div>
+        </div>
+
+        <!-- Right Side: Candidate ROI Comparison -->
+        <div class="col-lg-4">
+            <div class="glass-panel p-4 h-100 d-flex flex-column gap-4">
+                <h5 class="fw-bold text-theme mb-0">Top Candidate Capitalization</h5>
+
+                <div class="candidate-roi-list d-flex flex-column gap-3">
+                    {% for item in top_candidates %}
+                    <div
+                        class="roi-card glass-card p-3 rounded-4 border-light border-opacity-10 hover-lift cursor-pointer">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div class="d-flex align-items-center gap-2">
+                                <div
+                                    class="avatar-sm rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center text-primary fw-bold">
+                                    {{ item.name|first }}</div>
+                                <div>
+                                    <h6 class="fw-bold text-theme mb-0">{{ item.name }}</h6>
+                                    <span class="xx-small text-muted">{{ item.role }}</span>
+                                </div>
+                            </div>
+                            <div class="text-end">
+                                <span
+                                    class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-20 px-2">High
+                                    ROI</span>
+                            </div>
+                        </div>
+                        <div
+                            class="stats-row d-flex justify-content-between x-small py-2 border-top border-light border-opacity-5">
+                            <span class="text-muted">Net Value (Yr 1)</span>
+                            <span class="fw-bold text-theme">₹{{ item.value }}</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <div class="mt-auto">
+                    <div
+                        class="alert alert-warning bg-warning bg-opacity-5 border-warning border-opacity-10 rounded-pill py-2 px-4 d-flex align-items-center gap-3">
+                        <i class="fas fa-exclamation-triangle text-warning"></i>
+                        <span class="xx-small text-muted mb-0 fw-bold">ORACLE ALERT: Every 10 days of vacancy in this
+                            role costs the company ₹85,000.</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Row: Precision Metrics -->
+    <div class="row g-4 mt-2">
+        <div class="col-md-3">
+            <div class="glass-panel p-4 text-center">
+                <div class="xx-small text-muted uppercase tracking-widest mb-2">Time-to-Value (Avg)</div>
+                <h3 class="fw-bold text-info mb-1">42 Days</h3>
+                <div class="progress mt-3" style="height: 4px;">
+                    <div class="progress-bar bg-info" style="width: 80%"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="glass-panel p-4 text-center">
+                <div class="xx-small text-muted uppercase tracking-widest mb-2">Success Predictor</div>
+                <h3 class="fw-bold text-primary mb-1">94.2%</h3>
+                <div class="progress mt-3" style="height: 4px;">
+                    <div class="progress-bar bg-primary" style="width: 94%"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="glass-panel p-4 text-center">
+                <div class="xx-small text-muted uppercase tracking-widest mb-2">Cultural Capital</div>
+                <h3 class="fw-bold text-warning mb-1">+15%</h3>
+                <div class="progress mt-3" style="height: 4px;">
+                    <div class="progress-bar bg-warning" style="width: 65%"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="glass-panel p-4 text-center">
+                <div class="xx-small text-muted uppercase tracking-widest mb-2">Replacement Hedge</div>
+                <h3 class="fw-bold text-danger mb-1">₹4.2M</h3>
+                <div class="progress mt-3" style="height: 4px;">
+                    <div class="progress-bar bg-danger" style="width: 40%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .shadow-2v {
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    }
+
+    .text-gradient {
+        background: linear-gradient(90deg, #00d2ff 0%, #3a7bd5 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .xx-small {
+        font-size: 0.65rem;
+    }
+
+    .x-small {
+        font-size: 0.75rem;
+    }
+
+    .uppercase {
+        text-transform: uppercase;
+    }
+
+    .tracking-widest {
+        letter-spacing: 0.1em;
+    }
+
+    .hover-lift {
+        transition: transform 0.3s ease;
+    }
+
+    .hover-lift:hover {
+        transform: translateY(-5px);
+    }
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const ctx = document.getElementById('roiChart').getContext('2d');
+    const chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: ['M1', 'M6', 'Y1', 'Y2', 'Y3'],
+            datasets: [{
+                label: 'Hiring Cost (Investment)',
+                data: [-15, -12, -8, -5, -2],
+                borderColor: '#ff4b2b',
+                backgroundColor: 'rgba(255, 75, 43, 0.1)',
+                fill: true,
+                tension: 0.4
+            }, {
+                label: 'Talent Value (Contribution)',
+                data: [0, 25, 60, 140, 280],
+                borderColor: '#00d2ff',
+                backgroundColor: 'rgba(0, 210, 255, 0.1)',
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { labels: { color: 'rgba(255,255,255,0.7)', font: { size: 10 } } }
+            },
+            scales: {
+                x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: 'rgba(255,255,255,0.5)' } },
+                y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: 'rgba(255,255,255,0.5)' } }
+            }
+        }
+    });
+</script>
+{% endblock %}

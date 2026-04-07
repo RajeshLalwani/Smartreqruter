@@ -1,0 +1,339 @@
+/* =======================================================
+   THUNDER UI ENGINE — SmartRecruit
+   Developer: Rajesh Lalwani
+   Themes: midnight (dark) | clean (light)
+   ======================================================= */
+
+/* ── 1. THEME TOKEN DEFINITIONS ── */
+:root,
+[data-theme="midnight"] {
+    --bg-main:            #0a0b10;
+    --bg-shell:           #0d0f18;
+    --bg-card:            rgba(255, 255, 255, 0.04);
+    --bg-card-hover:      rgba(255, 255, 255, 0.07);
+    --glass-blur:         20px;
+    --neon-accent:        #00f2ff;   /* Electric Cyan  */
+    --neon-accent-2:      #7f5af0;   /* Neon Violet    */
+    --neon-accent-3:      #00ff99;   /* Matrix Green   */
+    --neon-glow:          rgba(0, 242, 255, 0.45);
+    --neon-glow-strong:   rgba(0, 242, 255, 0.85);
+    --glass-border:       rgba(255, 255, 255, 0.10);
+    --glass-border-hover: rgba(0, 242, 255, 0.55);
+    --text-primary:       #f0f2f5;
+    --text-secondary:     #9aa3b0;
+    --text-muted:         rgba(255, 255, 255, 0.38);
+    --shadow-card:        0 8px 32px rgba(0, 0, 0, 0.55);
+    --shadow-glow:        0 0 20px var(--neon-glow);
+    --gradient-brand:     linear-gradient(135deg, #001f3f 0%, #00b4d8 100%);
+    --gradient-card:      linear-gradient(160deg, rgba(0,242,255,0.06) 0%, transparent 70%);
+    --transition-smooth:  all 0.35s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+[data-theme="clean"] {
+    --bg-main:            #f0f2f5;
+    --bg-shell:           #e8ebf0;
+    --bg-card:            rgba(255, 255, 255, 0.80);
+    --bg-card-hover:      rgba(255, 255, 255, 0.95);
+    --glass-blur:         20px;
+    --neon-accent:        #0066cc;
+    --neon-accent-2:      #5200c8;
+    --neon-accent-3:      #00a854;
+    --neon-glow:          rgba(0, 102, 204, 0.18);
+    --neon-glow-strong:   rgba(0, 102, 204, 0.45);
+    --glass-border:       rgba(0, 0, 0, 0.08);
+    --glass-border-hover: rgba(0, 102, 204, 0.45);
+    --text-primary:       #1a1a2e;
+    --text-secondary:     #455a6a;
+    --text-muted:         rgba(0, 0, 0, 0.42);
+    --shadow-card:        0 6px 24px rgba(0, 0, 0, 0.10);
+    --shadow-glow:        0 0 12px var(--neon-glow);
+    --gradient-brand:     linear-gradient(135deg, #0d47a1 0%, #00b0d2 100%);
+    --gradient-card:      linear-gradient(160deg, rgba(0,102,204,0.05) 0%, transparent 70%);
+    --transition-smooth:  all 0.35s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+/* ── BOOTSTRAP THEME ALIASES — keeps BS components in sync with Thunder tokens ── */
+[data-bs-theme="dark"] {
+    --bg-main:            #0a0b10;
+    --bg-shell:           #0d0f18;
+    --bg-card:            rgba(255, 255, 255, 0.04);
+    --bg-card-hover:      rgba(255, 255, 255, 0.07);
+    --glass-blur:         20px;
+    --neon-accent:        #00f2ff;
+    --neon-accent-2:      #7f5af0;
+    --neon-accent-3:      #00ff99;
+    --neon-glow:          rgba(0, 242, 255, 0.45);
+    --neon-glow-strong:   rgba(0, 242, 255, 0.85);
+    --glass-border:       rgba(255, 255, 255, 0.10);
+    --glass-border-hover: rgba(0, 242, 255, 0.55);
+    --text-primary:       #f0f2f5;
+    --text-secondary:     #9aa3b0;
+    --text-muted:         rgba(255, 255, 255, 0.38);
+    --shadow-card:        0 8px 32px rgba(0, 0, 0, 0.55);
+    --shadow-glow:        0 0 20px var(--neon-glow);
+    --gradient-brand:     linear-gradient(135deg, #001f3f 0%, #00b4d8 100%);
+    --gradient-card:      linear-gradient(160deg, rgba(0,242,255,0.06) 0%, transparent 70%);
+    --transition-smooth:  all 0.35s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+[data-bs-theme="light"] {
+    --bg-main:            #f0f2f5;
+    --bg-shell:           #e8ebf0;
+    --bg-card:            rgba(255, 255, 255, 0.80);
+    --bg-card-hover:      rgba(255, 255, 255, 0.95);
+    --glass-blur:         20px;
+    --neon-accent:        #0066cc;
+    --neon-accent-2:      #5200c8;
+    --neon-accent-3:      #00a854;
+    --neon-glow:          rgba(0, 102, 204, 0.18);
+    --neon-glow-strong:   rgba(0, 102, 204, 0.45);
+    --glass-border:       rgba(0, 0, 0, 0.08);
+    --glass-border-hover: rgba(0, 102, 204, 0.45);
+    --text-primary:       #1a1a2e;
+    --text-secondary:     #455a6a;
+    --text-muted:         rgba(0, 0, 0, 0.42);
+    --shadow-card:        0 6px 24px rgba(0, 0, 0, 0.10);
+    --shadow-glow:        0 0 12px var(--neon-glow);
+    --gradient-brand:     linear-gradient(135deg, #0d47a1 0%, #00b0d2 100%);
+    --gradient-card:      linear-gradient(160deg, rgba(0,102,204,0.05) 0%, transparent 70%);
+    --transition-smooth:  all 0.35s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+/* ── 2. SMART GLASS CARD ── */
+.glass-card,
+.thunder-card {
+    background:          var(--bg-card);
+    background-image:    var(--gradient-card);
+    backdrop-filter:     blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border:              1px solid var(--glass-border);
+    border-radius:       20px;
+    box-shadow:          var(--shadow-card);
+    transition:          var(--transition-smooth);
+    position:            relative;
+    overflow:            hidden;
+}
+
+.glass-card::before,
+.thunder-card::before {
+    content:     '';
+    position:    absolute;
+    inset:       0;
+    border-radius: inherit;
+    background: linear-gradient(135deg, rgba(255,255,255,0.04) 0%, transparent 60%);
+    pointer-events: none;
+}
+
+.glass-card:hover,
+.thunder-card:hover {
+    background:   var(--bg-card-hover);
+    border-color: var(--glass-border-hover);
+    box-shadow:   var(--shadow-card), var(--shadow-glow);
+    transform:    translateY(-4px);
+}
+
+/* ── 3. THUNDER BUTTON ── */
+.btn-thunder {
+    position:        relative;
+    display:         inline-flex;
+    align-items:     center;
+    gap:             8px;
+    background:      transparent;
+    border:          1px solid var(--neon-accent);
+    color:           var(--neon-accent);
+    padding:         10px 28px;
+    border-radius:   50px;
+    font-weight:     600;
+    font-size:       0.875rem;
+    text-transform:  uppercase;
+    letter-spacing:  0.06em;
+    cursor:          pointer;
+    box-shadow:      0 0 14px var(--neon-glow);
+    transition:      var(--transition-smooth);
+    overflow:         hidden;
+    text-decoration:  none;
+}
+
+.btn-thunder::after {
+    content:    '';
+    position:   absolute;
+    inset:      0;
+    background: var(--neon-accent);
+    opacity:    0;
+    transition: opacity 0.3s ease;
+}
+
+.btn-thunder:hover {
+    color:       #000;
+    box-shadow:  0 0 28px var(--neon-glow-strong);
+}
+
+.btn-thunder:hover::after {
+    opacity: 1;
+}
+
+.btn-thunder span,
+.btn-thunder i {
+    position: relative;
+    z-index:  1;
+}
+
+/* ── 4. NEON INPUT ── */
+.thunder-input,
+.thunder-input.form-control {
+    background:          rgba(0,0,0,0.22) !important;
+    border:              1px solid var(--glass-border) !important;
+    border-radius:       12px !important;
+    color:               var(--text-primary) !important;
+    backdrop-filter:     blur(10px);
+    transition:          var(--transition-smooth);
+}
+
+[data-theme="clean"] .thunder-input,
+[data-theme="clean"] .thunder-input.form-control {
+    background: rgba(255,255,255,0.65) !important;
+    color:      var(--text-primary) !important;
+}
+
+.thunder-input:focus,
+.thunder-input.form-control:focus {
+    border-color: var(--neon-accent) !important;
+    box-shadow:   0 0 18px var(--neon-glow) !important;
+    outline:      none;
+}
+
+/* ── 5. GLOW BADGE ── */
+.thunder-badge {
+    display:         inline-flex;
+    align-items:     center;
+    gap:             6px;
+    padding:         4px 14px;
+    border-radius:   50px;
+    border:          1px solid var(--glass-border);
+    background:      rgba(0, 242, 255, 0.08);
+    color:           var(--neon-accent);
+    font-size:       0.75rem;
+    font-weight:     600;
+    text-transform:  uppercase;
+    letter-spacing:  0.08em;
+}
+
+/* ── 6. PRELOADER ── */
+.thunder-preloader {
+    position:        fixed;
+    inset:           0;
+    z-index:         999999;
+    display:         flex;
+    align-items:     center;
+    justify-content: center;
+    flex-direction:  column;
+    background:      var(--bg-main);
+    transition:      opacity 0.45s ease;
+}
+
+.thunder-preloader.is-hidden {
+    opacity:          0;
+    pointer-events:   none;
+}
+
+.preloader-bolt {
+    width:  100px;
+    filter: drop-shadow(0 0 18px var(--neon-accent)) drop-shadow(0 0 40px var(--neon-glow));
+    animation: bolt-pulse 1.2s ease-in-out infinite;
+}
+
+.preloader-bar-wrap {
+    width:         200px;
+    height:        3px;
+    border-radius: 99px;
+    background:    rgba(255,255,255,0.08);
+    margin-top:    24px;
+    overflow:      hidden;
+}
+
+.preloader-bar {
+    height:     100%;
+    background: linear-gradient(90deg, var(--neon-accent), var(--neon-accent-2));
+    border-radius: 99px;
+    animation:  preloader-fill 1.4s ease-in-out forwards;
+}
+
+/* ── 7. KEYFRAME ANIMATIONS ── */
+@keyframes bolt-pulse {
+    0%, 100% { opacity: 1;   transform: scaleY(1);    }
+    50%       { opacity: 0.6; transform: scaleY(0.92); }
+}
+
+@keyframes preloader-fill {
+    from { width: 0%; }
+    to   { width: 100%; }
+}
+
+@keyframes neon-pulse {
+    0%, 100% { box-shadow: 0 0 10px var(--neon-glow); }
+    50%       { box-shadow: 0 0 30px var(--neon-glow-strong), 0 0 60px var(--neon-glow); }
+}
+
+@keyframes float-up {
+    0%, 100% { transform: translateY(0);   }
+    50%       { transform: translateY(-8px); }
+}
+
+@keyframes shimmer {
+    from { background-position: -400px 0; }
+    to   { background-position:  400px 0; }
+}
+
+@keyframes thunder-strike {
+    0%   { opacity: 0; transform: scaleY(0) translateY(-30px); }
+    40%  { opacity: 1; transform: scaleY(1.05) translateY(0); }
+    60%  { transform: scaleY(0.97); }
+    80%  { transform: scaleY(1.02); }
+    100% { opacity: 1; transform: scaleY(1); }
+}
+
+/* ── 8. UTILITY CLASSES ── */
+.neon-border          { border: 1px solid var(--neon-accent) !important; }
+.neon-glow-text       { color: var(--neon-accent) !important; text-shadow: 0 0 12px var(--neon-glow); }
+.neon-shadow          { box-shadow: var(--shadow-glow) !important; }
+.glass-blur-sm        { backdrop-filter: blur(8px);  -webkit-backdrop-filter: blur(8px); }
+.glass-blur-md        { backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
+.glass-blur-lg        { backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur)); }
+.animate-float        { animation: float-up 3.5s ease-in-out infinite; }
+.animate-neon-pulse   { animation: neon-pulse 2.5s ease-in-out infinite; }
+.animate-thunder      { animation: thunder-strike 0.55s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+/* Skeleton shimmer */
+.skeleton {
+    background: linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.09) 50%, rgba(255,255,255,0.04) 75%);
+    background-size: 400px 100%;
+    animation: shimmer 1.5s linear infinite;
+    border-radius: 8px;
+}
+
+/* ── 9. SECTION TITLES ── */
+.thunder-section-title {
+    font-size:     1.65rem;
+    font-weight:   800;
+    letter-spacing: -0.02em;
+    color:         var(--text-primary);
+    position:      relative;
+    padding-bottom: 10px;
+}
+
+.thunder-section-title::after {
+    content:       '';
+    position:      absolute;
+    bottom:        0;
+    left:          0;
+    width:         48px;
+    height:        3px;
+    background:    var(--neon-accent);
+    border-radius: 2px;
+    box-shadow:    0 0 12px var(--neon-glow);
+}
+
+/* ── 10. SCROLLBAR STYLING ── */
+::-webkit-scrollbar             { width: 6px; height: 6px; }
+::-webkit-scrollbar-track       { background: transparent; }
+::-webkit-scrollbar-thumb       { background: var(--glass-border-hover); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--neon-accent); }

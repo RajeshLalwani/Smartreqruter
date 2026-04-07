@@ -1,0 +1,408 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load job_filters %}
+{% load blind_filters %}
+
+{% block title %}Candidate Pool | SmartRecruit{% endblock %}
+
+{% block content %}
+<style>
+    /* Z-INDEX SAFEGUARDS & AESTHETICS */
+    .modal { z-index: 2000 !important; }
+    .modal-backdrop { z-index: 1050 !important; }
+    
+    .pulse-animation-slow { animation: pulse 3s infinite; }
+    @keyframes pulse { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.6; transform: scale(1.1); } 100% { opacity: 1; transform: scale(1); } }
+    
+    .avatar-circle {
+        width: 42px; height: 42px;
+        background: rgba(13, 202, 240, 0.1); border: 1px solid rgba(13, 202, 240, 0.25);
+        color: #0dcaf0; font-weight: bold; display: flex; align-items: center; justify-content: center; border-radius: 50%;
+    }
+    
+    /* Table Rows & Sticky Action Bar */
+    .candidate-row { transition: all 0.3s ease; }
+    .candidate-row:hover { background-color: rgba(255, 255, 255, 0.03) !important; transform: translateX(5px); }
+    
+    #bulkActionBar {
+        position: fixed; bottom: -100px; left: 50%; transform: translateX(-50%);
+        background: var(--alert-bg, rgba(10, 10, 15, 0.95)); backdrop-filter: blur(20px);
+        border: 1px solid var(--accent-glow, rgba(13, 110, 253, 0.5)); border-radius: 50rem;
+        padding: 1rem 2rem; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 20px rgba(13, 110, 253, 0.2);
+        z-index: 1040; transition: bottom 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        display: flex; align-items: center; gap: 1rem;
+    }
+    #bulkActionBar.active { bottom: 40px; }
+</style>
+
+<div class="container-fluid">
+    
+    <!-- Hero Header -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-5 gap-3" data-aos="fade-down">
+        <div>
+            <div class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-3 py-2 rounded-pill mb-3 text-uppercase tracking-widest small fw-bold">
+                <i class="fas fa-users-viewfinder me-2 pulse-animation-slow"></i>Talent Matrix Core
+            </div>
+            <h1 class="display-6 fw-bold text-theme mb-2 tracking-tight">Candidate <span class="text-transparent bg-clip-text bg-gradient-primary">Pool</span></h1>
+            <p class="lead text-theme-secondary mb-0">Evaluate incoming profiles, query resumes with ML/RAG, and execute batch determinations.</p>
+        </div>
+        
+        <a href="{% url 'job_list' %}" class="btn btn-outline-secondary btn-lg rounded-pill px-4 shadow-sm hover-scale fw-bold d-flex align-items-center gap-2">
+            <i class="fas fa-arrow-left"></i> Requisition Board
+        </a>
+    </div>
+
+    <form method="POST" action="{% url 'bulk_action' %}" id="bulkForm">
+        {% csrf_token %}
+        
+        <!-- RAG SEARCH MODULE -->
+        <div class="glass-card p-4 p-md-5 rounded-4 mb-5 position-relative overflow-hidden" data-aos="fade-up" data-aos-delay="100">
+            <div class="position-absolute top-0 end-0 p-4 opacity-10"><i class="fas fa-magic fa-6x text-info"></i></div>
+            
+            <div class="position-relative z-2">
+                <h5 class="fw-bold text-theme mb-3 d-flex align-items-center">
+                    <div class="rounded-circle d-flex justify-content-center align-items-center bg-info bg-opacity-10 border border-info border-opacity-50 shadow-inner me-3" style="width: 40px; height: 40px;">
+                        <i class="fas fa-search text-info"></i>
+                    </div>
+                    Semantic "Talk to Resume" Query Engine
+                </h5>
+                <p class="text-theme-secondary small mb-4">Execute natural language queries across all parsed vectors. The system understands conversational intent and filters profiles instantly.</p>
+                
+                <div class="input-group input-group-lg shadow-inner border border-info border-opacity-25 rounded-pill overflow-hidden bg-dark bg-opacity-25">
+                    <span class="input-group-text bg-transparent border-0 text-info ps-4"><i class="fas fa-terminal"></i></span>
+                    <input type="text" id="ragSearchInput" class="form-control bg-transparent border-0 text-theme shadow-none" placeholder="e.g., 'Find engineers with 5+ years of React and experience in payment gateways'">
+                    <button class="btn btn-info fw-bold px-4 text-dark shadow-none hover-scale border-0" type="button" onclick="performRAGSearch()" style="border-radius: 0 50rem 50rem 0;">
+                        <i class="fas fa-bolt me-2"></i> Execute Search
+                    </button>
+                </div>
+                
+                <div class="mt-3 ps-3 border-start border-info border-opacity-50 ms-2">
+                    <small class="text-info fw-bold tracking-widest text-uppercase" style="font-size: 0.65rem;" id="ragSearchResultText">Awaiting Search Protocol Initialization...</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- MASTER CANDIDATE TABLE -->
+        <div class="glass-card p-0 rounded-4 d-flex flex-column overflow-hidden" data-aos="fade-up" data-aos-delay="200">
+            <div class="p-4 border-bottom border-light border-opacity-10 bg-dark bg-opacity-10 d-flex justify-content-between align-items-center">
+                <h5 class="fw-bold mb-0 text-theme d-flex align-items-center gap-2">
+                    <i class="fas fa-database text-primary"></i> Application Registry
+                </h5>
+                <div class="badge bg-secondary bg-opacity-25 text-theme border border-secondary border-opacity-50 px-3 py-2 rounded-pill shadow-inner">
+                    {{ candidates|length }} Vectors
+                </div>
+            </div>
+
+            <div class="table-responsive flex-grow-1">
+                <table class="table table-borderless align-middle mb-0 w-100">
+                    <thead class="bg-light bg-opacity-5 border-bottom border-light border-opacity-10 text-theme-secondary small text-uppercase tracking-widest">
+                        <tr>
+                            <th class="ps-4 py-3 border-0" style="width: 50px;">
+                                <div class="form-check m-0">
+                                    <input type="checkbox" class="form-check-input bg-dark border-secondary cursor-pointer" id="selectAll">
+                                </div>
+                            </th>
+                            <th class="py-3 border-0">Identity Node</th>
+                            <th class="py-3 border-0">Timeline</th>
+                            <th class="py-3 border-0">Designation Target</th>
+                            <th class="py-3 border-0 text-center">Neural Score</th>
+                            <th class="py-3 border-0 text-center">Dataset</th>
+                            <th class="text-end pe-4 py-3 border-0">Primary Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for app in candidates %}
+                        <tr class="candidate-row border-bottom border-light border-opacity-5" data-app-id="{{ app.id }}" data-aos="fade-up">
+                            <td class="ps-4 py-3">
+                                <div class="form-check m-0">
+                                    <input type="checkbox" name="selected_ids" value="{{ app.id }}" class="form-check-input app-checkbox bg-dark border-secondary cursor-pointer">
+                                </div>
+                            </td>
+                            <td class="py-3">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="avatar-circle shadow-inner flex-shrink-0 border-primary">
+                                        {% if user.blind_hiring %}<i class="fas fa-mask"></i>{% else %}{{ app.candidate.full_name|slice:":1"|upper }}{% endif %}
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold text-theme mb-0" style="font-size: 0.95rem;">{{ app.candidate|anonymize:user }}</div>
+                                        <div class="text-theme-secondary small d-flex gap-2 align-items-center mt-1" style="font-size: 0.75rem;">
+                                            {% if user.blind_hiring %}
+                                            <span class="badge bg-secondary bg-opacity-25 text-theme px-2 py-1"><i class="fas fa-eye-slash me-1"></i> Data Obfuscated</span>
+                                            {% else %}
+                                            {{ app.candidate.email }}
+                                            {% endif %}
+                                            <span class="text-theme opacity-25">|</span>
+                                            <span class="text-info fw-bold">{{ app.candidate.experience_years|default:"0" }} Yrs</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="py-3 text-theme-secondary small">{{ app.applied_at|date:"M d, Y" }}</td>
+                            <td class="py-3">
+                                <span class="badge bg-secondary bg-opacity-25 text-theme border border-secondary border-opacity-50 px-2 py-1 shadow-inner fw-normal"><i class="fas fa-crosshairs text-primary me-1"></i>{{ app.job.title|truncatechars:20 }}</span>
+                            </td>
+                            <td class="py-3 text-center">
+                                {% with analysis=app|get_skill_analysis %}
+                                <div class="cursor-pointer hover-scale d-inline-block px-3 py-2 rounded-4 bg-dark bg-opacity-25 border border-secondary border-opacity-25 analysis-trigger" 
+                                     data-candidate-name="{{ app.candidate|anonymize:user }}" 
+                                     data-matched="{{ analysis.matched|join:',' }}" 
+                                     data-missing="{{ analysis.missing|join:',' }}" 
+                                     data-score="{{ app.ai_score }}">
+                                    <div class="d-flex flex-column align-items-center gap-1">
+                                        <span class="fw-bold text-{{ app.ai_score|match_color }} fs-6">{{ app.ai_score|floatformat:0 }}%</span>
+                                        <div class="progress bg-secondary bg-opacity-25 shadow-inner" style="height: 4px; width: 50px;">
+                                            <div class="progress-bar bg-{{ app.ai_score|match_color }}" style="width: {{ app.ai_score|default:0 }}%;"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endwith %}
+                            </td>
+                            <td class="py-3 text-center">
+                                {% if app.candidate.resume_file %}
+                                <button type="button" class="btn btn-sm btn-outline-info rounded-pill px-3 fw-bold hover-scale shadow-sm" onclick="showResume('{{ app.candidate.resume_file.url }}', '{{ app.candidate|anonymize:user|escapejs }}')">
+                                    <i class="fas fa-file-pdf me-1"></i> View
+                                </button>
+                                {% else %}
+                                <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25 px-2 py-1 rounded-pill fw-normal"><i class="fas fa-unlink me-1"></i>Null</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end pe-4 py-3">
+                                <a href="{% url 'update_status' app.id 'RESUME_SELECTED' %}" class="btn btn-sm btn-success rounded-circle shadow-sm hover-scale me-1" title="Approve Logic Gate" style="width: 32px; height: 32px; padding: 0; line-height: 30px;">
+                                    <i class="fas fa-check"></i>
+                                </a>
+                                <a href="{% url 'update_status' app.id 'RESUME_REJECTED' %}" class="btn btn-sm btn-danger rounded-circle shadow-sm hover-scale" title="Reject Sequence" style="width: 32px; height: 32px; padding: 0; line-height: 30px;">
+                                    <i class="fas fa-times"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center py-5">
+                                <div class="p-4 bg-dark bg-opacity-25 rounded-4 d-inline-block border border-secondary border-opacity-10 my-4">
+                                    <i class="fas fa-inbox fa-3x text-theme-secondary opacity-50 mb-3"></i>
+                                    <h6 class="fw-bold text-theme mb-1">Queue is Empty</h6>
+                                    <p class="text-theme-secondary small mb-0">No architectural profiles found in the current ingestion pipeline.</p>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- STICKY BULK ACTION BAR -->
+        <div id="bulkActionBar">
+            <div class="d-flex align-items-center gap-3">
+                <div class="text-white fw-bold d-flex align-items-center gap-2">
+                    <span class="badge bg-primary rounded-pill px-3 py-2 fs-6" id="selectedCount">0</span>
+                    <span class="small text-uppercase tracking-widest text-theme-secondary">Vectors Selected</span>
+                </div>
+                <div class="vr bg-secondary opacity-50" style="height: 30px;"></div>
+                <button type="submit" name="action" value="shortlist" class="btn btn-success rounded-pill px-4 fw-bold hover-scale shadow-sm">
+                    <i class="fas fa-check-double me-2"></i> Batch Approve
+                </button>
+                <button type="submit" name="action" value="reject" class="btn btn-danger rounded-pill px-4 fw-bold hover-scale shadow-sm">
+                    <i class="fas fa-ban me-2"></i> Batch Terminate
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- ================= AI ANALYSIS MODAL ================= -->
+<div class="modal fade" id="analysisModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content glass-panel shadow-lg" style="background: var(--bg-color, rgba(15, 15, 20, 0.95)); backdrop-filter: blur(20px); border: 1px solid var(--accent-color, rgba(13,202,240,0.5)) !important;">
+            <div class="modal-header border-bottom border-light border-opacity-10 pb-3">
+                <h5 class="modal-title fw-bold text-theme d-flex align-items-center gap-2">
+                    <i class="fas fa-brain text-primary pulse-animation-slow"></i> 
+                    Neural Analysis: <span id="analysisTitle" class="text-info fw-normal ms-1"></span>
+                </h5>
+                <button type="button" class="btn-close btn-close-white opacity-50" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4 position-relative overflow-hidden">
+                <div class="position-absolute top-50 start-50 translate-middle opacity-5 w-100 h-100 d-flex justify-content-center align-items-center pointer-events-none">
+                    <i class="fas fa-chart-network fa-10x text-primary"></i>
+                </div>
+                
+                <div class="position-relative z-2">
+                    <div class="text-center mb-5">
+                        <div class="rounded-circle d-inline-flex justify-content-center align-items-center border border-primary border-opacity-25 shadow-inner mb-3 bg-dark bg-opacity-50" style="width: 120px; height: 120px;">
+                            <div class="display-3 fw-bold mb-0" id="analysisScore" style="color: var(--accent-glow, #0dcaf0); font-family: 'Space Grotesk', sans-serif;">0%</div>
+                        </div>
+                        <h6 class="text-theme-secondary tracking-widest text-uppercase small fw-bold">Algorithmic Correlation Probability</h6>
+                    </div>
+
+                    <div class="mb-4 bg-success bg-opacity-10 border border-success border-opacity-25 rounded-4 p-4 shadow-inner">
+                        <h6 class="text-success fw-bold text-uppercase small tracking-widest mb-3 d-flex align-items-center gap-2 border-bottom border-success border-opacity-25 pb-2">
+                            <i class="fas fa-check-circle"></i> Verified Synaptic Links (Matched)
+                        </h6>
+                        <div id="matchedSkills" class="d-flex flex-wrap gap-2"></div>
+                    </div>
+
+                    <div class="bg-danger bg-opacity-10 border border-danger border-opacity-25 rounded-4 p-4 shadow-inner">
+                        <h6 class="text-danger fw-bold text-uppercase small tracking-widest mb-3 d-flex align-items-center gap-2 border-bottom border-danger border-opacity-25 pb-2">
+                            <i class="fas fa-times-circle"></i> Disconnected Vectors (Missing)
+                        </h6>
+                        <div id="missingSkills" class="d-flex flex-wrap gap-2"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ================= RESUME PREVIEW MODAL ================= -->
+<div class="modal fade" id="resumeModal" tabindex="-1">
+    <div class="modal-dialog modal-xl modal-dialog-centered" style="height: 90vh;">
+        <div class="modal-content glass-panel shadow-lg h-100" style="background: var(--bg-color, rgba(15, 15, 20, 0.95)); backdrop-filter: blur(20px); border: 1px solid var(--accent-color, rgba(13,202,240,0.5)) !important;">
+            <div class="modal-header border-bottom border-light border-opacity-10 py-3">
+                <h5 class="modal-title fw-bold text-theme d-flex align-items-center gap-2">
+                    <i class="fas fa-file-pdf text-danger"></i>
+                    Document Viewer: <span id="resumeTitle" class="text-theme-secondary fw-normal ms-1"></span>
+                </h5>
+                <button type="button" class="btn-close btn-close-white opacity-50" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-0 h-100 position-relative bg-dark rounded-bottom-3" style="min-height: 500px; max-height: 80vh; overflow-y: auto;">
+                <iframe id="resumeFrame" src="" class="w-100 h-100 border-0" style="min-height: 80vh;"></iframe>
+                <div id="docxContainer" class="w-100 h-100 p-4" style="display: none; background-color: #ffffff; color: #000; font-family: 'Arial', sans-serif;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.21/mammoth.browser.min.js"></script>
+<script>
+    // ================= MODAL LOGIC =================
+    document.querySelectorAll('.analysis-trigger').forEach(trigger => {
+        trigger.addEventListener('click', function() {
+            const name = this.dataset.candidateName;
+            const matched = this.dataset.matched;
+            const missing = this.dataset.missing;
+            const score = this.dataset.score;
+            showAnalysis(name, matched, missing, score);
+        });
+    });
+
+    function showAnalysis(name, matched, missing, score) {
+        document.getElementById('analysisTitle').innerText = name;
+        document.getElementById('analysisScore').innerText = Math.round(score) + '%';
+
+        const matchedContainer = document.getElementById('matchedSkills');
+        const missingContainer = document.getElementById('missingSkills');
+
+        matchedContainer.innerHTML = matched ? matched.split(',').map(s =>
+            `<span class="badge bg-success text-white px-3 py-2 rounded-pill shadow-sm"><i class="fas fa-check me-1 opacity-50"></i>${s.trim()}</span>`
+        ).join('') : '<span class="text-success small fst-italic">Zero strict correlation points identified.</span>';
+
+        missingContainer.innerHTML = missing ? missing.split(',').map(s =>
+            `<span class="badge bg-danger text-white px-3 py-2 rounded-pill shadow-sm"><i class="fas fa-times me-1 opacity-50"></i>${s.trim()}</span>`
+        ).join('') : '<span class="text-danger small fst-italic">Data sequence fully covers required matrix!</span>';
+
+        new bootstrap.Modal(document.getElementById('analysisModal')).show();
+    }
+
+    function showResume(url, name) {
+        document.getElementById('resumeTitle').innerText = name;
+        const iframe = document.getElementById('resumeFrame');
+        const docxContainer = document.getElementById('docxContainer');
+        
+        if (url.toLowerCase().endsWith('.docx') || url.toLowerCase().includes('.docx?')) {
+            iframe.style.display = 'none';
+            docxContainer.style.display = 'block';
+            docxContainer.innerHTML = '<div class="d-flex h-100 justify-content-center align-items-center"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading DOCX...</span></div></div>';
+            
+            fetch(url)
+                .then(res => res.arrayBuffer())
+                .then(arrayBuffer => mammoth.convertToHtml({arrayBuffer: arrayBuffer}))
+                .then(result => {
+                    docxContainer.innerHTML = `<div class="container py-4" style="max-width: 800px; margin: auto; text-align: left;">${result.value}</div>`;
+                })
+                .catch(err => {
+                    console.error("Mammoth error:", err);
+                    docxContainer.innerHTML = '<div class="text-danger p-5 text-center"><i class="fas fa-exclamation-triangle fa-3x mb-3"></i><br>Error rendering Document format natively in browser.</div>';
+                });
+        } else {
+            docxContainer.style.display = 'none';
+            iframe.style.display = 'block';
+            iframe.src = url;
+        }
+        
+        new bootstrap.Modal(document.getElementById('resumeModal')).show();
+    }
+
+    // ================= RAG PIPELINE =================
+    async function performRAGSearch() {
+        const query = document.getElementById('ragSearchInput').value.trim();
+        const resultText = document.getElementById('ragSearchResultText');
+        
+        if (!query) {
+            document.querySelectorAll('.candidate-row').forEach(row => { row.style.display = ''; });
+            resultText.innerHTML = "Awaiting Search Protocol Initialization...";
+            resultText.className = "text-info fw-bold tracking-widest text-uppercase small";
+            return;
+        }
+
+        resultText.innerHTML = '<i class="fas fa-circle-notch fa-spin me-2"></i> ML Engine Processing Document Embeddings...';
+        resultText.className = "text-warning fw-bold tracking-widest text-uppercase small";
+        
+        try {
+            const response = await fetch('/jobs/api/rag-search/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ query: query })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                const matchedIds = data.matches || [];
+                
+                let visibleCount = 0;
+                document.querySelectorAll('.candidate-row').forEach(row => {
+                    const appId = parseInt(row.dataset.appId);
+                    if (matchedIds.includes(appId)) {
+                        row.style.display = '';
+                        visibleCount++;
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+                resultText.innerHTML = `<i class="fas fa-check-circle me-2"></i> Process Complete: Isolated ${visibleCount} High-Probability Vector(s).`;
+                resultText.className = "text-success fw-bold tracking-widest text-uppercase small";
+            } else {
+                throw new Error("Pipeline Execution Failure");
+            }
+        } catch (err) {
+            resultText.innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i> Error: Local Deep-Search Engine Offline or Rate Limited.';
+            resultText.className = "text-danger fw-bold tracking-widest text-uppercase small";
+        }
+    }
+
+    // ================= BULK OPS HUD =================
+    const checkboxes = document.querySelectorAll('.app-checkbox');
+    const selectAll = document.getElementById('selectAll');
+    const actionBar = document.getElementById('bulkActionBar');
+    const countSpan = document.getElementById('selectedCount');
+
+    function updateActionBar() {
+        const checked = document.querySelectorAll('.app-checkbox:checked').length;
+        countSpan.innerText = checked;
+        if (checked > 0) actionBar.classList.add('active');
+        else actionBar.classList.remove('active');
+    }
+
+    if(selectAll) {
+        selectAll.addEventListener('change', function () {
+            checkboxes.forEach(cb => { 
+                if(cb.closest('tr').style.display !== 'none') {
+                    cb.checked = this.checked; 
+                }
+            });
+            updateActionBar();
+        });
+    }
+
+    checkboxes.forEach(cb => { cb.addEventListener('change', updateActionBar); });
+</script>
+{% endblock %}

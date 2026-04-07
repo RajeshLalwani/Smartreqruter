@@ -1,0 +1,30 @@
+Django>=4.2
+daphne
+channels
+channels-redis==4.2.0
+djangorestframework
+django-bootstrap-v5
+requests
+edge-tts
+pypdf
+scikit-learn
+spacy
+google-generativeai
+numpy
+opencv-python
+mediapipe
+textblob
+librosa
+matplotlib
+seaborn
+pandas
+joblib
+whitenoise
+gunicorn
+python-decouple
+django-allauth
+python3-saml
+p y t e s s e r a c t  
+ p d f 2 i m a g e  
+ o p e n c v - p y t h o n - h e a d l e s s  
+ g o o g l e - g e n e r a t i v e a i  

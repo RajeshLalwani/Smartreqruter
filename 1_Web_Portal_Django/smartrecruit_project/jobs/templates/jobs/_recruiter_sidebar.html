@@ -1,0 +1,107 @@
+{% load static %}
+<div class="glass-sidebar d-flex flex-column h-100 p-3 recruiter-theme" style="border-right: 1px solid rgba(255,255,255,0.05); background: rgba(10,11,16,0.6); backdrop-filter: blur(20px);">
+  <div class="sidebar-header mb-4 px-2">
+    <div class="d-flex align-items-center gap-2">
+      <div class="rounded-circle bg-purple p-2 d-flex align-items-center justify-content-center shadow-purple" style="width:40px; height:40px;">
+        <i class="fa-solid fa-user-tie text-white"></i>
+      </div>
+      <div>
+        <h6 class="mb-0 text-white fw-bold x-small tracking-widest text-uppercase">Recruiter Dashboard</h6>
+      </div>
+    </div>
+  </div>
+
+  <nav class="nav flex-column gap-2 flex-grow-1">
+    <a href="{% url 'dashboard' %}" class="nav-link rounded-3 p-3 {% if request.resolver_match.url_name == 'dashboard' %}active-purple{% else %}text-theme-secondary hover-bg-purple{% endif %}">
+      <div class="d-flex align-items-center gap-3">
+        <i class="fa-solid fa-gauge-high fs-5"></i>
+        <span class="fw-semibold small">Dashboard</span>
+      </div>
+    </a>
+
+    <div class="px-3 mt-3 mb-2">
+      <small class="text-muted xx-small tracking-widest text-uppercase fw-bold opacity-50">Hiring</small>
+    </div>
+
+    <a href="{% url 'candidate_list' %}" class="nav-link rounded-3 p-3 {% if request.resolver_match.url_name == 'candidate_list' %}active-purple{% else %}text-theme-secondary hover-bg-purple{% endif %}">
+      <div class="d-flex align-items-center gap-3">
+        <i class="fa-solid fa-people-group fs-5"></i>
+        <span class="fw-semibold small">Candidates</span>
+      </div>
+    </a>
+
+    <a href="{% url 'job_list' %}" class="nav-link rounded-3 p-3 {% if request.resolver_match.url_name == 'job_list' %}active-purple{% else %}text-theme-secondary hover-bg-purple{% endif %}">
+      <div class="d-flex align-items-center gap-3">
+        <i class="fa-solid fa-briefcase fs-5"></i>
+        <span class="fw-semibold small">Jobs</span>
+      </div>
+    </a>
+
+    <div class="px-3 mt-3 mb-2">
+      <small class="text-muted xx-small tracking-widest text-uppercase fw-bold opacity-50">Analytics</small>
+    </div>
+
+    <a href="{% url 'recruiter_analytics' %}" class="nav-link rounded-3 p-3 {% if request.resolver_match.url_name == 'recruiter_analytics' %}active-purple{% else %}text-theme-secondary hover-bg-purple{% endif %}">
+      <div class="d-flex align-items-center gap-3">
+        <i class="fa-solid fa-chart-pie fs-5"></i>
+        <span class="fw-semibold small">Reports</span>
+      </div>
+    </a>
+
+    <!-- Rankings removed for light-weight view and to avoid URL errors -->
+
+    <div class="px-3 mt-3 mb-2">
+      <small class="text-muted xx-small tracking-widest text-uppercase fw-bold opacity-50">Operations</small>
+    </div>
+
+    <a href="{% url 'kanban_board' %}" class="nav-link rounded-3 p-3 {% if request.resolver_match.url_name == 'kanban_board' %}active-purple{% else %}text-theme-secondary hover-bg-purple{% endif %}">
+      <div class="d-flex align-items-center gap-3">
+        <i class="fa-solid fa-columns fs-5 text-teal"></i>
+        <span class="fw-semibold small">Board</span>
+      </div>
+    </a>
+
+    <a href="{% url 'schedule_interview' %}" class="nav-link rounded-3 p-3 {% if request.resolver_match.url_name == 'schedule_interview' %}active-purple{% else %}text-theme-secondary hover-bg-purple{% endif %}">
+      <div class="d-flex align-items-center gap-3">
+        <i class="fa-solid fa-calendar-alt fs-5"></i>
+        <span class="fw-semibold small">Scheduler</span>
+      </div>
+    </a>
+  </nav>
+
+  <div class="sidebar-footer mt-auto pt-4 border-top border-white border-opacity-10">
+     <div class="d-flex align-items-center gap-3 px-2 mb-3">
+        <div class="user-avatar-mini" style="width:32px; height:32px; border-radius:8px; background: linear-gradient(135deg, #a855f7, #2dd4bf);"></div>
+        <div class="overflow-hidden">
+            <div class="text-white fw-bold xx-small text-truncate">{{ request.user.get_full_name|default:request.user.username }}</div>
+            <div class="text-muted xxx-small text-uppercase tracking-wider">Recruiter</div>
+        </div>
+     </div>
+     <form action="{% url 'logout' %}" method="post" class="m-0">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-outline-danger btn-sm w-100 rounded-3 py-2 xx-small fw-bold border-opacity-25">
+            <i class="fa-solid fa-power-off me-2"></i>Sign Out
+        </button>
+     </form>
+  </div>
+</div>
+
+<style>
+.bg-purple { background: #a855f7; }
+.text-teal { color: #2dd4bf; }
+.shadow-purple { box-shadow: 0 0 15px rgba(168, 85, 247, 0.4); }
+.active-purple {
+    background: rgba(168, 85, 247, 0.15);
+    color: #d8b4fe !important;
+    border: 1px solid rgba(168, 85, 247, 0.3);
+    box-shadow: inset 0 0 10px rgba(168, 85, 247, 0.1);
+}
+.hover-bg-purple:hover {
+    background: rgba(45, 212, 191, 0.05);
+    color: #2dd4bf !important;
+    transform: translateX(5px);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.recruiter-theme .nav-link { transition: all 0.3s ease; }
+.xxx-small { font-size: 0.6rem; }
+</style>

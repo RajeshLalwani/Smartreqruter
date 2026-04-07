@@ -1,0 +1,256 @@
+{% extends 'base.html' %}{% load static %}
+{% block title %}Talent Scout Hub | Scout-X Agent{% endblock %}
+{% block content %}
+<div class="container-fluid px-4 mt-4">
+    <!-- Hero / Logo -->
+    <div class="glass-panel p-5 mb-4 text-center overflow-hidden position-relative border-info border-opacity-20 shadow-lg"
+        style="background: radial-gradient(circle at bottom right, rgba(0, 210, 255, 0.08), transparent 80%);">
+
+        <!-- Animated Scanner Radar -->
+        <div class="scanner-radar position-absolute top-50 start-50 translate-middle"
+            style="z-index: 0; pointer-events: none;"></div>
+
+        <div class="position-relative" style="z-index: 1;">
+            <i class="fas fa-satellite-dish text-info fs-1 mb-3"></i>
+            <h1 class="fw-bold text-theme tracking-tight">Scout-X Terminal<sup>™</sup></h1>
+            <p class="text-muted mx-auto mb-5" style="max-width: 600px;">
+                Autonomous "Passive Sourcing" Agent. We scan the digital footprint of top engineers to find the
+                <strong>Invisible Talent</strong>.
+            </p>
+
+            <!-- Search Form -->
+            <form method="POST" action="." class="mx-auto" style="max-width: 700px;">
+                {% csrf_token %}
+                <div
+                    class="input-group glass-panel p-2 rounded-pill border border-info border-opacity-30 shadow-lg glow-border">
+                    <span class="input-group-text bg-transparent border-0 text-info fw-bold ps-4 small">URL:</span>
+                    <input type="text" name="profile_url" value="{{ url_input }}" required
+                        class="form-control border-0 bg-transparent text-theme px-3 focus-none"
+                        placeholder="GitHub, LinkedIn, or Portfolio Link...">
+                    <button type="submit"
+                        class="btn btn-info rounded-pill px-5 py-3 fw-bold d-flex align-items-center gap-2 shadow ms-2">
+                        <i class="fas fa-search-plus"></i> <span>Scout Node</span>
+                    </button>
+                </div>
+                <div class="mt-3 text-muted xx-small uppercase tracking-widest fw-bold op-5">
+                    <i class="fas fa-shield-halved me-1"></i> Compliant Data Synthesis Mode Active
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main Workspace -->
+    <div class="row g-4 mb-5">
+        <!-- Scouted Leads Sidebar -->
+        <div class="col-lg-4" data-aos="fade-right">
+            <div class="glass-panel p-4 h-100 shadow-sm border-secondary border-opacity-10">
+                <h6 class="fw-bold text-theme mb-4 d-flex justify-content-between">
+                    <span>Active Passive Pool ({{ scouted_leads|length }})</span>
+                    <i class="fas fa-folder-tree text-muted"></i>
+                </h6>
+
+                <div class="pool-list d-flex flex-column gap-3">
+                    {% for lead in scouted_leads %}
+                    <div
+                        class="glass-panel p-3 border border-secondary border-opacity-10 hover-lift-sm transition position-relative overflow-hidden">
+                        <!-- Score Bar -->
+                        <div class="position-absolute top-0 start-0 h-100 bg-info opacity-05"
+                            style="width: {{ lead.scout_score }}%;"></div>
+
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="fw-bold text-theme x-small mb-1 truncate">{{ lead.full_name }}</span>
+                            <span class="text-info fw-bold x-small">{{ lead.scout_score }}%</span>
+                        </div>
+                        <div class="text-muted xx-small uppercase fw-bold mb-2 truncate">{{ lead.headline }}</div>
+
+                        <div class="d-flex gap-2 mb-3">
+                            {% for tag in lead.stack|slice:":3" %}
+                            <span
+                                class="badge bg-dark bg-opacity-30 text-muted xx-small border border-secondary border-opacity-20 px-2 py-1">
+                                {{ tag }}
+                            </span>
+                            {% endfor %}
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center">
+                            <a href="{{ lead.url }}" target="_blank"
+                                class="text-info xx-small text-decoration-none hover-underline"><i
+                                    class="fas fa-external-link-alt"></i> External</a>
+                            <span class="text-muted x-small italic text-end truncate" style="max-width: 120px;">Risk: {{                                 lead.churn_risk }}</span>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="text-center py-5 opacity-50">
+                        <i class="fas fa-inbox fs-1 mb-3"></i>
+                        <p class="small mb-0">No leads scouted yet.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Analysis View -->
+        <div class="col-lg-8" data-aos="fade-left">
+            <div class="glass-panel p-0 h-100 shadow border-info border-opacity-10 overflow-hidden">
+                <div
+                    class="bg-dark bg-opacity-25 p-3 px-4 border-bottom border-secondary border-opacity-10 d-flex justify-content-between align-items-center">
+                    <h6 class="fw-bold text-theme mb-0">Scout-X Evaluation Report</h6>
+                    <div
+                        class="badge rounded-pill bg-info bg-opacity-10 text-info border border-info border-opacity-20 x-small px-3">
+                        AGENT READY
+                    </div>
+                </div>
+
+                <div class="p-5">
+                    {% if analysis %}
+                    <div class="row g-5">
+                        <div class="col-md-7">
+                            <h2 class="fw-bold text-theme mb-1">{{ analysis.full_name }}</h2>
+                            <p class="text-info fs-5 mb-4">{{ analysis.headline }}</p>
+
+                            <div class="mb-5">
+                                <label class="xx-small uppercase fw-bold text-muted mb-3 tracking-widest d-block">Public
+                                    Footprint Weight</label>
+                                <div
+                                    class="p-4 rounded-4 bg-dark bg-opacity-25 border border-secondary border-opacity-10">
+                                    <h4 class="fw-bold text-theme mb-2">{{ analysis.oss_weight }}</h4>
+                                    <p class="small text-muted mb-0 italic">This candidate is a recognized authority in
+                                        their primary stack. Their codebase reflects high-quality architectural
+                                        standards.</p>
+                                </div>
+                            </div>
+
+                            <div class="mb-5">
+                                <label
+                                    class="xx-small uppercase fw-bold text-muted mb-3 tracking-widest d-block">Technical
+                                    Core Focus</label>
+                                <div class="d-flex flex-wrap gap-2">
+                                    {% for skill in analysis.stack %}
+                                    <span
+                                        class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-20 p-2 px-3 fw-bold">
+                                        {{ skill }}
+                                    </span>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-5">
+                            <div
+                                class="glass-panel p-4 bg-info bg-opacity-5 border-info border-opacity-20 shadow-sm rounded-4 mb-4">
+                                <h6 class="fw-bold text-theme mb-4"><i class="fas fa-lightbulb text-warning me-2"></i>AI
+                                    Outreach Pitch</h6>
+                                <p class="small text-muted italic mb-4">"{{ analysis.pitch_strategy }}"</p>
+                                <button class="btn btn-outline-info w-100 rounded-pill py-2 x-small fw-bold shadow-sm">
+                                    <i class="fas fa-paper-plane me-2"></i> Personalize Pitch
+                                </button>
+                            </div>
+
+                            <div
+                                class="p-4 rounded-4 bg-dark bg-opacity-25 border border-secondary border-opacity-10 text-center">
+                                <div class="display-3 fw-bold text-info mb-0">{{ analysis.scout_score }}</div>
+                                <div class="xx-small text-muted uppercase fw-bold tracking-widest op-5">Talent Scarcity
+                                    Index</div>
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <div class="mb-4 opacity-10">
+                            <i class="fas fa-satellite-dish" style="font-size: 8rem;"></i>
+                        </div>
+                        <h4 class="text-theme fw-bold mb-3">System Idle</h4>
+                        <p class="text-muted mx-auto" style="max-width: 400px;">
+                            Enter a candidate's public profile URL above to initiate an autonomous technical audit.
+                        </p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .tracking-tight {
+        letter-spacing: -0.05em;
+    }
+
+    .tracking-widest {
+        letter-spacing: 0.15em;
+    }
+
+    .focus-none:focus {
+        box-shadow: none !important;
+    }
+
+    .truncate {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .op-5 {
+        opacity: 0.5;
+    }
+
+    .x-small {
+        font-size: 0.72rem;
+    }
+
+    .xx-small {
+        font-size: 0.6rem;
+    }
+
+    .uppercase {
+        text-transform: uppercase;
+    }
+
+    .italic {
+        font-style: italic;
+    }
+
+    .hover-lift-sm:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2) !important;
+    }
+
+    .transition {
+        transition: all 0.3s ease;
+    }
+
+    .opacity-05 {
+        opacity: 0.05;
+    }
+
+    .glow-border:focus-within {
+        border-color: rgba(var(--info-rgb), 0.6) !important;
+        box-shadow: 0 0 20px rgba(0, 210, 255, 0.2) !important;
+    }
+
+    /* Radar Pulse Animation */
+    .scanner-radar {
+        width: 600px;
+        height: 600px;
+        background: radial-gradient(circle, rgba(0, 210, 255, 0.05) 0%, transparent 60%);
+        border-radius: 50%;
+        animation: radar-pulse 8s infinite linear;
+    }
+
+    @keyframes radar-pulse {
+        0% {
+            transform: translate(-50%, -50%) scale(0.5);
+            opacity: 0;
+        }
+
+        50% {
+            opacity: 0.5;
+        }
+
+        100% {
+            transform: translate(-50%, -50%) scale(2);
+            opacity: 0;
+        }
+    }
+</style>
+{% endblock %}

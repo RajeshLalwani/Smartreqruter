@@ -1,0 +1,222 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Hiring Funnel Analytics | SmartRecruit{% endblock %}
+
+{% block content %}
+<style>
+    /* Z-INDEX SAFEGUARDS */
+    .modal { z-index: 2000 !important; }
+    .modal-backdrop { z-index: 1050 !important; }
+    .tracking-widest { letter-spacing: 0.15em; }
+    .x-small { font-size: 0.75rem; }
+
+    /* Funnel Bars */
+    .funnel-bar-track {
+        height: 30px; border-radius: 8px;
+        background: rgba(255,255,255,0.04);
+        overflow: hidden;
+    }
+    .funnel-bar-fill {
+        height: 100%; border-radius: 8px;
+        background: linear-gradient(90deg, rgba(41,121,255,0.85), rgba(103,58,183,0.85));
+        transition: width 1.2s cubic-bezier(0.23, 1, 0.32, 1);
+        display: flex; align-items: center; padding-left: 10px;
+    }
+
+    /* Bottleneck Alert */
+    .bottleneck-alert {
+        background: rgba(255,82,82,0.07);
+        border: 1px solid rgba(255,82,82,0.2);
+        border-radius: 0.75rem;
+        padding: 0.75rem 1rem;
+    }
+
+    /* Avg Time to Hire pill */
+    .time-pill {
+        width: 52px; height: 52px; border-radius: 50%;
+        background: rgba(0,200,83,0.1);
+        border: 2px solid rgba(0,200,83,0.3);
+        display: flex; align-items: center; justify-content: center;
+        flex-shrink: 0;
+    }
+</style>
+
+<div class="container-fluid px-4 mt-4 fade-up">
+
+    <!-- ─── Hero ─── -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-5 gap-3" data-aos="fade-down">
+        <div>
+            <div class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-3 py-2 rounded-pill mb-3 tracking-widest text-uppercase x-small fw-bold">
+                <i class="fas fa-filter me-2"></i>Pipeline Intelligence
+            </div>
+            <h1 class="display-6 fw-bold text-white mb-2" style="font-family: 'Space Grotesk', sans-serif;">Hiring Funnel <span style="background: linear-gradient(90deg, #2979FF, #7C4DFF); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">Analytics</span></h1>
+            <p class="lead text-secondary mb-0">Visualise your full recruitment pipeline — spot bottlenecks instantly.</p>
+        </div>
+        <!-- Job Filter -->
+        <form method="get" class="d-flex gap-2 align-items-center">
+            <select name="job_id" class="form-select form-select-sm rounded-pill fw-bold" onchange="this.form.submit()" style="background: rgba(255,255,255,0.05); color: var(--text-color); border: 1px solid rgba(255,255,255,0.12); min-width: 210px; padding-left: 1rem;">
+                <option value="">All Jobs</option>
+                {% for job in jobs %}<option value="{{ job.id }}" {% if selected_job_id == job.id %}selected{% endif %}>{{ job.title|truncatechars:35 }}</option>{% endfor %}
+            </select>
+        </form>
+    </div>
+
+    <!-- ─── Summary Stats ─── -->
+    <div class="row g-3 mb-5" data-aos="fade-up">
+        {% for label, value, color, icon in summary_stats %}
+        <div class="col-6 col-md-3">
+            <div class="glass-panel p-4 text-center h-100 rounded-4 border-{{ color }} border-opacity-25 hover-scale">
+                <i class="{{ icon }} fa-2x text-{{ color }} mb-2 d-block"></i>
+                <div class="fw-bold text-{{ color }}" style="font-size: 2rem; font-family: 'Space Grotesk', sans-serif;">{{ value }}</div>
+                <div class="x-small text-secondary fw-bold tracking-widest text-uppercase mt-1">{{ label }}</div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="row g-4 mb-5">
+
+        <!-- ─── Funnel Visualization ─── -->
+        <div class="col-lg-7" data-aos="fade-right">
+            <div class="glass-panel p-4 h-100 rounded-4 border-secondary border-opacity-25 shadow-lg">
+                <h6 class="fw-bold text-white mb-4 x-small tracking-widest text-uppercase border-bottom border-light border-opacity-10 pb-3"><i class="fas fa-funnel-dollar text-primary me-2"></i>Pipeline Funnel</h6>
+                <div id="funnelViz">
+                    {% for stage in funnel_data %}
+                    {% with max_count=funnel_data.0.count %}
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="fw-semibold text-white x-small">{{ stage.label }}</span>
+                            <span class="x-small text-secondary">
+                                {{ stage.count }} candidates
+                                {% if stage.conversion < 100 %}<span class="badge bg-{% if stage.conversion >= 60 %}success{% elif stage.conversion >= 30 %}warning text-dark{% else %}danger{% endif %} rounded-pill ms-2 x-small">{{ stage.conversion }}%</span>{% endif %}
+                            </span>
+                        </div>
+                        <div class="funnel-bar-track">
+                            <div class="funnel-bar-fill" style="width: {% if max_count > 0 %}{% widthratio stage.count max_count 100 %}{% else %}0{% endif %}%;">
+                                <span class="fw-bold x-small text-white">{{ stage.count }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    {% endwith %}
+                    {% endfor %}
+                </div>
+                {% if bottleneck %}
+                <div class="bottleneck-alert mt-3">
+                    <i class="fas fa-exclamation-triangle text-danger me-2"></i>
+                    <strong class="text-danger">Bottleneck detected:</strong>
+                    <span class="text-white ms-1">{{ bottleneck }} stage has the highest candidate drop-off</span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- ─── Right Rail: Hire Rate Ring + Avg Time ─── -->
+        <div class="col-lg-5" data-aos="fade-up">
+            <div class="row g-3 h-100">
+                <!-- Hire Rate Ring -->
+                <div class="col-12">
+                    <div class="glass-panel p-4 text-center rounded-4 border-primary border-opacity-25">
+                        <h6 class="fw-bold text-white mb-3 x-small tracking-widest text-uppercase"><i class="fas fa-trophy text-warning me-2"></i>Overall Hire Rate</h6>
+                        <div class="position-relative d-inline-flex align-items-center justify-content-center">
+                            <svg width="130" height="130" viewBox="0 0 130 130">
+                                <circle cx="65" cy="65" r="52" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="10"/>
+                                <circle cx="65" cy="65" r="52" fill="none" stroke="url(#hireGrad)" stroke-width="10" stroke-dasharray="{{ hire_rate }} 100" stroke-linecap="round" transform="rotate(-90 65 65)" style="filter: drop-shadow(0 0 8px rgba(41,121,255,0.4));"/>
+                                <defs><linearGradient id="hireGrad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" style="stop-color:#2979FF"/><stop offset="100%" style="stop-color:#7C4DFF"/></linearGradient></defs>
+                            </svg>
+                            <div class="position-absolute text-center">
+                                <div class="fw-bold text-primary" style="font-size: 1.6rem; font-family: 'Space Grotesk', sans-serif;">{{ hire_rate }}%</div>
+                                <div class="x-small text-muted">hired</div>
+                            </div>
+                        </div>
+                        <div class="row g-2 mt-3">
+                            <div class="col-4 text-center"><div class="fw-bold text-success" style="font-family: 'Space Grotesk', sans-serif;">{{ hired }}</div><div class="x-small text-muted">Hired</div></div>
+                            <div class="col-4 text-center"><div class="fw-bold text-warning" style="font-family: 'Space Grotesk', sans-serif;">{{ active }}</div><div class="x-small text-muted">Active</div></div>
+                            <div class="col-4 text-center"><div class="fw-bold text-danger" style="font-family: 'Space Grotesk', sans-serif;">{{ rejected }}</div><div class="x-small text-muted">Rejected</div></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Avg Time to Hire -->
+                <div class="col-12">
+                    <div class="glass-panel p-3 d-flex align-items-center gap-3 rounded-4 border-success border-opacity-25">
+                        <div class="time-pill"><i class="fas fa-clock text-success"></i></div>
+                        <div>
+                            <div class="fw-bold text-white" style="font-size: 1.4rem; font-family: 'Space Grotesk', sans-serif;">{% if avg_days %}{{ avg_days }} days{% else %}N/A{% endif %}</div>
+                            <div class="x-small text-secondary fw-bold tracking-widest text-uppercase">Average Time to Hire</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ─── Charts Row: Source + Score + Weekly Trend ─── -->
+    <div class="row g-4 mb-5" data-aos="fade-up" data-aos-delay="100">
+        <div class="col-md-4">
+            <div class="glass-panel p-4 h-100 rounded-4 border-secondary border-opacity-25">
+                <h6 class="fw-bold text-white mb-3 x-small tracking-widest text-uppercase border-bottom border-light border-opacity-10 pb-3"><i class="fas fa-share-alt text-info me-2"></i>Source of Hire</h6>
+                <canvas id="sourceChart" height="220"></canvas>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="glass-panel p-4 h-100 rounded-4 border-secondary border-opacity-25">
+                <h6 class="fw-bold text-white mb-3 x-small tracking-widest text-uppercase border-bottom border-light border-opacity-10 pb-3"><i class="fas fa-robot text-primary me-2"></i>AI Score Distribution</h6>
+                <canvas id="scoreChart" height="220"></canvas>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="glass-panel p-4 h-100 rounded-4 border-secondary border-opacity-25">
+                <h6 class="fw-bold text-white mb-3 x-small tracking-widest text-uppercase border-bottom border-light border-opacity-10 pb-3"><i class="fas fa-chart-line text-success me-2"></i>Weekly Applications</h6>
+                <canvas id="trendChart" height="220"></canvas>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+Chart.defaults.color = '#94a3b8';
+Chart.defaults.borderColor = 'rgba(255,255,255,0.04)';
+
+const FUNNEL  = {{ funnel_json|safe }};
+const SOURCE  = {{ source_json|safe }};
+const SBUCKETS = {{ score_buckets|safe }};
+const SVALS   = {{ score_values|safe }};
+const TLABELS = {{ trend_labels|safe }};
+const TVALS   = {{ trend_values|safe }};
+
+const GRID = { color: 'rgba(255,255,255,0.04)' };
+const TICK = { color: '#64748b', font: { size: 11 } };
+
+// Source Doughnut
+new Chart(document.getElementById('sourceChart'), {
+    type: 'doughnut',
+    data: {
+        labels: SOURCE.map(s => s.source),
+        datasets: [{ data: SOURCE.map(s => s.count), backgroundColor: ['#2979FF','#7C4DFF','#00C853','#FF6D00','#00B0FF','#FF4081'], borderWidth: 0 }]
+    },
+    options: { plugins: { legend: { labels: { color: '#94a3b8', font: { size: 11 }, boxWidth: 10, padding: 10 } } }, cutout: '65%' }
+});
+
+// Score Distribution Bar
+new Chart(document.getElementById('scoreChart'), {
+    type: 'bar',
+    data: {
+        labels: SBUCKETS,
+        datasets: [{ label: 'Candidates', data: SVALS, backgroundColor: ['rgba(255,82,82,0.7)','rgba(255,152,0,0.7)','rgba(0,200,83,0.6)','rgba(41,121,255,0.7)'], borderRadius: 6 }]
+    },
+    options: { plugins: { legend: { display: false } }, scales: { x: { grid: GRID, ticks: TICK }, y: { grid: GRID, ticks: TICK } } }
+});
+
+// Weekly Trend Line
+new Chart(document.getElementById('trendChart'), {
+    type: 'line',
+    data: {
+        labels: TLABELS.length ? TLABELS : ['W1','W2','W3','W4','W5','W6','W7','W8'],
+        datasets: [{ label: 'Applications', data: TVALS.length ? TVALS : [0,0,0,0,0,0,0,0], borderColor: '#00C853', backgroundColor: 'rgba(0,200,83,0.08)', fill: true, tension: 0.4, pointRadius: 4, pointBackgroundColor: '#00C853' }]
+    },
+    options: { plugins: { legend: { display: false } }, scales: { x: { grid: GRID, ticks: TICK }, y: { grid: GRID, ticks: TICK, beginAtZero: true } } }
+});
+</script>
+{% endblock %}

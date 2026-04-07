@@ -1,0 +1,7 @@
+Day,Date,Time of Arrival,Time of Departure,Activities performed by Student,Remarks by Industry Mentor
+5,27/02/2026,9:00 AM,4:00 PM,"Template Automation Scripting: Authored a custom Python automation script (sweep_templates.py) to systematically scan all 178 Django HTML templates for syntax vulnerabilities.",
+6,28/02/2026,9:00 AM,4:00 PM,"AST/Regex Parsing: Programmed the script to automatically identify and collapse aggressively auto-formatted multi-line template logic into safe, single-line syntax.",
+1,02/03/2026,9:00 AM,4:00 PM,"Global Stability Verification: Executed the template sweep, successfully eradicating all TemplateSyntaxError crashes across the portal and preventing future IDE auto-formatter breaks.",
+2,03/03/2026,9:00 AM,4:00 PM,"PDF Backend Overhaul: Completely redesigned the PDF backend that generates candidate offers (offer_letter_pdf.html) to accommodate the strict CSS limitations of the xhtml2pdf library.",
+3,04/03/2026,9:00 AM,4:00 PM,"PDF Styling Workarounds: Reverted to strict table-based and margin-based inline-block CSS specifically isolated inside the PDF generator to force beautiful layouts without relying on Flexbox or Grid.",
+4,05/03/2026,9:00 AM,4:00 PM,"Document Structuring: Finalized the printable PDF offer letter by structuring typography for Compensation/CTC data, and embedding official HR signature lines and a massive ""OFFICIAL OFFER"" watermark."

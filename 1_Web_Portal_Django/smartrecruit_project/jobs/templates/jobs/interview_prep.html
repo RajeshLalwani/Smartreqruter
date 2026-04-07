@@ -1,0 +1,507 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Interview Prep - {{ job_title }} | SmartRecruit{% endblock %}
+
+{% block sidebar %}
+    {% include 'jobs/_candidate_sidebar.html' %}
+{% endblock %}
+
+{% block content %}
+<div class="d-flex" id="candidate-wrapper" style="min-height:calc(100vh - 72px)">
+    <!-- Sidebar is handled by block sidebar in app-shell -->
+    
+    <main class="flex-grow-1 p-4 p-lg-5 overflow-auto">
+        <div class="container-fluid fade-up">
+
+    <!-- Header -->
+    <!-- Hero -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-5 gap-3" data-aos="fade-down">
+        <div>
+            <div class="badge bg-warning bg-opacity-25 text-theme border border-warning border-opacity-50 px-3 py-2 rounded-pill mb-3 tracking-widest text-uppercase x-small fw-bold">
+                <i class="fas fa-lightbulb me-2 text-warning"></i>AI Interview Coach
+            </div>
+            <h1 class="display-6 fw-bold text-white mb-2" style="font-family: 'Space Grotesk', sans-serif;">Interview <span style="background: linear-gradient(90deg, #7C4DFF, #00B8D4); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">Prep Suite</span></h1>
+            <p class="lead text-secondary mb-0">Personalized preparation for <span class="fw-bold text-primary">{{ job_title }}</span>{% if application %} &middot; {{ application.job.recruiter.get_full_name|default:application.job.recruiter.username }}{% endif %}</p>
+        </div>
+        <div class="d-flex gap-2 flex-wrap">
+            {% if application %}
+            <a href="{% url 'candidate_applications' %}" class="btn btn-outline-secondary rounded-pill px-4 fw-bold hover-scale"><i class="fas fa-arrow-left me-2"></i>My Applications</a>
+            {% endif %}
+            <button class="btn btn-outline-warning rounded-pill px-4 fw-bold hover-scale" onclick="regenerateTips()" id="regenBtn"><i class="fas fa-sync-alt me-2"></i>Regenerate</button>
+            <button class="btn btn-primary rounded-pill px-4 fw-bold hover-scale" onclick="startPracticeMode()"><i class="fas fa-play me-2"></i>Start Practice</button>
+        </div>
+    </div>
+
+    <div class="row g-4">
+
+        <!-- LEFT column: Confidence + Quick Tips + Skills -->
+        <div class="col-lg-4">
+
+            <!-- Confidence Score -->
+            <div class="glass-panel p-4 mb-4 text-center">
+                <h6 class="fw-bold text-theme-secondary text-uppercase small mb-3">
+                    <i class="fas fa-chart-line me-2 text-primary"></i>Readiness Score
+                </h6>
+                <div class="position-relative d-inline-flex align-items-center justify-content-center mb-3">
+                    <svg width="140" height="140" viewBox="0 0 140 140">
+                        <circle cx="70" cy="70" r="58" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="12" />
+                        <circle cx="70" cy="70" r="58" fill="none" stroke="url(#scoreGradient)" stroke-width="12"
+                            stroke-dasharray="{{ confidence_score }} 100" id="confRing" stroke-linecap="round"
+                            transform="rotate(-90 70 70)" style="filter: drop-shadow(0 0 8px rgba(124,77,255,0.6));" />
+                        <defs>
+                            <linearGradient id="scoreGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                <stop offset="0%" style="stop-color:#7C4DFF;stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:#00B8D4;stop-opacity:1" />
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                    <div class="position-absolute text-center">
+                        <div class="fw-bold text-theme" style="font-size: 2rem;" id="confScore">{{ confidence_score }}%</div>
+                        <div class="small text-theme-secondary">Ready</div>
+                    </div>
+                </div>
+                <div class="d-flex align-items-center justify-content-center gap-2 text-theme-secondary small">
+                    <i class="fas fa-clock text-warning"></i>
+                    Estimated prep: <strong class="text-theme ms-1" id="prepTime">{{ prep_time }}</strong>
+                </div>
+                <div class="mt-3">
+                    {% if confidence_score >= 75 %}
+                <span class="badge bg-success bg-opacity-20 text-success border border-success border-opacity-50 rounded-pill px-3 py-2 x-small fw-bold">High Readiness</span>
+                {% elif confidence_score >= 50 %}
+                <span class="badge bg-warning bg-opacity-30 text-theme border border-warning border-opacity-75 rounded-pill px-3 py-2 x-small fw-bold">Moderate Readiness</span>
+                {% else %}
+                <span class="badge bg-danger bg-opacity-20 text-danger border border-danger border-opacity-50 rounded-pill px-3 py-2 x-small fw-bold">More Prep Needed</span>
+                {% endif %}
+                </div>
+            </div>
+
+            <!-- Skills to Brush Up -->
+            <div class="glass-panel p-4 mb-4">
+                <h6 class="fw-bold text-theme mb-3">
+                    <i class="fas fa-graduation-cap me-2 text-info"></i>Skills to Review
+                </h6>
+                <div class="d-flex flex-wrap gap-2" id="skillsTags">
+                    {% for skill in skills_to_brush %}
+                    <span class="badge rounded-pill px-3 py-2"
+                        style="background: rgba(0,176,255,0.12); border: 1px solid rgba(0,176,255,0.3); color: #40C4FF;">
+                        {{ skill }}
+                    </span>
+                    {% empty %}
+                    <span class="text-muted small">No specific skills identified.</span>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Quick Tips -->
+            <div class="glass-panel p-4">
+                <h6 class="fw-bold text-theme mb-3">
+                    <i class="fas fa-bolt me-2 text-warning"></i>Quick Tips
+                </h6>
+                <div id="quickTipsList">
+                    {% for tip in quick_tips %}
+                    <div
+                        class="d-flex align-items-start gap-2 mb-3 pb-3 {% if not forloop.last %}border-bottom border-light border-opacity-10{% endif %}">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center text-theme fw-bold flex-shrink-0"
+                            style="width: 24px; height: 24px; background: rgba(255,193,7,0.3); font-size: 0.7rem;">
+                            {{ forloop.counter }}
+                        </div>
+                        <div class="small text-theme" style="line-height: 1.5;">{{ tip }}</div>
+                    </div>
+                    {% empty %}
+                    <p class="text-muted small">No tips available.</p>
+                    {% endfor %}
+                </div>
+            </div>
+
+        </div>
+
+        <!-- RIGHT column: Questions -->
+        <div class="col-lg-8">
+
+            <!-- Tab nav -->
+            <div class="d-flex gap-2 mb-4 flex-wrap">
+                <button class="btn btn-outline-secondary rounded-pill px-4 tab-btn active" onclick="showQTab('tech', this)">
+                    <i class="fas fa-code me-2"></i>Technical Questions
+                </button>
+                <button class="btn btn-outline-secondary rounded-pill px-4 tab-btn" onclick="showQTab('hr', this)">
+                    <i class="fas fa-user-tie me-2"></i>HR Questions
+                </button>
+                <button class="btn btn-outline-secondary rounded-pill px-4 tab-btn" onclick="showQTab('custom', this)">
+                    <i class="fas fa-sliders-h me-2"></i>Custom Focus
+                </button>
+            </div>
+
+            <!-- Technical Questions -->
+            <div id="tab-tech">
+                <div id="techQList">
+                    {% for item in technical_questions %}
+                    <div class="glass-panel p-4 mb-3 question-card"
+                        style="border-left: 4px solid var(--primary-color); transition: all 0.3s ease;">
+                        <div class="d-flex justify-content-between align-items-start gap-3 mb-2">
+                            <div class="fw-bold text-theme fs-5">
+                                <span class="text-primary me-2 opacity-50">Q{{ forloop.counter }}.</span>{{ item.q }}
+                            </div>
+                            <button class="btn btn-glass btn-sm rounded-pill flex-shrink-0 hint-toggle"
+                                onclick="toggleHint(this)">
+                                <i class="fas fa-eye me-1"></i>Hint
+                            </button>
+                        </div>
+                        <div class="hint-box small text-theme-secondary d-none mt-3"
+                            style="background: rgba(41,121,255,0.1); border: 1px solid rgba(41,121,255,0.2); padding: 12px 15px; border-radius: 12px; color: var(--text-color, #ffffff) !important;">
+                            <div class="d-flex gap-2">
+                                <i class="fas fa-lightbulb text-warning"></i>
+                                <span>{{ item.hint }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="glass-panel p-5 text-center text-muted">
+                        <i class="fas fa-spinner fa-spin fa-2x mb-3"></i>
+                        <p>Generating questions...</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- HR Questions -->
+            <div id="tab-hr" class="d-none">
+                <div id="hrQList">
+                    {% for item in hr_questions %}
+                    <div class="glass-panel p-4 mb-3" style="border-left: 3px solid rgba(255,152,0,0.5);">
+                        <div class="d-flex justify-content-between align-items-start gap-3 mb-2">
+                            <div class="fw-semibold text-theme">
+                                <span class="text-warning me-2">Q{{ forloop.counter }}.</span>{{ item.q }}
+                            </div>
+                            <button class="btn btn-outline-secondary btn-sm rounded-pill flex-shrink-0"
+                                onclick="toggleHint(this)" style="font-size: 0.7rem;">
+                                <i class="fas fa-eye me-1"></i>Hint
+                            </button>
+                        </div>
+                        <div class="hint-box small text-theme-secondary d-none"
+                            style="background: rgba(255,152,0,0.07); border-left: 2px solid rgba(255,152,0,0.3); padding: 8px 12px; border-radius: 6px; color: var(--text-color, #ffffff) !important;">
+                            <i class="fas fa-lightbulb text-warning me-1"></i>{{ item.hint }}
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="glass-panel p-5 text-center text-muted">No HR questions generated.</div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Custom Focus -->
+            <div id="tab-custom" class="d-none">
+                <div class="glass-panel p-4">
+                    <h6 class="fw-bold text-theme mb-3">Generate Custom Questions</h6>
+                    <p class="text-muted small mb-3">Enter a specific topic or technology to get focused questions.</p>
+                    <div class="d-flex gap-2 mb-3">
+                        <input type="text" id="customFocusInput" class="form-control"
+                            placeholder="e.g. 'Machine Learning pipelines', 'System Design', 'React Hooks'..."
+                            style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12); color: var(--text-color);">
+                        <button class="btn btn-primary rounded-pill px-4" onclick="generateCustom()">
+                            <i class="fas fa-magic me-2"></i>Generate
+                        </button>
+                    </div>
+                    <div id="customQList"></div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- Practice Mode Overlay (Elite Feature) -->
+<div id="practiceOverlay" class="position-fixed top-0 start-0 w-100 h-100 d-none"
+    style="z-index: 2050; background: rgba(8,8,16,0.97); backdrop-filter: blur(20px);">
+    <div class="container h-100 d-flex flex-column align-items-center justify-content-center">
+        <div class="glass-panel p-5 w-100" style="max-width: 800px; border: 1px solid rgba(124,77,255,0.3);">
+            <div
+                class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom border-light border-opacity-10">
+                <h4 class="fw-bold text-white mb-0">
+                    <i class="fas fa-clock text-primary me-2"></i> Practice Session
+                </h4>
+                <div class="d-flex align-items-center gap-3">
+                    <div class="h5 mb-0 fw-bold text-warning" id="practiceTimer">15:00</div>
+                    <button class="btn-close btn-close-white" onclick="stopPracticeMode()"></button>
+                </div>
+            </div>
+
+            <div id="practiceContent" class="py-4 text-center position-relative">
+                <div class="d-flex justify-content-center mb-4">
+                    <div class="position-relative shadow text-center bg-black" style="width: 140px; height: 140px; border-radius: 50%; overflow: hidden; border: 3px solid rgba(99,102,241,0.5);">
+                        <video id="practiceWebcam" autoplay playsinline muted style="width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1);"></video>
+                        <div id="practiceEmotionTag" class="position-absolute bottom-0 start-0 w-100 py-1 d-none" style="background: rgba(0,0,0,0.6); font-size: 0.65rem;"></div>
+                    </div>
+                </div>
+
+                <div class="badge bg-primary mb-3">Question <span id="currentQIndex">1</span> of <span
+                        id="totalQCount">--</span></div>
+                <h3 class="fw-bold text-white mb-4" id="practiceQuestionText">--</h3>
+                <div class="hint-box mb-4 p-3 rounded d-none" id="practiceHintBox"
+                    style="background: rgba(41,121,255,0.1); border-left: 3px solid var(--primary-color);">
+                    <small class="text-white-50 d-block mb-1">HINT</small>
+                    <div id="practiceHintText" class="text-white"></div>
+                </div>
+
+                <div class="d-flex justify-content-center gap-3 mt-5">
+                    <button class="btn btn-outline-info rounded-pill px-4" onclick="togglePracticeHint()">
+                        <i class="fas fa-lightbulb me-2"></i>Toggle Hint
+                    </button>
+                    <button class="btn btn-primary rounded-pill px-5" id="nextPracticeBtn"
+                        onclick="nextPracticeQuestion()">
+                        Next Question <i class="fas fa-arrow-right ms-2"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div id="practiceFinish" class="py-5 text-center d-none">
+                <div class="display-1 text-success mb-4"><i class="fas fa-check-circle"></i></div>
+                <h2 class="fw-bold text-white mb-3">Session Complete!</h2>
+                <div class="mb-4">
+                    <div class="display-3 fw-bold text-info mb-1" id="practiceConfidenceResult">--%</div>
+                    <div class="text-uppercase tracking-widest small text-info fw-bold">Live AI Confidence Average</div>
+                </div>
+                <p class="text-white-50 mb-4 pb-2">You've successfully practiced the core assessment bank for this role.</p>
+                <button class="btn btn-warning rounded-pill px-5 hover-scale fw-bold" onclick="stopPracticeMode()">
+                    Return to Blueprint
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const JOB_TITLE = '{{ job_title|escapejs }}';
+    const CSRF_TOKEN = '{{ csrf_token }}';
+
+    // Animate confidence ring on load
+    document.addEventListener('DOMContentLoaded', () => {
+        const ring = document.getElementById('confRing');
+        if (ring) {
+            const score = {{ confidence_score|default:0 }};
+            const circumference = 2 * Math.PI * 58;
+            ring.style.strokeDasharray = `${circumference}`;
+            ring.style.strokeDashoffset = circumference;
+            setTimeout(() => {
+                ring.style.transition = 'stroke-dashoffset 1.5s ease';
+                ring.style.strokeDashoffset = circumference - (score / 100 * circumference);
+            }, 300);
+        }
+    });
+
+    function showQTab(name, el) {
+        ['tech', 'hr', 'custom'].forEach(t => {
+            document.getElementById('tab-' + t).classList.add('d-none');
+        });
+        document.querySelectorAll('.tab-btn').forEach(b => {
+            b.classList.remove('btn-primary');
+            b.classList.add('btn-outline-secondary');
+        });
+        document.getElementById('tab-' + name).classList.remove('d-none');
+        el.classList.add('btn-primary');
+        el.classList.remove('btn-outline-secondary');
+    }
+
+    function toggleHint(btn) {
+        const hintBox = btn.closest('.glass-panel').querySelector('.hint-box');
+        hintBox.classList.toggle('d-none');
+        const icon = btn.querySelector('i');
+        icon.className = hintBox.classList.contains('d-none') ? 'fas fa-eye me-1' : 'fas fa-eye-slash me-1';
+    }
+
+    // Practice Mode Logic
+    let practiceQuestions = [];
+    let currentIdx = 0;
+    let timerInterval = null;
+    let practiceStream = null;
+    let practiceSentimentInterval = null;
+    let practiceConfidenceScores = [];
+    const APP_ID = parseInt("{{ application.id|default:'0' }}");
+
+    async function startPracticeCamera() {
+        try {
+            practiceStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+            const pVideo = document.getElementById('practiceWebcam');
+            pVideo.srcObject = practiceStream;
+            practiceConfidenceScores = [];
+            
+            const pEmotionTag = document.getElementById('practiceEmotionTag');
+            
+            practiceSentimentInterval = setInterval(async () => {
+                if (pVideo.readyState !== 4) return;
+                const sCanvas = document.createElement('canvas');
+                sCanvas.width = pVideo.videoWidth; sCanvas.height = pVideo.videoHeight;
+                sCanvas.getContext('2d').drawImage(pVideo, 0, 0, sCanvas.width, sCanvas.height);
+                const frameBase64 = sCanvas.toDataURL('image/jpeg', 0.6);
+                
+                try {
+                    const response = await fetch(`/jobs/api/sentiment-stream/${APP_ID}/`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF_TOKEN },
+                        body: JSON.stringify({ frame_base64: frameBase64 })
+                    });
+                    const data = await response.json();
+                    if (data.status === 'success') {
+                        pEmotionTag.classList.remove('d-none');
+                        const emotionMap = {
+                            'happy': { c: 'success' }, 'sad': { c: 'primary' },
+                            'angry': { c: 'danger' }, 'fear': { c: 'warning' },
+                            'fearful': { c: 'warning' }, 'disgust': { c: 'danger' },
+                            'surprise': { c: 'info' }, 'neutral': { c: 'secondary' },
+                            'no_face': { c: 'danger', label: 'FACE NOT FOUND' },
+                            'multiple_faces': { c: 'warning', label: 'MULTIPLE FACES' },
+                            'mobile_phone': { c: 'danger', label: 'PHONE DETECTED' }
+                        };
+                        const eData = emotionMap[data.emotion] || { c: 'secondary' };
+                        const displayLabel = eData.label ? eData.label : data.emotion;
+                        pEmotionTag.innerHTML = `<span class="fw-bold tracking-widest text-uppercase text-${eData.c}">${displayLabel} (${data.score}%)</span>`;
+                        if(data.score) practiceConfidenceScores.push(data.score);
+                    }
+                } catch (e) {
+                    console.warn("Tracker silenced:", e);
+                }
+            }, 3000);
+        } catch (e) { console.error("Camera denied:", e); }
+    }
+
+    function stopPracticeCamera() {
+        if (practiceStream) {
+            practiceStream.getTracks().forEach(track => track.stop());
+            practiceStream = null;
+        }
+        clearInterval(practiceSentimentInterval);
+    }
+
+    function startPracticeMode() {
+        const tech = Array.from(document.querySelectorAll('#techQList .glass-panel')).map(p => {
+            const el = p.querySelector('.fw-bold') || p.querySelector('.fw-semibold') || p.querySelector('[class*="fw-"]');
+            return {
+                q: el ? el.textContent.replace(/^Q\d+\.\s*/, '').trim() : '',
+                hint: p.querySelector('.hint-box').textContent.trim()
+            };
+        });
+        const hr = Array.from(document.querySelectorAll('#hrQList .glass-panel')).map(p => {
+            const el = p.querySelector('.fw-semibold') || p.querySelector('.fw-bold') || p.querySelector('[class*="fw-"]');
+            return {
+                q: el ? el.textContent.replace(/^Q\d+\.\s*/, '').trim() : '',
+                hint: p.querySelector('.hint-box').textContent.trim()
+            };
+        });
+
+        practiceQuestions = [...tech, ...hr];
+        if (practiceQuestions.length === 0) {
+            alert('Please generate questions first!');
+            return;
+        }
+        
+        // Randomly pick up to 15 questions for standard speed-run
+        practiceQuestions = practiceQuestions.sort(() => 0.5 - Math.random()).slice(0, 15);
+
+        currentIdx = 0;
+        document.getElementById('totalQCount').textContent = practiceQuestions.length;
+        document.getElementById('practiceOverlay').classList.remove('d-none');
+        document.getElementById('practiceContent').classList.remove('d-none');
+        document.getElementById('practiceFinish').classList.add('d-none');
+
+        updatePracticeQuestion();
+        startTimer(15 * 60); // 15 minutes
+        startPracticeCamera();
+    }
+
+    function stopPracticeMode() {
+        document.getElementById('practiceOverlay').classList.add('d-none');
+        clearInterval(timerInterval);
+        stopPracticeCamera();
+    }
+
+    function updatePracticeQuestion() {
+        const q = practiceQuestions[currentIdx];
+        document.getElementById('currentQIndex').textContent = currentIdx + 1;
+        document.getElementById('practiceQuestionText').textContent = q.q;
+        document.getElementById('practiceHintText').textContent = q.hint;
+        document.getElementById('practiceHintBox').classList.add('d-none');
+
+        if (currentIdx === practiceQuestions.length - 1) {
+            document.getElementById('nextPracticeBtn').innerHTML = 'Finish Session <i class="fas fa-flag-checkered ms-2"></i>';
+        } else {
+            document.getElementById('nextPracticeBtn').innerHTML = 'Next Question <i class="fas fa-arrow-right ms-2"></i>';
+        }
+    }
+
+    function nextPracticeQuestion() {
+        if (currentIdx < practiceQuestions.length - 1) {
+            currentIdx++;
+            updatePracticeQuestion();
+        } else {
+            // End of test calculation
+            clearInterval(timerInterval);
+            let avgConf = 85; 
+            if (practiceConfidenceScores.length > 0) {
+                avgConf = Math.round(practiceConfidenceScores.reduce((a, b) => a + b, 0) / practiceConfidenceScores.length);
+            }
+            document.getElementById('practiceConfidenceResult').textContent = avgConf + "%";
+            
+            document.getElementById('practiceContent').classList.add('d-none');
+            document.getElementById('practiceFinish').classList.remove('d-none');
+            stopPracticeCamera();
+        }
+    }
+
+    function togglePracticeHint() {
+        document.getElementById('practiceHintBox').classList.toggle('d-none');
+    }
+
+    function startTimer(duration) {
+        let timer = duration, minutes, seconds;
+        const display = document.getElementById('practiceTimer');
+        clearInterval(timerInterval);
+        timerInterval = setInterval(() => {
+            minutes = parseInt(timer / 60, 10);
+            seconds = parseInt(timer % 60, 10);
+            display.textContent = (minutes < 10 ? "0" + minutes : minutes) + ":" + (seconds < 10 ? "0" + seconds : seconds);
+            if (--timer < 0) {
+                clearInterval(timerInterval);
+                display.textContent = "ALARM!";
+            }
+        }, 1000);
+    }
+
+    async function regenerateTips() {
+        const btn = document.getElementById('regenBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Generating...';
+        // The backend view statically regenerates answers on each request, so a simple reload does the trick securely.
+        window.location.reload();
+    }
+
+    async function generateCustom() {
+        const focus = document.getElementById('customFocusInput').value.trim();
+        if (!focus) return;
+        const el = document.getElementById('customQList');
+        el.innerHTML = '<div class="text-center py-4 text-muted"><i class="fas fa-spinner fa-spin fa-2x mb-2"></i><br>Generating custom questions...</div>';
+        try {
+            const res = await fetch('{% url "regenerate_prep_tips" %}', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF_TOKEN },
+                body: JSON.stringify({ job_title: JOB_TITLE, focus }),
+            });
+            const data = await res.json();
+            if (data.ok && data.tips.technical_questions) {
+                el.innerHTML = data.tips.technical_questions.map((item, i) => `
+                <div class="glass-panel p-4 mb-3" style="border-left: 3px solid rgba(103,58,183,0.5);">
+                    <div class="fw-semibold text-theme mb-2"><span class="text-primary me-2">Q${i + 1}.</span>${item.q}</div>
+                    <div class="small text-theme-secondary" style="background:rgba(103,58,183,0.07);border-left:2px solid rgba(103,58,183,0.3);padding:8px 12px;border-radius:6px;color: var(--text-color, #ffffff) !important;">
+                        <i class="fas fa-lightbulb text-warning me-1"></i>${item.hint}
+                    </div>
+                </div>
+            `).join('');
+            }
+        } catch (e) {
+            el.innerHTML = '<div class="text-danger small p-3">Failed to generate. Try again.</div>';
+        }
+    }
+</script>
+        </div>
+    </main>
+</div>
+{% endblock %}

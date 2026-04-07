@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Decision Matrix — {{ job.title }} | SmartRecruit{% endblock %}
+
+{% block content %}
+<style>
+    /* Z-INDEX SAFEGUARDS */
+    .modal { z-index: 2000 !important; }
+    .modal-backdrop { z-index: 1050 !important; }
+    .tracking-widest { letter-spacing: 0.15em; }
+    .x-small { font-size: 0.75rem; }
+    .xx-small { font-size: 0.65rem; }
+    .italic { font-style: italic; }
+
+    .matrix-hex-icon { width: 64px; height: 64px; background: rgba(41,121,255,0.1); border: 1px solid rgba(41,121,255,0.2); border-radius: 16px; box-shadow: inset 0 0 15px rgba(41,121,255,0.2); display: flex; align-items: center; justify-content: center; }
+    .rank-circle { width: 32px; height: 32px; border-radius: 50%; font-size: 0.8rem; display: flex; align-items: center; justify-content: center; font-weight: 700; }
+    .hover-highlight:hover { background: rgba(255,255,255,0.015) !important; }
+    .progress { background-color: rgba(255,255,255,0.05) !important; }
+    .shadow-2v { box-shadow: 0 40px 100px -20px rgba(0,0,0,0.4); }
+</style>
+
+<div class="container-fluid py-4 px-5 fade-up">
+
+    <!-- ─── Header ─── -->
+    <div class="glass-panel p-4 mb-5 border-primary border-opacity-20 shadow-2v d-flex justify-content-between align-items-center rounded-4" data-aos="fade-down">
+        <div class="d-flex align-items-center gap-4">
+            <div class="matrix-hex-icon"><i class="fas fa-microchip text-primary fs-3"></i></div>
+            <div>
+                <div class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-3 py-1 rounded-pill tracking-widest text-uppercase x-small fw-bold mb-2">Active Comparison · SmartRecruit Intelligence</div>
+                <h4 class="fw-bold text-white mb-0" style="font-family: 'Space Grotesk', sans-serif;">Decision Intelligence: <span style="background: linear-gradient(90deg, #2979FF, #7C4DFF); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">{{ job.title }}</span></h4>
+            </div>
+        </div>
+        <a href="{% url 'job_detail' job.id %}" class="btn btn-outline-secondary rounded-pill px-4 btn-sm fw-bold hover-scale"><i class="fas fa-arrow-left me-2"></i>Pipeline</a>
+    </div>
+
+    {% if not rankings %}
+    <div class="glass-panel p-5 text-center shadow-lg border-secondary border-opacity-10 rounded-4" data-aos="fade-up">
+        <div class="rounded-circle bg-secondary bg-opacity-10 d-inline-flex align-items-center justify-content-center mb-4" style="width: 72px; height: 72px;">
+            <i class="fas fa-users-slash text-muted fa-2x"></i>
+        </div>
+        <h3 class="fw-bold text-white mb-2" style="font-family: 'Space Grotesk', sans-serif;">Insufficient Data</h3>
+        <p class="text-secondary mx-auto" style="max-width: 500px;">The Decision Matrix requires at least one active candidate to generate comparative intelligence.</p>
+    </div>
+
+    {% else %}
+    <!-- ─── Executive Recommendation Brief ─── -->
+    <div class="glass-panel p-4 mb-5 rounded-4 border-start border-primary border-4 shadow-sm" data-aos="fade-right">
+        <h6 class="fw-bold text-white mb-3 x-small tracking-widest text-uppercase"><i class="fas fa-lightbulb text-warning me-2"></i>Executive Recommendation</h6>
+        <p class="small text-secondary italic lh-lg mb-0">"{{ recommendation }}"</p>
+    </div>
+
+    <!-- ─── Matrix Table ─── -->
+    <div class="glass-panel p-0 overflow-hidden shadow-2v rounded-4 border-secondary border-opacity-25" data-aos="fade-up">
+        <div class="table-responsive">
+            <table class="table table-borderless table-dark bg-transparent mb-0 align-middle">
+                <thead class="bg-primary bg-opacity-10 border-bottom border-primary border-opacity-10">
+                    <tr class="text-secondary x-small tracking-widest text-uppercase text-center">
+                        <th class="ps-4 py-3 border-0 text-start">Rank</th>
+                        <th class="py-3 border-0 text-start">Candidate</th>
+                        <th class="py-3 border-0">R1: Resume</th>
+                        <th class="py-3 border-0">R2: Technical</th>
+                        <th class="py-3 border-0">R3: Sentiment</th>
+                        <th class="py-3 border-0">Agile Match</th>
+                        <th class="py-3 border-0">Innovation</th>
+                        <th class="py-3 border-0">Churn Risk</th>
+                        <th class="pe-4 py-3 border-0">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in rankings %}
+                    <tr class="border-bottom border-secondary border-opacity-5 hover-highlight text-center">
+                        <td class="ps-4 py-3 text-start">
+                            <div class="rank-circle {% if item.rank == 1 %}bg-primary bg-opacity-20 text-primary{% else %}bg-secondary bg-opacity-20 text-light{% endif %}">{{ item.rank }}</div>
+                        </td>
+                        <td class="py-3 text-start">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="width: 36px; height: 36px; background: rgba(0,176,255,0.12); border: 1px solid rgba(0,176,255,0.2);">
+                                    <i class="fas fa-user-tie text-info x-small"></i>
+                                </div>
+                                <div>
+                                    <div class="fw-bold text-white x-small">{{ item.application.candidate.full_name }}</div>
+                                    <div class="text-secondary xx-small">{{ item.application.candidate.experience_years }} Years Exp.</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="py-3">
+                            <span class="fw-bold text-white x-small" title="Resume Score">{{ item.application.ai_score|floatformat:0 }}%</span>
+                        </td>
+                        <td class="py-3">
+                            <span class="fw-bold text-info x-small" title="Technical Score">{{ item.application.technical_score|floatformat:0 }}%</span>
+                        </td>
+                        <td class="py-3">
+                            <span class="fw-bold text-warning x-small" title="Behavioral Score">{{ item.application.communication_score|floatformat:0 }}%</span>
+                        </td>
+                        <td class="py-3">
+                            <div class="d-flex align-items-center justify-content-center gap-2">
+                                <span class="fw-bold text-success x-small" style="font-family: 'Space Grotesk', sans-serif;">{{ item.cultural_fit }}%</span>
+                            </div>
+                        </td>
+                        <td class="py-3">
+                            <span class="fw-bold text-info x-small">{{ item.innovation_index }}%</span>
+                        </td>
+                        <td class="py-3">
+                            <span class="badge bg-{% if item.churn_risk == 'Low' %}success{% elif item.churn_risk == 'Medium' %}warning{% else %}danger{% endif %} bg-opacity-15 text-{% if item.churn_risk == 'Low' %}success{% elif item.churn_risk == 'Medium' %}warning{% else %}danger{% endif %} xx-small px-3 rounded-pill fw-bold">{{ item.churn_risk }}</span>
+                        </td>
+                        <td class="pe-4 py-3">
+                            <div class="d-flex justify-content-center gap-2">
+                                <a href="{% url 'hr_decision' item.application.id %}" class="btn bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 btn-sm px-3 rounded-pill hover-scale fw-bold xx-small"><i class="fas fa-crosshairs me-2"></i>War Room</a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

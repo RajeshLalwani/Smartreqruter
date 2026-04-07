@@ -1,0 +1,46 @@
+smartrecruit_project/
+├── 📁 venv/                          # Python Virtual Environment
+├── 📁 smartrecruit/                  # Django Project
+│   ├── __init__.py
+│   ├── settings.py                   # Django settings
+│   ├── urls.py                       # URL routing
+│   ├── asgi.py, wsgi.py
+│   └── 📁 static/                    # Static files
+│       ├── css/
+│       │   ├── style.css             # Custom CSS3
+│       │   └── bootstrap-overrides.css
+│       ├── js/
+│       │   ├── main.js               # ES6+ JavaScript
+│       │   ├── interview.js          # Video handling
+│       │   └── vendor/
+│       │       └── jquery-3.6.0.min.js
+│       └── 📁 bootstrap/             # Bootstrap 5 files
+├── 📁 users/                         # Django App
+│   ├── models.py                     # CustomUser model
+│   ├── views.py                      # Authentication views
+│   ├── urls.py
+│   └── templates/users/              # HTML templates
+├── 📁 jobs/                          # Jobs App
+├── 📁 applications/                  # Applications App
+├── 📁 interviews/                    # Interviews App
+├── 📁 ai_engine/                     # AI/ML Processing
+│   ├── resume_parser.py              # SpaCy + NLTK
+│   ├── video_analyzer.py             # OpenCV + DeepFace
+│   ├── ml_models.py                  # Scikit-Learn + XGBoost
+│   └── utils.py                      # Pandas + NumPy helpers
+├── 📁 notebooks/                     # Jupyter Notebooks
+│   ├── resume_screening.ipynb        # ML experiments
+│   ├── video_analysis.ipynb          # OpenCV experiments
+│   └── model_training.ipynb          # XGBoost training
+├── 📁 data/                          # Training datasets
+│   ├── resumes/
+│   ├── job_descriptions/
+│   └── labeled_data.csv
+├── 📁 media/                         # Uploaded files
+│   ├── resumes/
+│   ├── videos/
+│   └── offer_letters/
+├── db.sqlite3                        # Development database
+├── requirements.txt                  # Python dependencies
+├── manage.py
+└── README.md

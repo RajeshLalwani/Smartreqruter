@@ -1,0 +1,1 @@
+I am an expert in Python and Django. I have 5 years of experience. I am also familiar with Kubernetes and AWS but only used them once. Core skills include React.

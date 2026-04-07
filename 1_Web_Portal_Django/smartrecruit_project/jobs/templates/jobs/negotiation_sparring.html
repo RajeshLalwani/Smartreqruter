@@ -1,0 +1,128 @@
+{% extends 'base.html' %}{% load static %}
+{% block title %}AI Negotiation Sparring | SmartRecruit{% endblock %}
+{% block content %}
+<div class="row g-0 vh-100 overflow-hidden">
+    <!-- Chat Sidebar (History & Logic) -->
+    <div class="col-lg-4 border-end border-secondary border-opacity-10 d-flex flex-column"
+        style="background: rgba(255,255,255,0.01);">
+        <div class="p-4 border-bottom border-secondary border-opacity-10">
+            <h5 class="fw-bold text-theme mb-1"><i class="fas fa-comments-dollar text-primary me-2"></i>Negotiation
+                Sparring</h5>
+            <p class="text-muted x-small mb-0">Agentic AI 'Sparrow' v2.0</p>
+        </div>
+
+        <div class="p-4 flex-grow-1 overflow-auto">
+            <h6 class="text-muted xx-small uppercase fw-bold mb-3">Agentic Thought Process</h6>
+            <div class="d-flex flex-column gap-3">
+                {% for status in agent_status %}
+                <div class="d-flex align-items-center gap-2" data-aos="fade-right"
+                    data-aos-delay="{{ forloop.counter0 }}00">
+                    <div class="bg-success rounded-circle" style="width:6px;height:6px;"></div>
+                    <span class="text-muted xx-small">{{ status }}</span>
+                </div>
+                {% endfor %}
+            </div>
+
+            <hr class="border-secondary border-opacity-10 my-4">
+
+            <div class="glass-panel p-3 border-primary border-opacity-20 mb-3">
+                <div class="text-muted xx-small uppercase fw-bold mb-2">Tactical ML Critique</div>
+                <p class="small text-theme italic">"{{ result.tactical_critique }}"</p>
+            </div>
+
+            <div class="glass-panel p-3 border-info border-opacity-20">
+                <div class="text-muted xx-small uppercase fw-bold mb-2">DL Strategy Node</div>
+                <p class="xx-small text-info mb-0">{{ result.ai_counter_strategy }}</p>
+            </div>
+        </div>
+
+        <div class="p-4 border-top border-secondary border-opacity-10 mt-auto bg-primary bg-opacity-5">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+                <span class="text-muted xx-small uppercase fw-bold">Closing Strength</span>
+                <span class="text-primary fw-bold small">{{ result.closing_strength }}%</span>
+            </div>
+            <div class="progress" style="height:6px;background:rgba(255,255,255,0.05);">
+                <div class="progress-bar bg-primary" id="closingStrengthBar"
+                    style="width: {{ result.closing_strength }}%;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Chat Workspace -->
+    <div class="col-lg-8 d-flex flex-column position-relative"
+        style="background: radial-gradient(circle at top right, rgba(124,77,255,0.03), transparent);">
+        <div class="p-4 flex-grow-1 overflow-auto" id="chatWindow">
+            <div class="chat-container mx-auto" style="max-width: 700px;">
+                {% for msg in history %}
+                <div class="d-flex flex-column {% if msg.role == 'Candidate' %}align-items-end{% else %}align-items-start{% endif %} mb-4"
+                    data-aos="fade-up">
+                    <div class="mb-1 text-muted xx-small uppercase fw-bold">{% if msg.role == 'Candidate' %}You{% else                         %}AI Recruiter (Agentic){% endif %}</div>
+                    <div class="p-3 rounded-4 shadow-sm"
+                        style="max-width: 80%; {% if msg.role == 'Candidate' %}background: var(--accent-primary); color: white;{% else %}background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: var(--text-primary);{% endif %}">
+                        {{ msg.text }}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Input Area -->
+        <div class="p-4 border-top border-secondary border-opacity-10 bg-dark bg-opacity-25">
+            <form action="." method="POST" class="chat-container mx-auto" style="max-width: 700px;">
+                {% csrf_token %}
+                <div
+                    class="input-group glass-panel p-1 rounded-pill overflow-hidden border-secondary border-opacity-20">
+                    <input type="text" name="message" class="form-control border-0 bg-transparent text-theme px-4"
+                        placeholder="Type your counter-offer or negotiation tactic..." required>
+                    <button class="btn btn-primary rounded-pill px-4" type="submit">
+                        <i class="fas fa-paper-plane me-2"></i>Send Offer
+                    </button>
+                </div>
+                <div class="text-center mt-3">
+                    <span class="text-muted xx-small uppercase fw-bold"><i class="fas fa-shield-halved me-1"></i>
+                        Practice Mode: Non-Binding Training Session</span>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    .x-small {
+        font-size: 0.72rem;
+    }
+
+    .xx-small {
+        font-size: 0.6rem;
+    }
+
+    .uppercase {
+        text-transform: uppercase;
+    }
+
+    .vh-100 {
+        height: 100vh !important;
+    }
+
+    .chat-container {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .hover-translate:hover {
+        transform: translateY(-5px);
+    }
+
+    #closingStrengthBar {
+        transition: width 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+</style>
+<script>
+    // Auto-scroll to bottom of chat
+    window.onload = function () {
+        const chatWin = document.getElementById('chatWindow');
+        chatWin.scrollTop = chatWin.scrollHeight;
+    }
+</script>
+{% endblock %}

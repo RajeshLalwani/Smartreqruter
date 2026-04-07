@@ -1,0 +1,141 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Competitive Standing | SmartRecruit{% endblock %}
+
+{% block content %}
+<style>
+    /* Z-INDEX SAFEGUARDS */
+    .modal { z-index: 2000 !important; }
+    .modal-backdrop { z-index: 1050 !important; }
+    .tracking-widest { letter-spacing: 0.15em; }
+    .x-small { font-size: 0.75rem; }
+    .xx-small { font-size: 0.65rem; }
+</style>
+
+<div class="container-fluid px-4 mt-4 fade-up">
+
+    <!-- ─── Hero ─── -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-5 gap-3" data-aos="fade-down">
+        <div>
+            <div class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 px-3 py-2 rounded-pill mb-3 tracking-widest text-uppercase x-small fw-bold">
+                <i class="fas fa-medal me-2"></i>Applicant Pool Analysis
+            </div>
+            <h1 class="display-6 fw-bold text-white mb-2" style="font-family: 'Space Grotesk', sans-serif;">Competitive <span style="background: linear-gradient(90deg, #FFD700, #FF6D00); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">Standing</span></h1>
+            <p class="lead text-secondary mb-0">Your ranking vs all applicants for <strong class="text-primary">{{ application.job.title }}</strong></p>
+        </div>
+    </div>
+
+    <!-- ─── Stat Cards ─── -->
+    <div class="row g-4 mb-5" data-aos="fade-up">
+        <div class="col-md-3">
+            <div class="glass-panel p-4 text-center rounded-4 hover-scale border-warning border-opacity-25">
+                <div class="fw-bold {% if rank <= 3 %}text-warning{% elif rank <= 10 %}text-success{% else %}text-primary{% endif %}" style="font-size: 3rem; font-family: 'Space Grotesk', sans-serif;">
+                    {% if rank == 1 %}🥇{% elif rank == 2 %}🥈{% elif rank == 3 %}🥉{% else %}#{{ rank }}{% endif %}
+                </div>
+                <div class="x-small text-secondary fw-bold tracking-widest text-uppercase mt-1">Your Rank</div>
+                <div class="text-secondary xx-small mt-1">out of {{ total }} applicants</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="glass-panel p-4 text-center rounded-4 hover-scale border-info border-opacity-25">
+                <div class="fw-bold text-info" style="font-size: 3rem; font-family: 'Space Grotesk', sans-serif;">{{ percentile }}%</div>
+                <div class="x-small text-secondary fw-bold tracking-widest text-uppercase mt-1">Top Percentile</div>
+                {% if is_top_25 %}<span class="badge bg-success bg-opacity-20 text-success border border-success border-opacity-25 rounded-pill x-small px-2 mt-2">Top 25%</span>{% endif %}
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="glass-panel p-4 text-center rounded-4 hover-scale border-primary border-opacity-25">
+                <div class="fw-bold text-primary" style="font-size: 3rem; font-family: 'Space Grotesk', sans-serif;">{{ candidate_score }}%</div>
+                <div class="x-small text-secondary fw-bold tracking-widest text-uppercase mt-1">Your AI Score</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="glass-panel p-4 text-center rounded-4 hover-scale border-success border-opacity-25">
+                <div class="fw-bold text-success" style="font-size: 3rem; font-family: 'Space Grotesk', sans-serif;">{{ avg_score }}%</div>
+                <div class="x-small text-secondary fw-bold tracking-widest text-uppercase mt-1">Pool Average</div>
+                <div class="text-secondary xx-small mt-1">Top score: {{ top_score }}%</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <!-- ─── Score Distribution Chart ─── -->
+        <div class="col-md-6" data-aos="fade-right">
+            <div class="glass-panel p-4 h-100 rounded-4 border-secondary border-opacity-25">
+                <h6 class="fw-bold text-white mb-4 x-small tracking-widest text-uppercase border-bottom border-light border-opacity-10 pb-3"><i class="fas fa-chart-bar text-primary me-2"></i>Score Distribution</h6>
+                <canvas id="distChart" height="200"></canvas>
+            </div>
+        </div>
+
+        <!-- ─── Top 10 Table ─── -->
+        <div class="col-md-6" data-aos="fade-up">
+            <div class="glass-panel p-0 h-100 rounded-4 overflow-hidden border-secondary border-opacity-25">
+                <div class="p-4 border-bottom border-light border-opacity-10 bg-dark bg-opacity-25">
+                    <h6 class="fw-bold text-white mb-0 x-small tracking-widest text-uppercase"><i class="fas fa-list-ol text-warning me-2"></i>Top 10 Applicants</h6>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-borderless align-middle mb-0 text-white w-100">
+                        <thead class="text-secondary x-small tracking-widest text-uppercase border-bottom border-light border-opacity-10 bg-light bg-opacity-5">
+                            <tr>
+                                <th class="ps-4 py-3 border-0">#</th>
+                                <th class="py-3 border-0">Candidate</th>
+                                <th class="py-3 border-0">AI Score</th>
+                                <th class="py-3 pe-4 border-0">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for t in top_10 %}
+                            <tr class="border-bottom border-light border-opacity-5">
+                                <td class="ps-4 py-3 fw-bold text-warning x-small" style="font-family: 'Space Grotesk', sans-serif;">{{ forloop.counter }}</td>
+                                <td class="py-3 x-small text-white">{{ t.candidate__full_name }}</td>
+                                <td class="py-3 fw-bold text-primary x-small" style="font-family: 'Space Grotesk', sans-serif;">{{ t.ai_score|floatformat:0 }}%</td>
+                                <td class="py-3 pe-4"><span class="badge rounded-pill px-2 xx-small" style="background: rgba(255,255,255,0.07); color: #94a3b8;">{{ t.status }}</span></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ─── Top 25% Banner ─── -->
+    {% if is_top_25 %}
+    <div class="glass-panel p-4 rounded-4 mt-2 d-flex align-items-center gap-3" style="border: 1px solid rgba(0,200,83,0.3); background: rgba(0,200,83,0.05);" data-aos="fade-up">
+        <i class="fas fa-star text-success fa-2x flex-shrink-0" style="filter: drop-shadow(0 0 8px rgba(0,200,83,0.5));"></i>
+        <div>
+            <div class="fw-bold text-success">You're in the Top 25%!</div>
+            <div class="x-small text-secondary">Keep it up! Check out <a href="{% url 'interview_prep' %}" class="text-success fw-bold">Interview Prep</a> to stay ahead of the competition.</div>
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+Chart.defaults.color = '#94a3b8';
+Chart.defaults.borderColor = 'rgba(255,255,255,0.04)';
+
+const DIST = {{ score_dist_json|safe }};
+new Chart(document.getElementById('distChart'), {
+    type: 'bar',
+    data: {
+        labels: Object.keys(DIST),
+        datasets: [{
+            label: 'Applicants',
+            data: Object.values(DIST),
+            backgroundColor: ['rgba(255,82,82,0.6)', 'rgba(255,152,0,0.6)', 'rgba(41,121,255,0.6)', 'rgba(0,200,83,0.6)'],
+            borderRadius: 6
+        }]
+    },
+    options: {
+        plugins: { legend: { display: false } },
+        scales: {
+            x: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#64748b' } },
+            y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#64748b' }, beginAtZero: true }
+        }
+    }
+});
+</script>
+{% endblock %}

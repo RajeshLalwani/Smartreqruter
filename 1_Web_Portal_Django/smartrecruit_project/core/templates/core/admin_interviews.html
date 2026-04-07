@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Interview Oversight | SmartRecruit Admin{% endblock %}
+{% block content %}
+<div class="d-flex" style="min-height:calc(100vh - 72px)">
+  {% include 'core/_admin_sidebar.html' %}
+  <main class="flex-grow-1 p-4 p-lg-5">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+      <div>
+        <h1 class="glow-text mb-1" style="font-size:1.8rem;"><i class="fa-solid fa-video me-2 text-danger"></i>Interview Oversight</h1>
+        <p class="text-theme-secondary mb-0">
+          {{ interviews_list|length }} session{{ interviews_list|length|pluralize }}
+          {% if total_flagged %} · <span class="text-danger fw-semibold">{{ total_flagged }} flagged</span>{% endif %}
+        </p>
+      </div>
+      <div class="btn-group glass-card p-1">
+        <a href="?flag=all" class="btn btn-sm {% if flag_filter == 'all' %}btn-primary{% else %}btn-outline-secondary text-theme{% endif %}">All</a>
+        <a href="?flag=flagged" class="btn btn-sm {% if flag_filter == 'flagged' %}btn-danger{% else %}btn-outline-secondary text-theme{% endif %}">
+          <i class="fa-solid fa-triangle-exclamation me-1"></i>Flagged {% if total_flagged %}<span class="badge bg-danger ms-1">{{ total_flagged }}</span>{% endif %}
+        </a>
+        <a href="?flag=clean" class="btn btn-sm {% if flag_filter == 'clean' %}btn-success{% else %}btn-outline-secondary text-theme{% endif %}">Clean</a>
+      </div>
+    </div>
+
+    <div class="glass-card p-0" style="overflow:hidden;">
+      <div class="table-responsive">
+        <table class="table table-dark table-hover align-middle mb-0" style="background:transparent;">
+          <thead style="background:rgba(0,0,0,.3);">
+            <tr>
+              <th class="ps-4 py-3">#ID</th>
+              <th>Candidate</th>
+              <th>Role Applied For</th>
+              <th>Type</th>
+              <th>AI Score</th>
+              <th>Status</th>
+              <th>Proctoring</th>
+              <th>Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for interview in interviews_list %}
+            <tr style="border-bottom:1px solid rgba(255,255,255,.05);">
+              <td class="ps-4 py-3 text-theme-secondary" style="font-size:.85rem;">#{{ interview.id }}</td>
+              <td>
+                <div class="fw-semibold text-white" style="font-size:.88rem;">{{ interview.application.candidate.full_name }}</div>
+              </td>
+              <td class="text-theme-secondary" style="font-size:.85rem;">{{ interview.application.job.title }}</td>
+              <td><span class="badge bg-primary bg-opacity-20 text-primary">{{ interview.get_interview_type_display }}</span></td>
+              <td>
+                {% if interview.ai_confidence_score > 0 %}
+                <span class="fw-bold" style="color:{% if interview.ai_confidence_score >= 7 %}#10b981{% elif interview.ai_confidence_score >= 5 %}#f59e0b{% else %}#ef4444{% endif %};">
+                  {{ interview.ai_confidence_score|floatformat:1 }}/10
+                </span>
+                {% else %}<span class="text-muted">—</span>{% endif %}
+              </td>
+              <td>
+                {% if interview.status == 'COMPLETED' %}<span class="badge bg-success bg-opacity-20 text-success">Completed</span>
+                {% elif interview.status == 'SCHEDULED' %}<span class="badge bg-primary bg-opacity-20 text-primary">Scheduled</span>
+                {% elif interview.status == 'TERMINATED' %}<span class="badge bg-danger bg-opacity-20 text-danger">Terminated</span>
+                {% elif interview.status == 'IN_PROGRESS' %}<span class="badge bg-warning bg-opacity-20 text-warning">In Progress</span>
+                {% else %}<span class="badge bg-secondary text-white">{{ interview.status }}</span>{% endif %}
+              </td>
+              <td>
+                {% if interview.is_flagged %}
+                <span class="badge bg-danger"><i class="fa-solid fa-triangle-exclamation me-1"></i>{{ interview.flag_count }} Violation{{ interview.flag_count|pluralize }}</span>
+                {% elif interview.flag_count > 0 %}
+                <span class="badge bg-warning text-dark"><i class="fa-solid fa-circle-exclamation me-1"></i>{{ interview.flag_count }} Warning{{ interview.flag_count|pluralize }}</span>
+                {% else %}
+                <span class="badge bg-success bg-opacity-10 text-success"><i class="fa-solid fa-shield-check me-1"></i>Clean</span>{% endif %}
+              </td>
+              <td class="text-theme-secondary" style="font-size:.82rem;">{{ interview.created_at|date:"M d, Y" }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="8" class="text-center py-5 text-theme-secondary">
+              <i class="fa-solid fa-video opacity-25 fs-1 d-block mb-3"></i>No interview sessions found.
+            </td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        
+        {% include 'core/_admin_pagination.html' %}
+      </div>
+    </div>
+  </main>
+</div>
+{% endblock %}

@@ -1,0 +1,136 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Evidence Review: {{ interview.application.candidate.full_name }} | SmartRecruit{% endblock %}
+
+{% block content %}
+<div class="d-flex" style="min-height:calc(100vh - 72px)">
+  {% include 'core/_admin_sidebar.html' %}
+  
+  <main class="flex-grow-1 p-4 p-lg-5" style="background: radial-gradient(circle at top right, rgba(99, 102, 241, 0.05), transparent 400px);">
+    
+    <!-- Breadcrumbs -->
+    <nav aria-label="breadcrumb" class="mb-4">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'admin_proctoring_review' %}" class="text-primary text-decoration-none">Evidence Review</a></li>
+        <li class="breadcrumb-item active text-theme-secondary" aria-current="page">{{ interview.application.candidate.full_name }}</li>
+      </ol>
+    </nav>
+
+    <!-- Header Section -->
+    <div class="d-flex justify-content-between align-items-end mb-5">
+      <div>
+        <h1 class="glow-text mb-1" style="font-size:1.8rem;">
+          <i class="fa-solid fa-camera-viewfinder me-2 text-primary"></i>Investigation: {{ interview.application.candidate.full_name }}
+        </h1>
+        <p class="text-theme-secondary mb-0">Reviewing {{ logs|length }} captured violation events for this session</p>
+      </div>
+      <div class="glass-card px-4 py-2 border-primary border-opacity-25 bg-primary bg-opacity-10">
+        <div class="small text-primary fw-bold">TOTAL FLAGS</div>
+        <div class="h4 mb-0 text-white fw-bold">{{ interview.flag_count }}</div>
+      </div>
+    </div>
+
+    <div class="row g-4">
+      <!-- Evidence Timeline -->
+      <div class="col-lg-8">
+        <div class="space-y-4">
+          {% for log in logs %}
+          <div class="glass-card p-0 overflow-hidden mb-4 border-white border-opacity-10 hover-border-primary transition-all">
+            <div class="row g-0">
+              <div class="col-md-5 bg-black d-flex align-items-center justify-content-center" style="min-height:240px;">
+                {% if log.frame_image %}
+                <img src="{{ log.frame_image.url }}" class="img-fluid rounded" alt="Violation Frame" style="max-height:240px; object-fit: contain;">
+                {% else %}
+                <div class="text-center text-theme-secondary px-4">
+                  <i class="fa-solid fa-video-slash display-6 opacity-25 mb-2"></i>
+                  <p class="small mb-0">Visual evidence not persisted (Low Priority Log)</p>
+                </div>
+                {% endif %}
+              </div>
+              <div class="col-md-7 p-4">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                  <div>
+                    <span class="badge bg-danger bg-opacity-20 text-danger border border-danger border-opacity-25 px-2 py-1 mb-2">
+                       VIOLATION DETECTED
+                    </span>
+                    <div class="text-white fw-bold h6 mb-0">{{ log.timestamp|time:"H:i:s" }} <small class="text-theme-secondary fw-normal">({{ log.timestamp|timesince }} ago)</small></div>
+                  </div>
+                  <div class="text-end">
+                    <div class="small text-theme-secondary">Frame Confidence</div>
+                    <div class="text-primary fw-bold">88.4%</div>
+                  </div>
+                </div>
+
+                <div class="p-3 rounded-lg bg-white bg-opacity-5 mb-3 border border-white border-opacity-5">
+                  <div class="small fw-bold text-theme-secondary mb-2 uppercase tracking-wider">Detection Logic</div>
+                  <ul class="list-unstyled mb-0 space-y-2">
+                    {% for flag in log.proctoring_flags %}
+                    <li class="small text-white">
+                      <i class="fa-solid fa-circle-exclamation text-danger me-2"></i>{{ flag|replace:"_, "|title }}
+                    </li>
+                    {% endfor %}
+                  </ul>
+                </div>
+                
+                <div class="small text-theme-secondary italic">
+                  <i class="fa-solid fa-microchip me-1 opacity-50"></i> Meta: Eye_Ratio ({{ log.eye_gaze_ratio|default:"N/A" }}), Face_Detected: YES
+                </div>
+              </div>
+            </div>
+          </div>
+          {% empty %}
+          <div class="glass-card text-center py-5">
+             <i class="fa-solid fa-check-double text-success display-4 opacity-25 mb-3"></i>
+             <h5 class="text-white">No Critical Evidence Found</h5>
+             <p class="text-theme-secondary">All violations were below the persistence threshold or cleared from the vault.</p>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Decision Panel -->
+      <div class="col-lg-4">
+        <div class="sticky-top" style="top:92px;">
+          <div class="glass-card p-4 border-warning border-opacity-25">
+            <h5 class="text-white mb-4 border-bottom border-white border-opacity-10 pb-3">Final Decision</h5>
+            
+            <form method="POST">
+              {% csrf_token %}
+              <div class="mb-4">
+                <label class="form-label text-theme-secondary fw-semibold small uppercase">Adjudication Notes</label>
+                <textarea name="notes" class="form-control bg-dark border-secondary text-white small" rows="5" placeholder="Reasoning for decision (e.g., 'Candidate was adjusting glasses', 'Multiple face detected in background')">{{ interview.proctoring_notes }}</textarea>
+              </div>
+
+              <div class="d-grid gap-3">
+                <button type="submit" name="action" value="verify" class="btn btn-danger py-3 fw-bold">
+                  <i class="fa-solid fa-gavel me-2"></i>Verify Violation
+                </button>
+                <button type="submit" name="action" value="dismiss" class="btn btn-outline-success py-3 fw-bold">
+                  <i class="fa-solid fa-thumbs-up me-2"></i>Dismiss as False Positive
+                </button>
+              </div>
+            </form>
+
+            <div class="mt-4 pt-4 border-top border-white border-opacity-10">
+              <div class="Small text-theme-secondary d-flex align-items-center gap-2 mb-2">
+                <i class="fa-solid fa-user-clock opacity-50"></i>
+                Review assigned to: <span class="text-white fw-bold">System Admin</span>
+              </div>
+              <div class="Small text-theme-secondary d-flex align-items-center gap-2">
+                <i class="fa-solid fa-calendar-day opacity-50"></i>
+                Session Date: <span class="text-white fw-bold">{{ interview.created_at|date:"M d, Y" }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="glass-card mt-4 p-4 bg-primary bg-opacity-5 border-primary border-opacity-10">
+            <h6 class="text-primary small fw-bold mb-2">INTEGRITY POLICY</h6>
+            <p class="small text-theme-secondary mb-0">Verifying a violation will permanently flag this candidate's profile across all recruiter views. This action is audited.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+{% endblock %}

@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block sidebar %}
+    {% include 'jobs/_recruiter_sidebar.html' %}
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="candidate-wrapper d-flex flex-grow-1" style="background: #0a0b10; min-height: 100vh;">
+    <div class="main-content flex-grow-1 p-4" style="max-height: 100vh; overflow-y: auto; scrollbar-width: none;">
+<div class="container mt-4">
+    <div class="glass-panel p-4">
+        <h2 class="fw-bold text-theme mb-4">Email Templates</h2>
+
+        <div class="row">
+            <div class="col-md-4">
+                <div class="list-group" id="template-list">
+                    {% for template in templates %}
+                    <a href="?template_id={{ template.id }}"
+                        class="list-group-item list-group-item-action {% if selected_template.id == template.id %}active{% endif %}">
+                        <h6 class="mb-1">{{ template.subject }}</h6>
+                        <small>{{ template.name }}</small>
+                    </a>
+                    {% endfor %}
+                    <a href="?new=true" class="list-group-item list-group-item-action text-center text-success">
+                        <i class="fas fa-plus me-1"></i> Create New
+                    </a>
+                </div>
+            </div>
+
+            <div class="col-md-8">
+                <form method="POST">
+                    {% csrf_token %}
+                    <input type="hidden" name="template_id" value="{{ selected_template.id }}">
+
+                    <div class="mb-3">
+                        <label class="form-label text-white">Internal Name (Key)</label>
+                        <input type="text" name="name" class="form-control" value="{{ selected_template.name }}"
+                            required {% if selected_template %}readonly{% endif %}>
+                        <small class="text-muted">Used by system to identify email type (e.g. 'shortlisted').</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label text-white">Subject</label>
+                        <input type="text" name="subject" class="form-control" value="{{ selected_template.subject }}"
+                            required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label text-white">Body Content (HTML)</label>
+                        <textarea name="body_content" class="form-control" rows="10"
+                            required>{{ selected_template.body_content }}</textarea>
+                        <small class="text-muted">Variables: {{ candidate_name }}, {{ job_title }}, {{ dashboard_url }}</small>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Save Template</button>
+                    {% if selected_template %}
+                    <button type="submit" name="delete" value="true"
+                        class="btn btn-outline-danger float-end">Delete</button>
+                    {% endif %}
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,358 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Pipeline Control Board | SmartRecruit{% endblock %}
+
+{% block sidebar %}
+    {% include 'jobs/_recruiter_sidebar.html' %}
+{% endblock %}
+
+{% block content %}
+<div class="candidate-wrapper d-flex flex-grow-1" style="background: #0a0b10; min-height: 100vh;">
+    <div class="main-content flex-grow-1 p-4" style="max-height: 100vh; overflow-y: auto; scrollbar-width: none;">
+<style>
+    /* Z-INDEX SAFEGUARDS */
+    .modal { z-index: 2000 !important; }
+    .modal-backdrop { z-index: 1050 !important; }
+
+    .tracking-widest { letter-spacing: 0.15em; }
+    .x-small { font-size: 0.75rem; }
+    .xx-small { font-size: 0.65rem; }
+
+    /* Kanban Board */
+    .kanban-board {
+        display: flex; gap: 1rem; overflow-x: auto; align-items: flex-start;
+        padding-bottom: 2rem; min-height: 80vh;
+    }
+    .kanban-board::-webkit-scrollbar { height: 6px; }
+    .kanban-board::-webkit-scrollbar-track { background: rgba(255,255,255,0.03); border-radius: 10px; }
+    .kanban-board::-webkit-scrollbar-thumb { background: rgba(41,121,255,0.35); border-radius: 10px; }
+
+    /* Kanban Columns */
+    .kanban-col {
+        flex: 0 0 290px; min-width: 290px;
+        display: flex; flex-direction: column;
+        background: rgba(15, 15, 20, 0.55);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-radius: 1rem;
+        overflow: hidden;
+        transition: box-shadow 0.3s ease;
+    }
+    .kanban-col:hover { box-shadow: 0 10px 40px rgba(0,0,0,0.4); }
+    
+    .kanban-col-header {
+        padding: 1rem;
+        border-bottom: 3px solid;
+        background: rgba(0,0,0,0.25);
+        backdrop-filter: blur(10px);
+    }
+
+    /* Kanban Items Drop Zone */
+    .kanban-items { padding: 0.75rem; min-height: 120px; flex-grow: 1; display: flex; flex-direction: column; gap: 0.5rem; }
+    
+    /* Sortable Ghost */
+    .sortable-ghost { opacity: 0.3; background: rgba(41, 121, 255, 0.15) !important; border-color: rgba(41, 121, 255, 0.5) !important; transform: scale(1.02); }
+    .sortable-drag { box-shadow: 0 20px 40px rgba(0,0,0,0.6) !important; }
+
+    /* Kanban Card */
+    .kanban-card {
+        cursor: grab;
+        background: rgba(15, 15, 20, 0.7);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255,255,255,0.07);
+        border-radius: 0.75rem;
+        padding: 0.85rem;
+        transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .kanban-card:hover {
+        transform: translateY(-3px) scale(1.01);
+        border-color: rgba(255, 255, 255, 0.2) !important;
+        box-shadow: 0 12px 25px rgba(0,0,0,0.5);
+    }
+    .kanban-card:active { cursor: grabbing; }
+
+    /* Toast notification (SV style) */
+    #kanban-toast {
+        position: fixed; bottom: 2rem; right: 2rem; z-index: 2010;
+        min-width: 280px;
+        background: rgba(15,15,25,0.95);
+        backdrop-filter: blur(20px);
+        border-radius: 0.75rem;
+        border: 1px solid rgba(255,255,255,0.1);
+        box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+        transform: translateY(120%);
+        transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    #kanban-toast.show { transform: translateY(0); }
+</style>
+
+<div class="container-fluid fade-up">
+    <!-- ─── Hero + Controls ─── -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3" data-aos="fade-down">
+        <div>
+            <div class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-3 py-2 rounded-pill mb-2 tracking-widest text-uppercase small fw-bold">
+                <i class="fas fa-columns me-2"></i>Drag-and-Drop ATS
+            </div>
+            <h1 class="display-6 fw-bold text-white mb-1 tracking-tight">Pipeline <span style="background: linear-gradient(90deg, #2979FF, #7C4DFF); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Control Board</span></h1>
+            <p class="text-secondary mb-0">Drag candidate cards between columns to update their pipeline status in real-time.</p>
+        </div>
+        
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+            <!-- Search -->
+            <div class="input-group shadow-inner" style="max-width: 220px;">
+                <span class="input-group-text bg-dark border-secondary border-opacity-50 text-secondary"><i class="fas fa-search"></i></span>
+                <input type="text" id="candidateSearch" class="form-control bg-dark border-secondary border-opacity-50 text-white" placeholder="Search candidate...">
+            </div>
+            <!-- Job Filter -->
+            <select id="jobFilter" class="form-select bg-dark border-secondary border-opacity-50 text-white shadow-inner" style="max-width: 180px;">
+                <option value="" class="bg-dark">All Jobs</option>
+            </select>
+            
+            <div class="vr bg-secondary opacity-25 mx-1"></div>
+            
+            <a href="{% url 'candidate_list' %}" class="btn btn-outline-secondary rounded-pill px-3 hover-scale" title="List View"><i class="fas fa-list me-1"></i></a>
+            <a href="{% url 'interview_calendar' %}" class="btn btn-outline-secondary rounded-pill px-3 hover-scale" title="Calendar"><i class="fas fa-calendar me-1"></i></a>
+        </div>
+    </div>
+
+    <!-- ─── Kanban Board ─── -->
+    <div class="kanban-board" data-aos="fade-up">
+
+        {% with cols=stages %}
+
+        <!-- COLUMN: APPLIED -->
+        <div class="kanban-col border border-info border-opacity-25">
+            <div class="kanban-col-header border-info" style="border-color: rgba(13,202,240,0.6) !important;">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="rounded-circle d-flex justify-content-center align-items-center bg-info bg-opacity-10 border border-info border-opacity-50 shadow-inner" style="width: 30px; height: 30px;">
+                            <i class="fas fa-file-alt text-info" style="font-size: 0.75rem;"></i>
+                        </div>
+                        <span class="fw-bold text-info text-uppercase tracking-widest x-small">Ingested</span>
+                    </div>
+                    <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25 rounded-pill fw-bold x-small">{{ stages.applied|length }}</span>
+                </div>
+            </div>
+            <div class="kanban-items" id="col-applied" data-status="APPLIED">
+                {% for app in stages.applied %}{% include 'jobs/includes/kanban_card.html' with app=app col_color="info" %}{% endfor %}
+            </div>
+        </div>
+
+        <!-- COLUMN: SCREENING -->
+        <div class="kanban-col border border-warning border-opacity-25">
+            <div class="kanban-col-header" style="border-color: rgba(255,193,7,0.6) !important;">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="rounded-circle d-flex justify-content-center align-items-center bg-warning bg-opacity-10 border border-warning border-opacity-50 shadow-inner" style="width: 30px; height: 30px;">
+                            <i class="fas fa-search text-warning" style="font-size: 0.75rem;"></i>
+                        </div>
+                        <span class="fw-bold text-warning text-uppercase tracking-widest x-small">Screening</span>
+                    </div>
+                    <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 rounded-pill fw-bold x-small">{{ stages.screening|length }}</span>
+                </div>
+            </div>
+            <div class="kanban-items" id="col-screening" data-status="RESUME_SCREENING">
+                {% for app in stages.screening %}{% include 'jobs/includes/kanban_card.html' with app=app col_color="warning" %}{% endfor %}
+            </div>
+        </div>
+
+        <!-- COLUMN: ASSESSMENT -->
+        <div class="kanban-col border border-primary border-opacity-25">
+            <div class="kanban-col-header" style="border-color: rgba(41,121,255,0.6) !important;">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="rounded-circle d-flex justify-content-center align-items-center bg-primary bg-opacity-10 border border-primary border-opacity-50 shadow-inner" style="width: 30px; height: 30px;">
+                            <i class="fas fa-laptop-code text-primary" style="font-size: 0.75rem;"></i>
+                        </div>
+                        <span class="fw-bold text-primary text-uppercase tracking-widest x-small">Assessment</span>
+                    </div>
+                    <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 rounded-pill fw-bold x-small">{{ stages.assessment|length }}</span>
+                </div>
+            </div>
+            <div class="kanban-items" id="col-assessment" data-status="ROUND_1_PENDING">
+                {% for app in stages.assessment %}{% include 'jobs/includes/kanban_card.html' with app=app col_color="primary" %}{% endfor %}
+            </div>
+        </div>
+
+        <!-- COLUMN: INTERVIEW -->
+        <div class="kanban-col border border-secondary border-opacity-25">
+            <div class="kanban-col-header" style="border-color: rgba(108,117,125,0.6) !important;">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="rounded-circle d-flex justify-content-center align-items-center bg-secondary bg-opacity-10 border border-secondary border-opacity-50 shadow-inner" style="width: 30px; height: 30px;">
+                            <i class="fas fa-comments text-secondary" style="font-size: 0.75rem;"></i>
+                        </div>
+                        <span class="fw-bold text-secondary text-uppercase tracking-widest x-small">Interview</span>
+                    </div>
+                    <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25 rounded-pill fw-bold x-small">{{ stages.interview|length }}</span>
+                </div>
+            </div>
+            <div class="kanban-items" id="col-interview" data-status="ROUND_3_PENDING">
+                {% for app in stages.interview %}{% include 'jobs/includes/kanban_card.html' with app=app col_color="secondary" %}{% endfor %}
+            </div>
+        </div>
+
+        <!-- COLUMN: OFFER -->
+        <div class="kanban-col border border-success border-opacity-25">
+            <div class="kanban-col-header" style="border-color: rgba(25,135,84,0.6) !important;">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="rounded-circle d-flex justify-content-center align-items-center bg-success bg-opacity-10 border border-success border-opacity-50 shadow-inner" style="width: 30px; height: 30px;">
+                            <i class="fas fa-file-signature text-success" style="font-size: 0.75rem;"></i>
+                        </div>
+                        <span class="fw-bold text-success text-uppercase tracking-widest x-small">Offer Sent</span>
+                    </div>
+                    <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 rounded-pill fw-bold x-small">{{ stages.offer|length }}</span>
+                </div>
+            </div>
+            <div class="kanban-items" id="col-offer" data-status="OFFER_GENERATED">
+                {% for app in stages.offer %}{% include 'jobs/includes/kanban_card.html' with app=app col_color="success" %}{% endfor %}
+            </div>
+        </div>
+
+        <!-- COLUMN: HIRED -->
+        <div class="kanban-col border-0" style="background: rgba(25,135,84,0.08); box-shadow: 0 0 30px rgba(25,135,84,0.1) inset;">
+            <div class="kanban-col-header" style="border-color: #198754 !important; background: rgba(25,135,84,0.15);">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="rounded-circle d-flex justify-content-center align-items-center bg-success border border-success shadow-inner" style="width: 30px; height: 30px;">
+                            <i class="fas fa-trophy text-white" style="font-size: 0.75rem;"></i>
+                        </div>
+                        <span class="fw-bold text-success text-uppercase tracking-widest x-small">Hired</span>
+                    </div>
+                    <span class="badge bg-success text-dark border border-success rounded-pill fw-bold x-small">{{ stages.hired|length }}</span>
+                </div>
+            </div>
+            <div class="kanban-items" id="col-hired" data-status="HIRED">
+                {% for app in stages.hired %}{% include 'jobs/includes/kanban_card.html' with app=app col_color="success" %}{% endfor %}
+            </div>
+        </div>
+
+        {% endwith %}
+    </div>
+</div>
+
+<!-- SV Toast Notification -->
+<div id="kanban-toast" class="p-3">
+    <div class="d-flex align-items-center gap-3">
+        <div id="toast-icon" class="rounded-circle d-flex justify-content-center align-items-center" style="width: 36px; height: 36px; min-width: 36px;"></div>
+        <div>
+            <div id="toast-title" class="fw-bold text-white x-small tracking-widest text-uppercase"></div>
+            <div id="toast-body" class="text-secondary xx-small"></div>
+        </div>
+        <button class="btn-close btn-close-white ms-auto opacity-50" onclick="document.getElementById('kanban-toast').classList.remove('show')"></button>
+    </div>
+</div>
+
+<!-- Dependencies -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // 1. ─── FILTER LOGIC ───
+    const searchInput = document.getElementById('candidateSearch');
+    const jobFilter = document.getElementById('jobFilter');
+    const allCards = document.querySelectorAll('.kanban-card');
+
+    // Populate Job Filter Dynamically
+    const jobs = new Set();
+    allCards.forEach(card => jobs.add(card.dataset.job));
+    jobs.forEach(job => {
+        if (job) {
+            const opt = document.createElement('option');
+            opt.value = job;
+            opt.textContent = job.charAt(0).toUpperCase() + job.slice(1);
+            opt.className = 'bg-dark text-white';
+            jobFilter.appendChild(opt);
+        }
+    });
+
+    function filterCards() {
+        const term = searchInput.value.toLowerCase();
+        const sel = jobFilter.value.toLowerCase();
+        allCards.forEach(card => {
+            const match = card.dataset.name.includes(term) && (sel === '' || card.dataset.job === sel);
+            card.style.display = match ? '' : 'none';
+        });
+    }
+    searchInput.addEventListener('keyup', filterCards);
+    jobFilter.addEventListener('change', filterCards);
+
+    // 2. ─── DRAG AND DROP ───
+    document.querySelectorAll('.kanban-items').forEach(col => {
+        new Sortable(col, {
+            group: 'kanban',
+            animation: 200,
+            ghostClass: 'sortable-ghost',
+            dragClass: 'sortable-drag',
+            onEnd(evt) {
+                const newStatus = evt.to.dataset.status;
+                const oldStatus = evt.from.dataset.status;
+                const appId = evt.item.dataset.id;
+                if (newStatus && appId && newStatus !== oldStatus) {
+                    updateStatus(appId, newStatus, evt.item);
+                }
+            }
+        });
+    });
+
+    function updateStatus(appId, status, cardEl) {
+        fetch(`/jobs/kanban/update/${appId}/${status}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                handleSmartActions(status, cardEl);
+            } else {
+                alert('Failed to update status. Reverting...');
+                window.location.reload();
+            }
+        })
+        .catch(e => console.error('Kanban update error:', e));
+    }
+
+    // 3. ─── SMART ACTIONS ───
+    function handleSmartActions(status, cardEl) {
+        if (status === 'HIRED') {
+            confetti({ particleCount: 200, spread: 80, origin: { y: 0.6 }, colors: ['#198754', '#20c997', '#75b798'] });
+            showToast('Acquisition Complete!', 'Candidate has been marked as Hired.', 'success');
+        } else if (status === 'ROUND_3_PENDING') {
+            if (confirm("Candidate advanced to Interview stage. Schedule a session now?")) {
+                window.location.href = "{% url 'interview_calendar' %}";
+            }
+        } else if (status === 'OFFER_GENERATED') {
+            showToast('Offer Stage', "Don't forget to generate the formal offer letter!", 'info');
+        }
+    }
+
+    // 4. ─── SV TOAST ───
+    function showToast(title, body, type) {
+        const toast = document.getElementById('kanban-toast');
+        const iconEl = document.getElementById('toast-icon');
+        const titleEl = document.getElementById('toast-title');
+        const bodyEl = document.getElementById('toast-body');
+
+        const colorMap = { success: '#198754', info: '#0dcaf0', warning: '#ffc107', danger: '#dc3545' };
+        const iconMap = { success: 'fa-check-circle', info: 'fa-info-circle', warning: 'fa-exclamation-triangle', danger: 'fa-times-circle' };
+        const color = colorMap[type] || '#adb5bd';
+
+        iconEl.style.background = `${color}22`;
+        iconEl.style.border = `1px solid ${color}44`;
+        iconEl.innerHTML = `<i class="fas ${iconMap[type]} fw-bold" style="color: ${color}; font-size: 0.9rem;"></i>`;
+        titleEl.innerText = title;
+        bodyEl.innerText = body;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 4000);
+    }
+});
+</script>
+    </div>
+</div>
+{% endblock %}

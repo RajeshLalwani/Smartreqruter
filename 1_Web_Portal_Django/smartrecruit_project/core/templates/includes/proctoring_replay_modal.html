@@ -1,0 +1,52 @@
+{% load static %}
+<!-- Proctoring Replay Modal -->
+<div class="modal fade" id="replayModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content smart-glass bg-dark border-primary border-opacity-25 shadow-lg rounded-4 overflow-hidden">
+            <div class="modal-header border-bottom border-light border-opacity-10 py-3 bg-primary bg-opacity-5">
+                <div class="d-flex align-items-center">
+                    <div class="rounded-circle bg-primary bg-opacity-10 border border-primary border-opacity-25 d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                        <i class="fas fa-history text-primary"></i>
+                    </div>
+                    <div>
+                        <h5 class="modal-title fw-bold text-theme mb-0">Evidence Replay Matrix</h5>
+                        <p class="small text-theme-secondary mb-0">Neural Session Audit Engine</p>
+                    </div>
+                </div>
+                <button type="button" class="btn-close btn-close-white opacity-50" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4" id="replay-viewer-body">
+                <!-- ProctorReplay.js will inject content here -->
+                <div class="text-center p-5">
+                    <div class="spinner-border text-primary"></div>
+                    <p class="mt-2 text-theme-secondary">Accessing Encrypted Sequence...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .violation-dot {
+        position: absolute;
+        width: 10px;
+        height: 10px;
+        background-color: #ff3366;
+        border-radius: 50%;
+        box-shadow: 0 0 10px #ff3366;
+        transform: translate(-50%, -50%);
+        z-index: 5;
+    }
+    
+    .custom-range::-webkit-slider-thumb {
+        background: #00d2ff !important;
+        box-shadow: 0 0 10px rgba(0, 210, 255, 0.5);
+    }
+    
+    .text-cyan { color: #00d2ff !important; }
+    .btn-cyan { background-color: #00d2ff; color: #0a0b10; font-weight: bold; }
+    .btn-outline-cyan { border-color: #00d2ff; color: #00d2ff; }
+    .btn-outline-cyan:hover { background-color: #00d2ff; color: #0a0b10; }
+</style>
+
+<script src="{% static 'js/ProctorReplay.js' %}"></script>

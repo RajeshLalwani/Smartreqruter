@@ -1,0 +1,136 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Anonymous Feedback | SmartRecruit{% endblock %}
+
+{% block content %}
+<style>
+    /* Z-INDEX SAFEGUARDS */
+    .modal { z-index: 2000 !important; }
+    .modal-backdrop { z-index: 1050 !important; }
+    .tracking-widest { letter-spacing: 0.15em; }
+    .x-small { font-size: 0.75rem; }
+
+    /* Star Rating */
+    .star-icon {
+        font-size: 2rem; color: rgba(255,255,255,0.12);
+        cursor: pointer; transition: transform 0.15s ease, color 0.15s ease;
+    }
+    .star-icon.active, .star-icon:hover { color: #FFD54F; }
+    .star-icon.active { transform: scale(1.15); }
+
+    /* Form inputs */
+    .sv-input {
+        background: rgba(255,255,255,0.04) !important;
+        border: 1px solid rgba(255,255,255,0.1) !important;
+        color: var(--text-color, #e2e8f0) !important;
+        border-radius: 0.75rem;
+        transition: border-color 0.2s ease;
+    }
+    .sv-input:focus {
+        border-color: rgba(124,77,255,0.5) !important;
+        box-shadow: 0 0 0 3px rgba(124,77,255,0.1) !important;
+        outline: none;
+    }
+
+    /* Success state */
+    .success-icon-glow { filter: drop-shadow(0 0 12px rgba(34,197,94,0.5)); }
+</style>
+
+<div class="container-fluid px-4 mt-4 fade-up" style="max-width: 700px;">
+
+    <!-- ─── Hero ─── -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-5 gap-3" data-aos="fade-down">
+        <div>
+            <div class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-3 py-2 rounded-pill mb-3 tracking-widest text-uppercase x-small fw-bold">
+                <i class="fas fa-comment-dots me-2" style="color: #7C4DFF;"></i>Candidate Voice
+            </div>
+            <h1 class="display-6 fw-bold text-white mb-2" style="font-family: 'Space Grotesk', sans-serif;">Anonymous <span style="background: linear-gradient(90deg, #7C4DFF, #2979FF); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">Feedback</span></h1>
+            <p class="lead text-secondary mb-0">Help us improve the hiring experience — your feedback is completely anonymous.</p>
+        </div>
+    </div>
+
+    {% if submitted %}
+    <!-- ─── Thank You State ─── -->
+    <div class="glass-panel p-5 text-center rounded-4 border-success border-opacity-25" data-aos="zoom-in">
+        <i class="fas fa-check-circle fa-5x text-success mb-4 d-block success-icon-glow"></i>
+        <h3 class="fw-bold text-white mb-2" style="font-family: 'Space Grotesk', sans-serif;">Thank You!</h3>
+        <p class="text-secondary mb-4">Your anonymous feedback has been recorded and will help improve the hiring process system-wide.</p>
+        <a href="{% url 'candidate_applications' %}" class="btn btn-outline-primary rounded-pill px-5 fw-bold hover-scale">
+            <i class="fas fa-arrow-left me-2"></i>Back to Applications
+        </a>
+    </div>
+
+    {% else %}
+    <!-- ─── Feedback Form ─── -->
+    <div class="glass-panel p-4 mb-4 rounded-4 border-secondary border-opacity-25" data-aos="fade-up">
+
+        <!-- Job Context Card -->
+        <div class="d-flex align-items-center gap-3 mb-4 p-3 rounded-3" style="background: rgba(124,77,255,0.07); border: 1px solid rgba(124,77,255,0.15);">
+            <div class="rounded-circle d-flex align-items-center justify-content-center fw-bold flex-shrink-0" style="width: 48px; height: 48px; background: linear-gradient(135deg, rgba(124,77,255,0.25), rgba(41,121,255,0.25)); color: #ce93d8; font-family: 'Space Grotesk', sans-serif; font-size: 1.1rem;">{{ application.job.title|first|upper }}</div>
+            <div>
+                <div class="fw-bold text-white">{{ application.job.title }}</div>
+                <div class="x-small text-secondary">Application outcome: <span class="text-primary fw-bold">{{ application.status }}</span></div>
+            </div>
+        </div>
+
+        <form method="post">
+            {% csrf_token %}
+
+            <!-- Star Rating -->
+            <div class="mb-4">
+                <label class="form-label fw-bold text-white x-small tracking-widest text-uppercase">Overall Experience</label>
+                <div class="d-flex gap-2 mt-2" id="starRating">
+                    <label><input type="radio" name="rating" value="1" class="d-none"><i class="fas fa-star star-icon" data-val="1" onclick="setRating(1)"></i></label>
+                    <label><input type="radio" name="rating" value="2" class="d-none"><i class="fas fa-star star-icon" data-val="2" onclick="setRating(2)"></i></label>
+                    <label><input type="radio" name="rating" value="3" class="d-none"><i class="fas fa-star star-icon" data-val="3" onclick="setRating(3)"></i></label>
+                    <label><input type="radio" name="rating" value="4" class="d-none" checked><i class="fas fa-star star-icon active" data-val="4" onclick="setRating(4)"></i></label>
+                    <label><input type="radio" name="rating" value="5" class="d-none"><i class="fas fa-star star-icon" data-val="5" onclick="setRating(5)"></i></label>
+                </div>
+                <div id="ratingLabel" class="x-small text-secondary mt-2 fw-bold tracking-widest text-uppercase">Good Experience</div>
+            </div>
+
+            <!-- Category -->
+            <div class="mb-4">
+                <label class="form-label fw-bold text-white x-small tracking-widest text-uppercase">Feedback Category</label>
+                <select name="category" class="form-select sv-input mt-1">
+                    <option>Communication</option>
+                    <option>Interview Process</option>
+                    <option>Transparency</option>
+                    <option>Professionalism</option>
+                    <option>Speed of Process</option>
+                    <option>General</option>
+                </select>
+            </div>
+
+            <!-- Feedback Text -->
+            <div class="mb-4">
+                <label class="form-label fw-bold text-white x-small tracking-widest text-uppercase">Your Feedback <span class="text-muted fw-normal normal-case">(anonymous)</span></label>
+                <textarea name="feedback" class="form-control sv-input mt-1" rows="5" placeholder="Share your honest experience with the hiring process..."></textarea>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100 rounded-pill fw-bold py-3 hover-scale shadow-lg">
+                <i class="fas fa-paper-plane me-2"></i>Submit Anonymously
+            </button>
+        </form>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+const labels = ['', 'Very Poor', 'Poor', 'Okay', 'Good', 'Excellent'];
+let currentRating = 4;
+
+function setRating(val) {
+    currentRating = val;
+    document.querySelector(`input[name=rating][value="${val}"]`).checked = true;
+    document.querySelectorAll('.star-icon').forEach(s => {
+        const isActive = parseInt(s.dataset.val) <= val;
+        s.classList.toggle('active', isActive);
+    });
+    document.getElementById('ratingLabel').innerText = labels[val] + ' Experience';
+}
+
+// Init with rating 4 active
+document.addEventListener('DOMContentLoaded', () => setRating(4));
+</script>
+{% endblock %}

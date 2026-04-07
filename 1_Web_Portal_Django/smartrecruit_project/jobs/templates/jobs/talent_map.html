@@ -1,0 +1,145 @@
+{% extends 'base.html' %}{% load static %}
+{% block title %}Global Talent Density Heatmap | Strategic Sourcing{% endblock %}
+{% block content %}
+<div class="container-fluid px-4 mt-4">
+    <!-- Header -->
+    <div class="glass-panel p-4 mb-4"
+        style="background:linear-gradient(135deg,rgba(255,187,51,0.08),rgba(41,121,255,0.08));border:1px solid rgba(255,187,51,0.25);">
+        <div class="d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center gap-3">
+                <div class="bg-warning bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center text-warning fw-bold shadow-sm"
+                    style="width: 56px; height: 56px; font-size: 1.25rem;">
+                    <i class="fas fa-globe-americas"></i>
+                </div>
+                <div>
+                    <h2 class="fw-bold text-theme mb-1">Global Talent Density Heatmap</h2>
+                    <p class="text-muted mb-0 small"><i class="fas fa-satellite-dish me-2 text-primary"></i>Strategic
+                        geographic sourcing analysis for high-demand technical roles.</p>
+                </div>
+            </div>
+            <div class="text-end">
+                <div class="btn-group shadow-sm">
+                    <button type="button" class="btn btn-sm btn-dark active">Engineers</button>
+                    <button type="button" class="btn btn-sm btn-dark opacity-50">Data Science</button>
+                    <button type="button" class="btn btn-sm btn-dark opacity-50">Designers</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Map Workspace -->
+    <div class="row g-4 mb-5">
+        <div class="col-lg-9">
+            <div class="glass-panel p-0 overflow-hidden position-relative shadow-lg"
+                style="height: 600px; background: radial-gradient(circle at center, #0a0a20, #020205);"
+                data-aos="zoom-in">
+                <!-- Simulated Map SVG Layer -->
+                <div id="talentMapContainer" style="width: 100%; height: 100%; position: relative;">
+                    <svg viewBox="0 0 1000 600" style="width:100%;height:100%;opacity:0.6;">
+                        <!-- Simple Dot Map Simulation -->
+                        {% for i in "123456789012345678901234567890" %}
+                        <circle cx="{{ forloop.counter0|add:5 }}0" cy="{{ forloop.counter0|add:15 }}0" r="2"
+                            fill="rgba(255,255,255,0.1)"></circle>
+                        {% endfor %}
+                    </svg>
+
+                    <!-- Talent Hotspots (Markers) -->
+                    {% for city in density_data_list %}
+                    <div class="talent-hotspot position-absolute pulse-marker"
+                        style="left: {{ city.lng_map }}%; top: {{ city.lat_map }}%;" data-bs-toggle="tooltip"
+                        title="{{ city.city }}: {{ city.density }}% Density ({{ city.trend }})">
+                        <div class="marker-dot"
+                            style="background: var(--accent-primary); width: 12px; height: 12px; border-radius: 50%; border: 2px solid white;">
+                        </div>
+                        <div class="marker-label xx-small text-white mt-1 fw-bold">{{ city.city }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Overlay Dashboard Stats -->
+                <div class="position-absolute bottom-0 start-0 p-4 w-100 d-flex justify-content-between align-items-end"
+                    style="pointer-events: none;">
+                    <div class="glass-panel p-3 border-secondary border-opacity-10"
+                        style="pointer-events: auto; width: 250px;">
+                        <div class="text-muted xx-small uppercase fw-bold mb-2">Primary Sourcing Hub</div>
+                        <h6 class="text-info fw-bold mb-1">Bangalore, India</h6>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge bg-success xx-small uppercase">Trend: +12% YoY</span>
+                        </div>
+                    </div>
+                    <div class="text-end">
+                        <div class="xx-small text-muted uppercase">Engine: Carto Intel v1.4</div>
+                        <div class="small fw-bold text-theme">Global Talent Network</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Strategy Column -->
+        <div class="col-lg-3">
+            <div class="glass-panel p-4 h-100 shadow-lg border-warning border-opacity-10" data-aos="fade-left">
+                <h6 class="fw-bold text-theme mb-4"><i class="fas fa-compass text-warning me-2"></i>Strategic Insights
+                </h6>
+
+                <div class="mb-5">
+                    <label class="text-muted x-small uppercase fw-bold mb-2 d-block">Cost Benefit Zone</label>
+                    <div class="p-4 rounded-4 bg-success bg-opacity-5 border border-success border-opacity-20">
+                        <h5 class="fw-bold text-success mb-1">East Europe</h5>
+                        <p class="xx-small text-muted mb-0">High engineering quality. Lower operational costs. Strong
+                            English proficiency.</p>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="text-muted x-small uppercase fw-bold mb-2 d-block">Sourcing Risk Alert</label>
+                    <div
+                        class="p-4 rounded-4 bg-danger bg-opacity-5 border border-danger border-opacity-20 text-danger">
+                        <i class="fas fa-exclamation-triangle float-end opacity-25"></i>
+                        <h6 class="fw-bold x-small opacity-75 mb-1">Market Saturation</h6>
+                        <p class="xx-small mb-0">San Francisco: Engineer salaries at all-time high. 1-year retention < 8
+                                months Average.</p>
+                    </div>
+                </div>
+
+                <hr class="border-secondary border-opacity-10 my-4">
+                <div
+                    class="p-3 rounded-pill bg-dark text-center border border-light border-opacity-10 x-small cursor-pointer transition-all hover-translate">
+                    <i class="fas fa-file-export me-2 text-info"></i>Export Sourcing Guide
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .x-small {
+        font-size: 0.72rem;
+    }
+
+    .xx-small {
+        font-size: 0.6rem;
+    }
+
+    .uppercase {
+        text-transform: uppercase;
+    }
+
+    .pulse-marker {
+        transform: translate(-50%, -50%);
+        cursor: pointer;
+    }
+
+    .pulse-marker:hover .marker-dot {
+        transform: scale(1.5);
+        box-shadow: 0 0 15px var(--accent-primary);
+    }
+
+    .marker-dot {
+        transition: all 0.3s ease;
+    }
+
+    .line-height-relaxed {
+        line-height: 1.8;
+    }
+</style>
+{% endblock %}

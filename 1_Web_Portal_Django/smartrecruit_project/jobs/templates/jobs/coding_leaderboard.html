@@ -1,0 +1,181 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Global Leaderboard | SmartRecruit{% endblock %}
+
+{% block content %}
+<style>
+    /* Z-INDEX SAFEGUARDS */
+    .modal { z-index: 2000 !important; }
+    .modal-backdrop { z-index: 1050 !important; }
+
+    .tracking-widest { letter-spacing: 0.15em; }
+    .x-small { font-size: 0.75rem; }
+    .xx-small { font-size: 0.65rem; }
+
+    /* Podium */
+    .podium-col { display: flex; align-items: flex-end; }
+    .podium-card {
+        width: 100%;
+        background: rgba(15, 15, 20, 0.6);
+        backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+        border-radius: 1rem;
+        border-top: 4px solid;
+        padding: 1.25rem 1rem;
+        text-align: center;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .podium-card:hover { transform: translateY(-4px); box-shadow: 0 16px 40px rgba(0,0,0,0.5); }
+    .podium-gold { border-color: #FFD700; box-shadow: 0 0 30px rgba(255,215,0,0.12); }
+    .podium-silver { border-color: #C0C0C0; box-shadow: 0 0 20px rgba(192,192,192,0.08); }
+    .podium-bronze { border-color: #CD7F32; box-shadow: 0 0 20px rgba(205,127,50,0.08); }
+
+    .podium-avatar {
+        width: 52px; height: 52px; border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        font-weight: 700; font-size: 1.1rem; margin: 0 auto 0.75rem;
+        font-family: 'Space Grotesk', sans-serif;
+    }
+    .podium-avatar-gold { background: linear-gradient(135deg, #FFD700, #FF8F00); color: #000; box-shadow: 0 0 20px rgba(255,215,0,0.4); }
+    .podium-avatar-silver { background: linear-gradient(135deg, #e0e0e0, #9e9e9e); color: #000; box-shadow: 0 0 15px rgba(192,192,192,0.3); }
+    .podium-avatar-bronze { background: linear-gradient(135deg, #CD7F32, #8D4E1A); color: #fff; box-shadow: 0 0 15px rgba(205,127,50,0.3); }
+
+    /* Ranking Tables */
+    .rank-table-row { transition: all 0.2s ease; }
+    .rank-table-row:hover td { background: rgba(255,255,255,0.02) !important; }
+    .rank-you td { background: rgba(41,121,255,0.05) !important; border-left: 2px solid rgba(41,121,255,0.4) !important; }
+
+    @keyframes xp-pulse { 0%,100% { box-shadow: 0 0 0 0 rgba(255,193,7,0.4); } 50% { box-shadow: 0 0 0 8px rgba(255,193,7,0); } }
+    .crown-animate { animation: xp-pulse 2s infinite; }
+</style>
+
+<div class="container-fluid fade-up">
+
+    <!-- ─── Hero ─── -->
+    <div class="text-center mb-5" data-aos="fade-down">
+        <div class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 px-3 py-2 rounded-pill mb-3 tracking-widest text-uppercase x-small fw-bold">
+            <i class="fas fa-trophy me-2"></i>Neural Ranking System
+        </div>
+        <h1 class="display-5 fw-bold text-white mb-2" style="font-family: 'Space Grotesk', sans-serif;">
+            Global XP <span style="background: linear-gradient(90deg, #FFD700, #FF8F00); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">Leaderboard</span>
+        </h1>
+        <p class="lead text-secondary mb-0">Top coders on the SmartRecruit Practice Arena, ranked by XP earned.</p>
+
+        {% if my_rank %}
+        <div class="d-inline-flex align-items-center gap-3 px-5 py-3 rounded-pill mt-4 shadow-inner" style="background: rgba(41,121,255,0.08); border: 1px solid rgba(41,121,255,0.25);">
+            <i class="fas fa-crosshairs text-primary"></i>
+            <span class="text-secondary x-small fw-bold tracking-widest text-uppercase">Your Rank</span>
+            <span class="fw-bold text-white" style="font-size: 1.25rem; font-family: 'Space Grotesk', sans-serif;">#{{ my_rank }}</span>
+            <div class="vr bg-secondary opacity-25" style="height: 20px;"></div>
+            <span class="fw-bold text-warning" style="font-family: 'Space Grotesk', sans-serif;">{{ my_xp.total_xp }} XP</span>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-9">
+
+            <!-- ─── Podium ─── -->
+            {% if top_xp|length >= 3 %}
+            <div class="row g-3 mb-5 align-items-end px-2" data-aos="fade-up">
+                <!-- 2nd Place -->
+                <div class="col-4 podium-col">
+                    <div class="podium-card podium-silver">
+                        <div class="podium-avatar podium-avatar-silver">2</div>
+                        <div class="fw-bold text-white x-small mb-1">{{ top_xp.1.user.username }}</div>
+                        <div class="fw-bold text-warning" style="font-family: 'Space Grotesk', sans-serif;">{{ top_xp.1.total_xp }} XP</div>
+                        <div class="text-secondary xx-small mt-1">{{ top_xp.1.problems_solved }} solved</div>
+                    </div>
+                </div>
+                <!-- 1st Place (tallest) -->
+                <div class="col-4" style="padding-bottom: 0;">
+                    <div class="podium-card podium-gold crown-animate" style="position: relative;">
+                        <div class="position-absolute top-0 start-50 translate-middle" style="font-size: 1.75rem; filter: drop-shadow(0 0 8px rgba(255,215,0,0.6));">👑</div>
+                        <div class="podium-avatar podium-avatar-gold mt-3">1</div>
+                        <div class="fw-bold text-white mb-1" style="font-family: 'Space Grotesk', sans-serif;">{{ top_xp.0.user.username }}</div>
+                        <div class="fw-bold text-warning fs-5" style="font-family: 'Space Grotesk', sans-serif;">{{ top_xp.0.total_xp }} XP</div>
+                        <div class="text-secondary xx-small mt-1">{{ top_xp.0.problems_solved }} solved</div>
+                    </div>
+                </div>
+                <!-- 3rd Place -->
+                <div class="col-4 podium-col">
+                    <div class="podium-card podium-bronze">
+                        <div class="podium-avatar podium-avatar-bronze">3</div>
+                        <div class="fw-bold text-white x-small mb-1">{{ top_xp.2.user.username }}</div>
+                        <div class="fw-bold text-warning" style="font-family: 'Space Grotesk', sans-serif;">{{ top_xp.2.total_xp }} XP</div>
+                        <div class="text-secondary xx-small mt-1">{{ top_xp.2.problems_solved }} solved</div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- ─── Full Rankings Table ─── -->
+            <div class="glass-panel p-0 rounded-4 overflow-hidden shadow-lg border-secondary border-opacity-25" data-aos="fade-up" data-aos-delay="100">
+                <div class="p-4 border-bottom border-light border-opacity-10 bg-dark bg-opacity-25 d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold text-white mb-0 d-flex align-items-center gap-2">
+                        <i class="fas fa-list-ol text-primary"></i>Full Rankings
+                    </h5>
+                    <span class="badge bg-secondary bg-opacity-25 text-secondary border border-secondary border-opacity-25 rounded-pill x-small fw-bold px-3 py-2">Updated Live</span>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-borderless align-middle mb-0 text-white w-100">
+                        <thead class="bg-light bg-opacity-5 border-bottom border-light border-opacity-10 text-secondary x-small tracking-widest text-uppercase">
+                            <tr>
+                                <th class="ps-4 py-3 border-0">#</th>
+                                <th class="py-3 border-0">Candidate</th>
+                                <th class="py-3 border-0">Level</th>
+                                <th class="py-3 text-end border-0">Solved</th>
+                                <th class="py-3 text-end border-0">Streak</th>
+                                <th class="py-3 pe-4 text-end border-0">XP</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for entry in top_xp %}
+                            <tr class="border-bottom border-light border-opacity-5 rank-table-row {% if entry.user == request.user %}rank-you{% endif %}">
+                                <td class="ps-4 py-3 fw-bold {% if forloop.counter == 1 %}text-warning{% elif forloop.counter == 2 %}text-secondary{% elif forloop.counter == 3 %}text-danger{% else %}text-muted{% endif %}" style="font-family: 'Space Grotesk', sans-serif;">
+                                    {% if forloop.counter == 1 %}🥇{% elif forloop.counter == 2 %}🥈{% elif forloop.counter == 3 %}🥉{% else %}{{ forloop.counter }}{% endif %}
+                                </td>
+                                <td class="py-3">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold flex-shrink-0" style="width: 34px; height: 34px; background: linear-gradient(135deg, rgba(41,121,255,0.5), rgba(124,77,255,0.5)); font-family: 'Space Grotesk', sans-serif; font-size: 0.85rem;">{{ entry.user.username|first|upper }}</div>
+                                        <span class="fw-semibold text-white">{{ entry.user.username }}</span>
+                                        {% if entry.user == request.user %}<span class="badge bg-primary bg-opacity-25 text-primary border border-primary border-opacity-25 rounded-pill xx-small fw-bold px-2">You</span>{% endif %}
+                                    </div>
+                                </td>
+                                <td class="py-3 text-secondary x-small fw-bold tracking-widest">{{ entry.level.0 }}</td>
+                                <td class="py-3 text-end fw-bold text-success" style="font-family: 'Space Grotesk', sans-serif;">{{ entry.problems_solved }}</td>
+                                <td class="py-3 text-end">
+                                    {% if entry.streak_days > 0 %}<span class="text-danger fw-bold x-small"><i class="fas fa-fire me-1"></i>{{ entry.streak_days }}d</span>{% else %}<span class="text-muted opacity-25">—</span>{% endif %}
+                                </td>
+                                <td class="py-3 pe-4 text-end fw-bold text-warning" style="font-family: 'Space Grotesk', sans-serif;">{{ entry.total_xp }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center py-5">
+                                    <div class="rounded-circle d-flex align-items-center justify-content-center bg-dark border border-secondary border-opacity-25 mx-auto mb-3" style="width: 60px; height: 60px;">
+                                        <i class="fas fa-trophy fa-lg text-secondary opacity-25"></i>
+                                    </div>
+                                    <h6 class="fw-bold text-white mb-1">No Rankings Yet</h6>
+                                    <p class="text-secondary x-small">Be the first to solve a challenge and claim the #1 spot.</p>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="p-4 border-top border-light border-opacity-10 d-flex justify-content-between align-items-center bg-dark bg-opacity-25">
+                    <a href="{% url 'coding_arena' %}" class="btn btn-outline-primary rounded-pill px-4 fw-bold hover-scale">
+                        <i class="fas fa-terminal me-2"></i>Practice Now
+                    </a>
+                    <span class="text-muted xx-small tracking-widest text-uppercase fw-bold">
+                        <i class="fas fa-circle text-success me-1" style="font-size: 0.5rem;"></i>Updated in real-time
+                    </span>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Proctoring Control | SmartRecruit Admin{% endblock %}
+
+{% block content %}
+<div class="d-flex" style="min-height:calc(100vh - 72px)">
+  {% include 'core/_admin_sidebar.html' %}
+  
+  <main class="flex-grow-1 p-4 p-lg-5" style="background: radial-gradient(circle at top right, rgba(99, 102, 241, 0.05), transparent 400px);">
+    
+    <!-- Header -->
+    <div class="mb-5">
+      <h1 class="glow-text mb-1" style="font-size:1.8rem;">
+        <i class="fa-solid fa-shield-halved me-2 text-primary"></i>Proctoring Control Panel
+      </h1>
+      <p class="text-theme-secondary mb-0">Adjust AI sensitivity, detection thresholds, and strictness parameters</p>
+    </div>
+
+    <div class="row g-4">
+      <!-- Sensitivity Sliders -->
+      <div class="col-lg-8">
+        <form method="POST" class="glass-card p-4 p-lg-5">
+          {% csrf_token %}
+          
+          <h5 class="text-white mb-4 border-bottom border-white border-opacity-10 pb-3">AI Detection Sensitivity</h5>
+          
+          <!-- Face Detection Confidence -->
+          <div class="mb-5">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <label class="form-label text-theme-secondary fw-semibold mb-0">Face Detection Confidence</label>
+              <span class="badge bg-primary px-3 py-2" id="conf-val">{{ min_conf }}</span>
+            </div>
+            <input type="range" name="min_confidence" class="form-range custom-range" min="0.1" max="0.9" step="0.05" value="{{ min_conf }}" oninput="document.getElementById('conf-val').innerText = this.value">
+            <div class="d-flex justify-content-between mt-1">
+              <small class="text-theme-secondary opacity-50">High Speed (0.1)</small>
+              <small class="text-theme-secondary opacity-50">High Accuracy (0.9)</small>
+            </div>
+          </div>
+
+          <!-- Eye Gaze Logic -->
+          <div class="row g-4 mb-5">
+            <div class="col-md-6">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <label class="form-label text-theme-secondary fw-semibold mb-0">Eye Gaze: Low Ratio</label>
+                <span class="badge bg-primary px-3 py-2" id="low-val">{{ eye_low }}</span>
+              </div>
+              <input type="range" name="eye_low" class="form-range custom-range" min="0.1" max="0.5" step="0.01" value="{{ eye_low }}" oninput="document.getElementById('low-val').innerText = this.value">
+              <small class="text-theme-secondary opacity-50 mt-1 d-block">Threshold for leftward gaze wandering</small>
+            </div>
+            <div class="col-md-6">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <label class="form-label text-theme-secondary fw-semibold mb-0">Eye Gaze: High Ratio</label>
+                <span class="badge bg-primary px-3 py-2" id="high-val">{{ eye_high }}</span>
+              </div>
+              <input type="range" name="eye_high" class="form-range custom-range" min="0.5" max="0.9" step="0.01" value="{{ eye_high }}" oninput="document.getElementById('high-val').innerText = this.value">
+              <small class="text-theme-secondary opacity-50 mt-1 d-block">Threshold for rightward gaze wandering</small>
+            </div>
+          </div>
+
+          <!-- Strictness Threshold -->
+          <div class="mb-5">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <label class="form-label text-theme-secondary fw-semibold mb-0">Max Flags Target</label>
+              <span class="badge bg-danger px-3 py-2" id="flags-val">{{ flags_max }}</span>
+            </div>
+            <input type="range" name="flags_max" class="form-range custom-range-danger" min="1" max="20" step="1" value="{{ flags_max }}" oninput="document.getElementById('flags-val').innerText = this.value">
+            <small class="text-theme-secondary opacity-50 mt-1 d-block">Allowable violations before session is moved to PENDING REVIEW</small>
+          </div>
+
+          <div class="d-grid gap-2">
+            <button type="submit" class="btn btn-primary py-3 fw-bold shadow-lg mt-3">
+              <i class="fa-solid fa-microchip me-2"></i>Apply Neural Strictness Config
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Live Context / Help -->
+      <div class="col-lg-4">
+        <div class="glass-card p-4 h-100 border-primary border-opacity-25">
+          <h6 class="text-primary fw-bold mb-3"><i class="fa-solid fa-circle-info me-2"></i>Configuration Intel</h6>
+          <div class="space-y-4">
+            <div class="mb-4">
+              <div class="fw-bold text-white small mb-1">Face Detection Confidence</div>
+              <p class="small text-theme-secondary mb-0">Lower values allow detections even in poor lighting but may result in false positives (shadows appearing as faces).</p>
+            </div>
+            <div class="mb-4">
+              <div class="fw-bold text-white small mb-1">Eye Gaze Ratio</div>
+              <p class="small text-theme-secondary mb-0">Calculated as the iris position relative to eye boundaries. Default (0.35 - 0.65) is standard for 13-15 inch laptops.</p>
+            </div>
+            <div class="mb-4">
+              <div class="fw-bold text-white small mb-1">Max Flags Target</div>
+              <p class="small text-theme-secondary mb-0 text-danger">Critical: Setting this too low (e.g., 1 or 2) will flag almost every candidate due to natural eye movement.</p>
+            </div>
+          </div>
+          
+          <div class="mt-5 pt-4 border-top border-white border-opacity-10">
+            <div class="d-flex align-items-center gap-3 p-3 rounded-lg bg-primary bg-opacity-10 border border-primary border-opacity-20 text-primary small">
+              <i class="fa-solid fa-triangle-exclamation fs-4"></i>
+              <div>Changes are applied instantly to all active interview sessions via the Proctor Engine sync.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<style>
+.custom-range::-webkit-slider-runnable-track { background: rgba(99, 102, 241, 0.2); height: 6px; border-radius: 3px; }
+.custom-range::-webkit-slider-thumb { background: #6366f1; border: 2px solid white; height: 18px; width: 18px; margin-top: -6px; box-shadow: 0 0 10px rgba(99,102,241,0.5); }
+
+.custom-range-danger::-webkit-slider-runnable-track { background: rgba(239, 68, 68, 0.2); height: 6px; border-radius: 3px; }
+.custom-range-danger::-webkit-slider-thumb { background: #ef4444; border: 2px solid white; height: 18px; width: 18px; margin-top: -6px; box-shadow: 0 0 10px rgba(239, 68, 68, 0.5); }
+
+.form-range:focus { box-shadow: none; }
+</style>
+{% endblock %}

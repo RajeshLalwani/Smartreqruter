@@ -1,0 +1,137 @@
+{% load static %}
+<!-- Neural Voice Assistant Hub (Phase 10) -->
+<div id="neural-assistant-hub" class="neural-assistant-container" data-entrance="fade-up">
+    <!-- Neural Waveform Visualizer -->
+    <div id="neural-wave-container" class="neural-wave-overlay">
+        <canvas id="neural-waveform"></canvas>
+    </div>
+
+    <!-- Floating Command Button -->
+    <button id="neural-mic-btn" class="neural-mic-trigger" title="Speak to Sentinel Prime">
+        <div class="mic-icon-wrapper">
+            <i class="fa-solid fa-microphone"></i>
+            <div class="mic-pulse-rings">
+                <span class="ring"></span>
+                <span class="ring"></span>
+            </div>
+        </div>
+        <span class="mic-label">NEURAL LINK</span>
+    </button>
+</div>
+
+<style>
+    .neural-assistant-container {
+        position: fixed;
+        bottom: 160px;
+        right: 30px;
+        z-index: 9999;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .neural-mic-trigger {
+        background: rgba(15, 15, 25, 0.7);
+        backdrop-filter: blur(15px);
+        -webkit-backdrop-filter: blur(15px);
+        border: 1px solid rgba(0, 229, 255, 0.3);
+        border-radius: 50px;
+        padding: 10px 20px;
+        color: #00e5ff;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        cursor: pointer;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4), 
+                    inset 0 0 10px rgba(0, 229, 255, 0.1);
+    }
+
+    .neural-mic-trigger:hover {
+        transform: translateY(-5px) scale(1.05);
+        border-color: #00e5ff;
+        box-shadow: 0 15px 40px rgba(0, 229, 255, 0.2), 
+                    inset 0 0 15px rgba(0, 229, 255, 0.2);
+    }
+
+    .neural-mic-trigger.is-listening {
+        background: rgba(0, 229, 255, 0.15);
+        border-color: #00e5ff;
+        animation: neuralGlow 2s infinite;
+    }
+
+    @keyframes neuralGlow {
+        0% { box-shadow: 0 0 10px rgba(0, 229, 255, 0.2); }
+        50% { box-shadow: 0 0 25px rgba(0, 229, 255, 0.5); }
+        100% { box-shadow: 0 0 10px rgba(0, 229, 255, 0.2); }
+    }
+
+    .mic-icon-wrapper {
+        position: relative;
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+    }
+
+    .mic-label {
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        opacity: 0.8;
+    }
+
+    .neural-wave-overlay {
+        position: absolute;
+        bottom: 60px;
+        width: 200px;
+        height: 60px;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .neural-assistant-container.active-comms .neural-wave-overlay {
+        opacity: 1;
+    }
+
+    #neural-waveform {
+        width: 100%;
+        height: 100%;
+    }
+
+    /* Pulse Rings */
+    .mic-pulse-rings .ring {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        border: 1px solid #00e5ff;
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    .is-listening .mic-pulse-rings .ring {
+        animation: ringPulse 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) infinite;
+    }
+
+    .is-listening .mic-pulse-rings .ring:nth-child(2) {
+        animation-delay: 0.75s;
+    }
+
+    @keyframes ringPulse {
+        0% { transform: translate(-50%, -50%) scale(1); opacity: 0.6; }
+        100% { transform: translate(-50%, -50%) scale(2.5); opacity: 0; }
+    }
+</style>
+
+<!-- Neural Hub Logic -->
+<script src="{% static 'js/neural_hub.js' %}"></script>

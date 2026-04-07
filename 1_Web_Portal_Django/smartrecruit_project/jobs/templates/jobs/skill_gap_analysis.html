@@ -1,0 +1,456 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block sidebar %}
+    {% include 'jobs/_candidate_sidebar.html' %}
+{% endblock %}
+
+{% block content %}
+<div class="d-flex" id="candidate-wrapper" style="min-height:calc(100vh - 72px)">
+    <!-- Sidebar is handled by block sidebar in app-shell -->
+    
+    <main class="flex-grow-1 p-4 p-lg-5 overflow-auto">
+        <div class="container-fluid fade-up">
+<style>
+    .skill-matrix-hud {
+        position: relative;
+        background: radial-gradient(circle at 0% 0%, rgba(102, 126, 234, 0.15), transparent 50%),
+            radial-gradient(circle at 100% 100%, rgba(118, 75, 162, 0.15), transparent 50%);
+        border: 1px solid rgba(102, 126, 234, 0.3);
+    }
+
+    .matrix-grid {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-image: linear-gradient(rgba(102, 126, 234, 0.05) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(102, 126, 234, 0.05) 1px, transparent 1px);
+        background-size: 30px 30px;
+        pointer-events: none;
+    }
+
+    .score-fusion-ring {
+        filter: drop-shadow(0 0 10px rgba(102, 126, 234, 0.4));
+    }
+
+    .compatibility-badge {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(4px);
+        transition: all 0.3s ease;
+    }
+
+    .compatibility-badge:hover {
+        background: rgba(255, 255, 255, 0.06);
+        border-color: rgba(255, 255, 255, 0.2);
+        transform: scale(1.05);
+    }
+</style>
+
+<div class="container-fluid mt-4">
+
+    <!-- Page Header -->
+    <div class="elite-glass p-4 mb-4 skill-matrix-hud overflow-hidden" data-aos="fade-down">
+        <div class="matrix-grid"></div>
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 position-relative z-3">
+            <div>
+                <div class="d-flex align-items-center gap-3 mb-2">
+                    <div class="rounded-circle bg-primary bg-opacity-20 d-flex align-items-center justify-content-center text-primary fw-bold pulse-glow"
+                        style="width: 56px; height: 56px; font-size: 1.3rem;">
+                        {{ application.candidate.full_name|slice:":1" }}
+                    </div>
+                    <div>
+                        <h3 class="fw-bold mb-0 text-white">Elite Skill Gap Matrix</h3>
+                        <p class="text-white-50 mb-0">
+                            Predictive Compatibility Intelligence
+                            <span class="mx-2">/</span>
+                            <span class="fw-semibold text-primary">{{ application.candidate.full_name }}</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="{% url 'application_details' application.id %}"
+                    class="btn btn-outline-light rounded-pill px-4 blur-btn">
+                    <i class="bi bi-arrow-left me-2"></i>Mission Control
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+
+        <!-- LEFT: Score Cards -->
+        <div class="col-lg-4">
+
+            <!-- Predictive Hiring Score -->
+            <div class="elite-glass p-4 mb-4 text-center position-relative overflow-hidden" data-aos="fade-right">
+                <div class="position-absolute top-0 start-0 w-100 h-100 opacity-10"
+                    style="background: radial-gradient(circle at 50% 0%, rgba(102, 126, 234, 0.6), transparent 70%);">
+                </div>
+                <h6 class="text-uppercase text-white-50 small fw-bold mb-4 position-relative">
+                    <i class="bi bi-cpu me-2 text-warning"></i>Neural Alignment Score
+                </h6>
+                <!-- Circular Progress Ring -->
+                <div class="position-relative d-inline-flex align-items-center justify-content-center mb-4">
+                    <svg width="180" height="180" viewBox="0 0 160 160" class="score-fusion-ring">
+                        <circle cx="80" cy="80" r="70" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="8" />
+                        <circle cx="80" cy="80" r="70" fill="none"
+                            stroke="{% if predictive.composite_score >= 70 %}#00E676{% elif predictive.composite_score >= 50 %}#FF9800{% else %}#FF5252{% endif %}"
+                            stroke-width="12" stroke-dasharray="439.8" id="scoreRing" stroke-linecap="round"
+                            transform="rotate(-90 80 80)" style="transition: stroke-dashoffset 1.5s ease;" />
+                    </svg>
+                    <div class="position-absolute text-center">
+                        <div class="fw-bold text-white" style="font-size: 2.5rem; line-height: 1;">{{
+                            predictive.composite_score }}<span class="fs-4">%</span></div>
+                        <div class="small text-white-50 text-uppercase tracking-tighter">Match Factor</div>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <span
+                        class="badge-elite bg-{{ predictive.likelihood_color }} bg-opacity-10 text-{{ predictive.likelihood_color }} border-{{ predictive.likelihood_color }} px-4 py-2">
+                        <i class="{{ predictive.likelihood_icon }} me-2"></i>{{ predictive.likelihood|upper }}
+                        CONFIDENCE
+                    </span>
+                </div>
+                <p class="text-white-50 small mt-3 mb-0">
+                    Composite AI-weighted alignment based on deep feature extraction and behavioral harmonics.
+                </p>
+            </div>
+
+            <!-- Skill Match Score -->
+            <div class="glass-panel p-4 mb-4">
+                <h6 class="fw-bold text-theme mb-3">
+                    <i class="fas fa-puzzle-piece me-2 text-info"></i>Skill Match Overview
+                </h6>
+                <div class="text-center mb-3">
+                    <h1
+                        class="fw-bold {% if skill_data.match_percentage >= 70 %}text-success{% elif skill_data.match_percentage >= 50 %}text-warning{% else %}text-danger{% endif %}">
+                        {{ skill_data.match_percentage }}%
+                    </h1>
+                    <p class="text-muted small mb-0">
+                        {{ skill_data.total_matched }} of {{ skill_data.total_required }} required skills matched
+                    </p>
+                </div>
+                <div class="progress mb-3" style="height: 10px; border-radius: 5px;">
+                    <div class="progress-bar {% if skill_data.match_percentage >= 70 %}bg-success{% elif skill_data.match_percentage >= 50 %}bg-warning{% else %}bg-danger{% endif %}"
+                        style="--w: {{ skill_data.match_percentage }}%; width: var(--w); transition: width 1.5s ease;">
+                    </div>
+                </div>
+
+                <!-- Importance-Weighted Score -->
+                <div class="p-3 rounded-3 mt-2"
+                    style="background: rgba(102,126,234,0.1); border: 1px solid rgba(102,126,234,0.2);">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="small fw-bold text-muted text-uppercase">Importance-Weighted AI Score</span>
+                        <span class="fw-bold text-primary">{{ skill_data.importance_weighted_score }}%</span>
+                    </div>
+                    <div class="progress mt-2" style="height: 6px;">
+                        <div class="progress-bar bg-primary"
+                            style="--w: {{ skill_data.importance_weighted_score }}%; width: var(--w);"></div>
+                    </div>
+                    <small class="text-muted d-block mt-1">Weighs critical skills (e.g., ML, Python) more heavily than
+                        peripheral ones.</small>
+                </div>
+            </div>
+
+            <!-- Score Components Breakdown -->
+            <div class="glass-panel p-4 mb-4">
+                <h6 class="fw-bold text-theme mb-3">
+                    <i class="fas fa-layer-group me-2 text-warning"></i>Score Components
+                </h6>
+                {% for label, comp in predictive.components.items %}
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="small fw-semibold">{{ label }}</span>
+                        <div class="d-flex align-items-center gap-2">
+                            <small class="text-muted">({{ comp.weight }})</small>
+                            <span
+                                class="fw-bold {% if comp.score is None %}text-muted{% elif comp.score >= 70 %}text-success{% elif comp.score >= 50 %}text-warning{% else %}text-danger{% endif %}">
+                                {% if comp.score is not None %}{{ comp.score|floatformat:1 }}%{% else %}N/A{% endif %}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="progress" style="height: 5px;">
+                        <div class="progress-bar {% if comp.score is None %}bg-secondary{% elif comp.score >= 70 %}bg-success{% elif comp.score >= 50 %}bg-warning{% else %}bg-danger{% endif %}"
+                            style="width: {% if comp.score %}{{ comp.score }}{% else %}0{% endif %}%;"></div>
+                    </div>
+                    {% if comp.details %}
+                    <small class="text-muted">{{ comp.details }}</small>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- AI Recommendations -->
+            {% if skill_data.recommendations %}
+            <div class="glass-panel p-4">
+                <h6 class="fw-bold text-theme mb-3">
+                    <i class="fas fa-lightbulb me-2 text-warning"></i>AI Recommendations
+                </h6>
+                {% for rec in skill_data.recommendations %}
+                <div class="p-3 rounded-3 mb-2 d-flex align-items-start gap-2"
+                    style="background: rgba(255,193,7,0.08); border-left: 3px solid #ffc107;">
+                    <i class="fas fa-robot text-warning mt-1"></i>
+                    <p class="small mb-0">{{ rec }}</p>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- RIGHT: Detailed Analysis -->
+        <div class="col-lg-8">
+
+            <!-- Matched vs Missing (Radar Chart) -->
+            <div class="glass-panel p-4 mb-4">
+                <h5 class="fw-bold text-theme mb-4">
+                    <i class="fas fa-chart-radar me-2 text-info"></i>Skill Coverage Radar
+                </h5>
+                <canvas id="skillRadarChart" style="max-height: 320px;"></canvas>
+            </div>
+
+            <div class="row g-4 mb-4">
+                <!-- Matched Skills -->
+                <div class="col-md-6">
+                    <div class="glass-panel p-4 h-100" style="border-left: 4px solid #00E676;">
+                        <h6 class="fw-bold mb-3">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            Matched Skills
+                            <span class="badge bg-success rounded-pill ms-2">{{ skill_data.matched_skills|length
+                                }}</span>
+                        </h6>
+                        <div class="d-flex flex-wrap gap-2" id="matchedSkillsContainer">
+                            {% for skill in skill_data.matched_skills %}
+                            <span class="badge rounded-pill px-3 py-2 skill-badge-matched"
+                                style="background: rgba(0,230,118,0.15); border: 1px solid rgba(0,230,118,0.4); color: #00E676; cursor: default;">
+                                <i class="fas fa-check me-1" style="font-size: 0.65rem;"></i>{{ skill }}
+                            </span>
+                            {% empty %}
+                            <p class="text-muted small fst-italic">No matched skills found.</p>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Missing Skills -->
+                <div class="col-md-6">
+                    <div class="glass-panel p-4 h-100" style="border-left: 4px solid #FF5252;">
+                        <h6 class="fw-bold mb-3">
+                            <i class="fas fa-times-circle text-danger me-2"></i>
+                            Missing Skills
+                            <span class="badge bg-danger rounded-pill ms-2">{{ skill_data.missing_skills|length
+                                }}</span>
+                        </h6>
+                        <div class="d-flex flex-wrap gap-2">
+                            {% for skill in skill_data.missing_skills %}
+                            <span class="badge rounded-pill px-3 py-2"
+                                style="background: rgba(255,82,82,0.15); border: 1px solid rgba(255,82,82,0.4); color: #FF5252; cursor: default;"
+                                title="This skill is required by the JD but missing from candidate's profile">
+                                <i class="fas fa-times me-1" style="font-size: 0.65rem;"></i>{{ skill }}
+                            </span>
+                            {% empty %}
+                            <p class="text-success small"><i class="fas fa-star me-1"></i>All required skills present!
+                            </p>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Extra/Bonus Skills -->
+            {% if skill_data.extra_skills %}
+            <div class="glass-panel p-4 mb-4" style="border-left: 4px solid #2979FF;">
+                <h6 class="fw-bold mb-3">
+                    <i class="fas fa-plus-circle text-primary me-2"></i>
+                    Bonus Skills (Not Required, But Valuable)
+                    <span class="badge bg-primary rounded-pill ms-2">{{ skill_data.extra_skills|length }}</span>
+                </h6>
+                <div class="d-flex flex-wrap gap-2">
+                    {% for skill in skill_data.extra_skills %}
+                    <span class="badge rounded-pill px-3 py-2"
+                        style="background: rgba(41,121,255,0.12); border: 1px solid rgba(41,121,255,0.35); color: #2979FF;">
+                        <i class="fas fa-star me-1" style="font-size: 0.65rem;"></i>{{ skill }}
+                    </span>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Category Breakdown -->
+            {% if skill_data.skill_breakdown %}
+            <div class="glass-panel p-4 mb-4">
+                <h5 class="fw-bold text-theme mb-4">
+                    <i class="fas fa-th-large me-2 text-warning"></i>Category-wise Breakdown
+                </h5>
+                <div class="row g-3">
+                    {% for category, data in skill_data.skill_breakdown.items %}
+                    <div class="col-md-6">
+                        <div class="p-3 rounded-3"
+                            style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="small fw-bold">{{ category }}</span>
+                                <span
+                                    class="badge {% if data.match_rate >= 70 %}bg-success{% elif data.match_rate >= 40 %}bg-warning text-dark{% else %}bg-danger{% endif %} rounded-pill">
+                                    {{ data.match_rate }}%
+                                </span>
+                            </div>
+                            <div class="progress mb-2" style="height: 6px;">
+                                <div class="progress-bar {% if data.match_rate >= 70 %}bg-success{% elif data.match_rate >= 40 %}bg-warning{% else %}bg-danger{% endif %}"
+                                    style="--w: {{ data.match_rate }}%; width: var(--w);"></div>
+                            </div>
+                            {% if data.matched %}
+                            <div class="small text-success"><i class="fas fa-check me-1"></i>{{ data.matched|join:", "
+                                }}</div>
+                            {% endif %}
+                            {% if data.missing %}
+                            <div class="small text-danger mt-1"><i class="fas fa-times me-1"></i>Missing: {{
+                                data.missing|join:", " }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Visualization: Matched vs Missing Bar Chart -->
+            <div class="glass-panel p-4">
+                <h5 class="fw-bold text-theme mb-4">
+                    <i class="fas fa-chart-bar me-2 text-primary"></i>Skill Distribution
+                </h5>
+                <canvas id="skillBarChart" height="80"></canvas>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const matched = {{ matched_json| safe
+    }};
+    const missing = {{ missing_json| safe }};
+    const breakdown = {{ breakdown_json| safe }};
+
+    // ─── Animated Progress Ring ───────────────────────────────
+    const ring = document.getElementById('scoreRing');
+    if (ring) {
+        const score = {{ predictive.composite_score|default: 0
+    }};
+    const circumference = 2 * Math.PI * 65;
+    const offset = circumference - (score / 100 * circumference);
+    ring.style.strokeDasharray = `${circumference}`;
+    ring.style.strokeDashoffset = circumference;
+    setTimeout(() => {
+        ring.style.transition = 'stroke-dashoffset 1.5s ease';
+        ring.style.strokeDashoffset = offset;
+    }, 200);
+        }
+
+    // ─── Skill Radar Chart ────────────────────────────────────
+    const categories = Object.keys(breakdown);
+    const radarMatched = categories.map(c => breakdown[c].matched.length);
+    const radarMissing = categories.map(c => breakdown[c].missing.length);
+
+    if (categories.length > 0) {
+        new Chart(document.getElementById('skillRadarChart'), {
+            type: 'radar',
+            data: {
+                labels: categories,
+                datasets: [
+                    {
+                        label: 'Matched',
+                        data: categories.map(c => breakdown[c].match_rate || 0),
+                        backgroundColor: 'rgba(0, 230, 118, 0.15)',
+                        borderColor: '#00E676',
+                        pointBackgroundColor: '#00E676',
+                        borderWidth: 2,
+                    },
+                    {
+                        label: 'Target (100%)',
+                        data: categories.map(() => 100),
+                        backgroundColor: 'rgba(255, 255, 255, 0.03)',
+                        borderColor: 'rgba(255,255,255,0.2)',
+                        borderWidth: 1,
+                        borderDash: [5, 5],
+                        pointRadius: 0,
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    r: {
+                        min: 0, max: 100,
+                        angleLines: { color: 'rgba(255,255,255,0.1)' },
+                        grid: { color: 'rgba(255,255,255,0.1)' },
+                        pointLabels: { color: '#adb5bd', font: { size: 11, weight: 'bold' } },
+                        ticks: { display: false }
+                    }
+                },
+                plugins: {
+                    legend: { position: 'bottom', labels: { color: '#adb5bd', usePointStyle: true } }
+                }
+            }
+        });
+    }
+
+    // ─── Skill Bar Chart ─────────────────────────────────────
+    const allSkills = [...new Set([...matched, ...missing])].slice(0, 15);
+    const barMatched = allSkills.map(s => matched.includes(s) ? 1 : 0);
+    const barMissing = allSkills.map(s => missing.includes(s) ? 1 : 0);
+
+    new Chart(document.getElementById('skillBarChart'), {
+        type: 'bar',
+        data: {
+            labels: allSkills,
+            datasets: [
+                {
+                    label: 'Matched ✓',
+                    data: barMatched,
+                    backgroundColor: 'rgba(0, 230, 118, 0.7)',
+                    borderColor: '#00E676',
+                    borderWidth: 2,
+                    borderRadius: 6,
+                },
+                {
+                    label: 'Missing ✗',
+                    data: barMissing,
+                    backgroundColor: 'rgba(255, 82, 82, 0.7)',
+                    borderColor: '#FF5252',
+                    borderWidth: 2,
+                    borderRadius: 6,
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            indexAxis: 'y',
+            scales: {
+                x: {
+                    stacked: true,
+                    ticks: { display: false },
+                    grid: { color: 'rgba(255,255,255,0.05)' }
+                },
+                y: {
+                    stacked: true,
+                    ticks: { color: '#adb5bd', font: { size: 11 } },
+                    grid: { display: false }
+                }
+            },
+            plugins: {
+                legend: { position: 'top', labels: { color: '#adb5bd', usePointStyle: true } }
+            }
+        }
+    });
+</script>
+        </div>
+    </main>
+</div>
+{% endblock %}
+```

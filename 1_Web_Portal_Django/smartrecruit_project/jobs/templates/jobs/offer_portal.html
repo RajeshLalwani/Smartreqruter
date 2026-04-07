@@ -1,0 +1,306 @@
+{% extends 'base.html' %}{% load static %}
+{% block title %}Welcome to the Team | {{ candidate.full_name }}{% endblock %}
+{% block content %}
+<div class="container py-5">
+    <!-- Hero Section -->
+    <div class="glass-panel p-5 mb-5 text-center shadow-2xl border-primary border-opacity-10 position-relative overflow-hidden"
+        style="background: linear-gradient(180deg, rgba(var(--primary-rgb),0.15) 0%, transparent 100%);">
+
+        <!-- Celebration Particles -->
+        <div id="confetti-canvas" class="position-absolute top-0 start-0 w-100 h-100"
+            style="pointer-events: none; z-index: 1;"></div>
+
+        <div class="position-relative" style="z-index: 2;">
+            <div class="mb-4">
+                <span
+                    class="badge rounded-pill bg-success bg-opacity-10 text-success border border-success border-opacity-30 px-4 py-2 xx-small uppercase fw-bold tracking-widest animate-bounce">
+                    🎉 OFFER SECURED
+                </span>
+            </div>
+
+            <h1 class="display-2 fw-bold text-theme mb-3 ls-1">Welcome to the Future, {{
+                candidate.first_name|default:'Partner' }}!</h1>
+            <p class="lead text-muted mx-auto mb-5" style="max-width: 850px; font-size: 1.35rem; line-height: 1.6;">
+                {{ content.welcome_message }}
+            </p>
+
+            <div class="d-flex justify-content-center gap-4 flex-wrap">
+                <form id="acceptForm" method="POST" action="{% url 'accept_offer' application.id %}">
+                    {% csrf_token %}
+                    <button type="button" onclick="triggerAcceptance()" class="btn btn-primary rounded-pill px-5 py-3 fw-bold shadow-glow-primary">
+                        <i class="fas fa-file-signature me-2"></i> Accept & Sign Contract
+                    </button>
+                </form>
+                {% if application.offer_letter.offer_file %}
+                <a href="{{ application.offer_letter.offer_file.url }}" target="_blank" class="btn btn-outline-secondary rounded-pill px-5 py-3 fw-bold backdrop-blur">
+                    <i class="fas fa-download me-2"></i> Offer Package (PDF)
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Team & Culture -->
+        <div class="col-lg-7" data-aos="fade-right">
+            <div class="glass-panel p-4 h-100 shadow border-secondary border-opacity-10">
+                <h5 class="fw-bold text-theme mb-4"><i class="fas fa-users text-info me-2"></i>Meet the Pack</h5>
+
+                <div class="row g-3 mb-4">
+                    <div class="col-6">
+                        <div
+                            class="p-4 rounded-4 bg-primary bg-opacity-5 border border-primary border-opacity-10 text-center">
+                            <h2 class="fw-bold text-primary mb-0">15+</h2>
+                            <p class="xx-small text-muted uppercase fw-bold mb-0">Engineers</p>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div
+                            class="p-4 rounded-4 bg-info bg-opacity-5 border border-info border-opacity-10 text-center">
+                            <h2 class="fw-bold text-info mb-0">Agile</h2>
+                            <p class="xx-small text-muted uppercase fw-bold mb-0">Workflow</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="xx-small uppercase fw-bold text-muted mb-2 tracking-widest d-block">Team
+                        Dynamic</label>
+                    <p class="text-theme small italic">"{{ content.team_vibe }}"</p>
+                </div>
+
+                <div class="p-3 rounded-4 bg-dark bg-opacity-25 border border-secondary border-opacity-10">
+                    <p class="small text-muted mb-0">
+                        <i class="fas fa-quote-left me-2 text-primary opacity-50"></i>
+                        Joining SmartRecruit means joining a Mission, not just a job. We're excited to see your impact
+                        on our core architecture.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Success Roadmap -->
+        <div class="col-lg-5" data-aos="fade-left">
+            <div class="glass-panel p-4 h-100 shadow border-warning border-opacity-10">
+                <h5 class="fw-bold text-theme mb-4"><i class="fas fa-rocket text-warning me-2"></i>Your Day 1 to Day 30
+                </h5>
+
+                <div class="timeline-simple">
+                    <div class="timeline-item mb-4 pb-4 border-bottom border-secondary border-opacity-5">
+                        <div class="d-flex gap-3">
+                            <div class="bg-warning bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center text-warning"
+                                style="width:32px; height:32px; min-width:32px;">
+                                <span class="fw-bold small">1</span>
+                            </div>
+                            <div>
+                                <h6 class="fw-bold text-theme mb-1 small">Onboarding & Setup</h6>
+                                <p class="xx-small text-muted mb-0">Environment configuration and initial team sync-ups.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="timeline-item mb-4 pb-4 border-bottom border-secondary border-opacity-5 text-primary">
+                        <div class="d-flex gap-3">
+                            <div class="bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center text-primary"
+                                style="width:32px; height:32px; min-width:32px;">
+                                <span class="fw-bold small">15</span>
+                            </div>
+                            <div>
+                                <h6 class="fw-bold text-theme mb-1 small">First Deployment</h6>
+                                <p class="xx-small text-muted mb-0">Contribute your first code change to the production
+                                    stack.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="timeline-item">
+                        <div class="d-flex gap-3">
+                            <div class="bg-success bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center text-success"
+                                style="width:32px; height:32px; min-width:32px;">
+                                <span class="fw-bold small">30</span>
+                            </div>
+                            <div>
+                                <h6 class="fw-bold text-theme mb-1 small">The North Star Goal</h6>
+                                <p class="xx-small text-muted mb-0">{{ content.first_30_days_goal }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .xx-small {
+        font-size: 0.65rem;
+    }
+
+    .uppercase {
+        text-transform: uppercase;
+    }
+
+    .tracking-widest {
+        letter-spacing: 0.15em;
+    }
+
+    .ls-1 {
+        letter-spacing: -0.02em;
+    }
+
+    .italic {
+        font-style: italic;
+    }
+
+    .shadow-glow-primary {
+        box-shadow: 0 0 30px rgba(99, 102, 241, 0.4);
+    }
+
+    .backdrop-blur {
+        backdrop-filter: blur(10px);
+    }
+
+    .glass-panel {
+        background: rgba(255, 255, 255, 0.03);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 24px;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .glass-panel:hover {
+        transform: translateY(-5px);
+        background: rgba(255, 255, 255, 0.05);
+        border-color: rgba(255, 255, 255, 0.15);
+    }
+
+    .timeline-item {
+        position: relative;
+        transition: all 0.3s ease;
+    }
+
+    .timeline-item:hover {
+        padding-left: 10px;
+    }
+
+    .animate-bounce {
+        animation: bounce 2s infinite;
+    }
+
+    /* Thunder Strike Animation Overlay */
+    #thunder-strike-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(0, 0, 0, 0.9);
+        z-index: 9999;
+        display: none;
+        justify-content: center;
+        align-items: center;
+        pointer-events: none;
+    }
+
+    .strike-flash {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        background: #fff;
+        opacity: 0;
+    }
+
+    .strike-line {
+        position: absolute;
+        bottom: 0;
+        left: 50%;
+        width: 4px;
+        height: 0;
+        background: #00f2ff;
+        box-shadow: 0 0 40px #00f2ff;
+        transform: translateX(-50%);
+    }
+
+    @keyframes strike {
+        0% { opacity: 0; }
+        10% { opacity: 1; }
+        20% { opacity: 0.1; }
+        30% { opacity: 0.8; }
+        40% { opacity: 0; }
+        100% { opacity: 0; }
+    }
+
+    @keyframes bolt-up {
+        0% { height: 0; top: 100%; }
+        50% { height: 100%; top: 0; }
+        100% { height: 0; top: 0; opacity: 0; }
+    }
+
+    @keyframes bounce {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-5px); }
+    }
+</style>
+
+<!-- Thunder Strike Container -->
+<div id="thunder-strike-overlay">
+    <div class="strike-flash"></div>
+    <div class="strike-line"></div>
+    <div class="text-center text-white" style="z-index: 10001; opacity: 0; transform: scale(0.5);" id="congrats-text">
+        <h1 class="display-1 fw-bold mb-0" style="color: #00f2ff; text-shadow: 0 0 20px rgba(0,242,255,0.8);">CONTRACT SEALED</h1>
+        <p class="h4">Welcome to the Empire.</p>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<script>
+    async function triggerAcceptance() {
+        const overlay = document.getElementById('thunder-strike-overlay');
+        const flash = overlay.querySelector('.strike-flash');
+        const bolt = overlay.querySelector('.strike-line');
+        const text = document.getElementById('congrats-text');
+        
+        // 1. Show Overlay
+        overlay.style.display = 'flex';
+        overlay.style.pointerEvents = 'all';
+        
+        // 2. Play Audio (Swoosh/Thunder) - Optional but high fidelity
+        // const audio = new Audio('/static/audio/thunder_strike.mp3');
+        // audio.play().catch(e => console.log('Audio disabled'));
+
+        // 3. Trigger Flash & Bolt
+        flash.style.animation = 'strike 0.5s ease-out';
+        bolt.style.animation = 'bolt-up 0.6s cubic-bezier(0.19, 1, 0.22, 1) forwards';
+        
+        setTimeout(() => {
+            text.style.transition = 'all 0.8s cubic-bezier(0.34, 1.56, 0.64, 1)';
+            text.style.opacity = '1';
+            text.style.transform = 'scale(1)';
+            
+            // Trigger Confetti alongside strike
+            confetti({
+                particleCount: 150,
+                spread: 70,
+                origin: { y: 0.6 },
+                colors: ['#00f2ff', '#ffffff', '#6366f1']
+            });
+        }, 600);
+
+        // 4. Submit form after animation
+        setTimeout(() => {
+            document.getElementById('acceptForm').submit();
+        }, 3500);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        // Initial soft celebration
+        confetti({
+            particleCount: 80,
+            spread: 100,
+            origin: { y: 0.8 },
+            colors: ['#00f2ff', '#ffffff']
+        });
+    });
+</script>
+{% endblock %}

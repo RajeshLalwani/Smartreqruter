@@ -1,0 +1,156 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="report-container mt-5">
+    <div class="row gx-5">
+        <div class="col-12 text-center mb-5" data-aos="fade-down">
+            <h1 class="glow-text text-uppercase tracking-widest display-4 mb-2">Communication Health</h1>
+            <p class="text-theme-secondary">Post-Interview Behavioral & Vocal Analysis Report</p>
+            <div class="badge bg-info bg-opacity-10 text-info px-4 py-2 rounded-pill mt-2">
+                <i class="fas fa-check-circle me-1"></i> Analysis Complete
+            </div>
+        </div>
+
+        <div class="col-lg-6 mb-4" data-aos="fade-right">
+            <div class="glass-panel p-5 text-center h-100 position-relative overflow-hidden">
+                <div class="bg-blur-circle pulse-slow"></div>
+                <h4 class="text-theme mb-4"><i class="fas fa-bullhorn text-info me-2"></i> Clarity Score</h4>
+                <div class="score-circle mx-auto mb-3" style="--score: {{ avg_clarity }}%;">
+                    <span>{{ avg_clarity }}<small>%</small></span>
+                </div>
+                <p class="text-theme-secondary mb-0 mt-4 px-3">Based on articulation, pitch stability, and speech consistency.</p>
+            </div>
+        </div>
+
+        <div class="col-lg-6 mb-4" data-aos="fade-left" data-aos-delay="100">
+            <div class="glass-panel p-5 text-center h-100 position-relative overflow-hidden">
+                <div class="bg-blur-circle bg-magenta pulse-slow" style="animation-delay: 1s;"></div>
+                <h4 class="text-theme mb-4"><i class="fas fa-bolt text-danger me-2"></i> Energy Levels</h4>
+                <div class="score-circle border-magenta mx-auto mb-3" style="--score: {{ avg_energy }}%;">
+                    <span class="text-danger">{{ avg_energy }}<small>%</small></span>
+                </div>
+                <p class="text-theme-secondary mb-0 mt-4 px-3">Based on volume tracking, speed, and RMS energy extraction.</p>
+            </div>
+        </div>
+
+        <div class="col-12 mt-4" data-aos="fade-up" data-aos-delay="200">
+            <div class="glass-panel p-5 border-info border-opacity-25 pb-4">
+                <h5 class="text-theme fw-bold mb-4"><i class="fas fa-water text-info me-2"></i> Vocal Resonance Waveform</h5>
+                <div class="waveform-container d-flex align-items-center justify-content-center gap-1" style="height: 120px;">
+                    <!-- Auto-generated waveform bars representing the session -->
+                    {% for i in "12345678901234567890"|make_list %}
+                        <div class="report-bar bg-info" style="animation-delay: 0.{{ forloop.counter }}s;"></div>
+                    {% endfor %}
+                </div>
+                <div class="mt-4 text-center">
+                    <p class="small text-theme-secondary mb-0">The waveform visualizes periods of high stress (shaky pitch) and deep confidence (steady amplitude) detected throughout the assessment.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-12 mt-5 text-center">
+            <a href="{% url 'dashboard' %}" class="btn btn-outline-info rounded-pill px-5 py-2 shadow-inner hover-scale">
+                <i class="fas fa-arrow-left me-2"></i> Return to Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+
+<style>
+    :root {
+        --midnight-dark: #0a0b10;
+        --electric-cyan: #00d2ff;
+        --neon-pink: #ff00ff;
+    }
+
+    .report-container {
+        max-width: 1000px;
+        margin: auto;
+    }
+
+    .glass-panel {
+        background: rgba(255, 255, 255, 0.03);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    }
+
+    .bg-blur-circle {
+        position: absolute;
+        top: 20%;
+        left: 20%;
+        width: 150px;
+        height: 150px;
+        background: rgba(0, 210, 255, 0.1);
+        filter: blur(50px);
+        border-radius: 50%;
+        z-index: 0;
+    }
+
+    .bg-magenta {
+        background: rgba(255, 0, 255, 0.1);
+        left: auto;
+        right: 20%;
+    }
+
+    .pulse-slow {
+        animation: pulseBg 4s infinite alternate;
+    }
+
+    @keyframes pulseBg {
+        0% { transform: scale(1); opacity: 0.5; }
+        100% { transform: scale(1.5); opacity: 1; }
+    }
+
+    .score-circle {
+        position: relative;
+        width: 160px;
+        height: 160px;
+        border-radius: 50%;
+        background: conic-gradient(var(--electric-cyan) var(--score), rgba(255,255,255,0.05) 0);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1;
+        box-shadow: 0 0 20px rgba(0, 210, 255, 0.2);
+    }
+    
+    .score-circle::before {
+        content: "";
+        position: absolute;
+        width: 130px;
+        height: 130px;
+        background: var(--midnight-dark);
+        border-radius: 50%;
+    }
+    
+    .border-magenta {
+        background: conic-gradient(var(--neon-pink) var(--score), rgba(255,255,255,0.05) 0);
+        box-shadow: 0 0 20px rgba(255, 0, 255, 0.2);
+    }
+
+    .score-circle span {
+        position: relative;
+        font-size: 2.5rem;
+        font-weight: 800;
+        color: var(--electric-cyan);
+        z-index: 2;
+        text-shadow: 0 0 10px rgba(0, 210, 255, 0.5);
+    }
+
+    .report-bar {
+        width: 15px;
+        height: 20px;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0, 210, 255, 0.6);
+        animation: postWave 1.5s infinite alternate ease-in-out;
+    }
+
+    @keyframes postWave {
+        0% { transform: scaleY(0.4); opacity: 0.6; }
+        100% { transform: scaleY(3.5); opacity: 1; }
+    }
+</style>
+{% endblock %}

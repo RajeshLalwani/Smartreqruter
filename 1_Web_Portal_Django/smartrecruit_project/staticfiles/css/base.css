@@ -1,0 +1,72 @@
+/* 
+   SMARTRECRUIT GLOBAL THEME ENGINE
+   Inspired by Jobify (Light) and AgriYield (Dark)
+*/
+
+:root {
+    --transition-speed: 0.4s;
+    --glass-blur: 16px;
+}
+
+/* AGRIYIELD DARK THEME PROTOCOL */
+[data-bs-theme="dark"] {
+    --bg-main: #0a0b10;
+    --bg-card: rgba(17, 25, 40, 0.75);
+    --brand: #00E5FF; /* Electric Cyan */
+    --brand-glow: rgba(0, 229, 255, 0.4);
+    --glow-cyan: 0 0 20px rgba(0, 229, 255, 0.35);
+    --text-primary: #fdfcfb;
+    --text-secondary: #8899a6;
+    --border-color: rgba(255, 255, 255, 0.1);
+    --glass-bg: rgba(255, 255, 255, 0.05);
+}
+
+/* JOBIFY LIGHT THEME PROTOCOL */
+[data-bs-theme="light"] {
+    --bg-main: #fdfcfb;
+    --bg-card: rgba(255, 255, 255, 0.8);
+    --brand: #2563eb; /* Royal Blue */
+    --brand-glow: rgba(37, 99, 235, 0.2);
+    --text-primary: #1a1a10;
+    --text-secondary: #4f5b62;
+    --border-color: rgba(0, 0, 0, 0.08);
+    --glass-bg: rgba(255, 255, 255, 0.1);
+}
+
+/* GLOBAL THEME TRANSITION */
+.theme-transition {
+    transition: background-color var(--transition-speed) ease, 
+                color var(--transition-speed) ease, 
+                border-color var(--transition-speed) ease,
+                box-shadow var(--transition-speed) ease;
+}
+
+body {
+    background: var(--bg-main);
+    color: var(--text-primary);
+    min-height: 100vh;
+}
+
+/* PREMIUM GLASSMORPHISM */
+.glass-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1);
+    transition: transform var(--transition-speed) cubic-bezier(0.175, 0.885, 0.32, 1.275), 
+                box-shadow var(--transition-speed) ease;
+}
+
+/* HOVER DYNAMICS */
+.glass-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 40px 0 var(--brand-glow);
+    border-color: var(--brand);
+}
+
+/* UTILITIES */
+.text-brand { color: var(--brand) !important; }
+.bg-brand { background-color: var(--brand) !important; }
+.border-brand { border-color: var(--brand) !important; }

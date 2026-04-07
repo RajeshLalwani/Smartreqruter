@@ -1,0 +1,235 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Interview Schedule | SmartRecruit{% endblock %}
+
+{% block body_class %}has-sidebar{% endblock %}
+
+{% block sidebar %}
+    {% include 'sidebar.html' %}
+{% endblock %}
+
+{% block content %}
+<style>
+    /* Z-INDEX SAFEGUARDS & AESTHETICS */
+    .modal { z-index: 2000 !important; }
+    .modal-backdrop { z-index: 1050 !important; }
+    
+    .pulse-animation-slow { animation: pulse 3s infinite; }
+    @keyframes pulse { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.6; transform: scale(1.1); } 100% { opacity: 1; transform: scale(1); } }
+    
+    .avatar-circle {
+        width: 42px; height: 42px;
+        background: rgba(13, 202, 240, 0.1); border: 1px solid rgba(13, 202, 240, 0.25);
+        color: var(--accent-glow, #0dcaf0); font-weight: bold; display: flex; align-items: center; justify-content: center; border-radius: 50%;
+    }
+    
+    /* Hover Row Transition */
+    .table-hover tbody tr:hover td { background-color: rgba(255, 255, 255, 0.03) !important; }
+</style>
+
+<div class="container-fluid">
+
+    <!-- Hero Header -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-5 gap-3" data-aos="fade-down">
+        <div>
+            <div class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-3 py-2 rounded-pill mb-3 text-uppercase tracking-widest small fw-bold">
+                <i class="fas fa-video me-2 pulse-animation-slow"></i>Neural Interview Pipeline
+            </div>
+            <h1 class="display-6 fw-bold text-theme mb-2 tracking-tight">Interview <span class="text-transparent bg-clip-text bg-gradient-primary">Command Center</span></h1>
+            <p class="lead text-theme-secondary mb-0">Track real-time candidate evaluations, meeting endpoints, and neural assessments.</p>
+        </div>
+        
+        {% if user.is_recruiter or user.is_staff or user.is_superuser %}
+        <button class="btn btn-primary btn-lg rounded-pill px-4 shadow-lg hover-scale fw-bold d-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#scheduleModal" style="background-color: var(--accent-color, #00d2ff); border-color: var(--accent-color, #00d2ff); color: var(--bg-color, #0a0b10);">
+            <i class="fas fa-calendar-plus"></i> Initialize Meeting
+        </button>
+        {% endif %}
+    </div>
+
+    <!-- Mandatory Actions (Pending) -->
+    {% if pending_applications %}
+    <div class="mb-5" data-aos="fade-up">
+        <h5 class="fw-bold text-theme mb-4 d-flex align-items-center">
+            <i class="fas fa-exclamation-triangle text-warning me-3 pulse-animation-slow"></i> 
+            Pending Pipeline Actions <span class="badge bg-warning bg-opacity-25 text-warning ms-3 rounded-pill">{{ pending_applications|length }}</span>
+        </h5>
+        
+        <div class="row g-4">
+            {% for app in pending_applications %}
+            <div class="col-md-6 col-lg-4">
+                <div class="glass-panel p-4 h-100 border-warning border-opacity-25 shadow-sm hover-shadow-lg transition-all d-flex flex-column justify-content-between position-relative overflow-hidden group" style="background-color: var(--bg-color, var(--panel-bg)); border-color: var(--accent-color, var(--primary)) !important;" data-aos="zoom-in" data-aos-delay="50">
+                    <div class="position-absolute top-0 end-0 p-3 opacity-10"><i class="fas fa-clock fa-4x text-warning"></i></div>
+                    
+                    <div class="position-relative z-2">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            {% with status=app.get_status_display %}
+                            <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 px-2 py-1">{{ status }}</span>
+                            {% endwith %}
+                            <div class="rounded-circle bg-dark bg-opacity-50 p-2 border border-secondary border-opacity-25 shadow-inner"><i class="fas fa-hourglass-half text-secondary"></i></div>
+                        </div>
+                        <h6 class="fw-bold text-theme mb-1 fs-5">{{ app.job.title|truncatechars:35 }}</h6>
+                        <p class="text-theme-secondary small mb-4">Awaiting next stage scheduling sequence for candidate progression.</p>
+                    </div>
+                    
+                    <a href="{% url 'schedule_interview_view' app.id %}" class="btn btn-sm btn-outline-warning w-100 rounded-pill hover-scale fw-bold position-relative z-2">
+                        <i class="fas fa-calendar-check me-2"></i> Sequence Now
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Metric HUD -->
+    <div class="row g-4 mb-5" data-aos="fade-up" data-aos-delay="100">
+        <!-- Upcoming -->
+        <div class="col-md-4">
+            <div class="glass-panel p-4 d-flex align-items-center justify-content-between rounded-4 border-info border-opacity-25 hover-scale shadow-sm">
+                <div>
+                    <h6 class="text-theme-secondary small text-uppercase tracking-widest fw-bold mb-2">Upcoming Events</h6>
+                    <h3 class="fw-bold text-theme mb-0 display-6">{{ total_scheduled }}</h3>
+                </div>
+                <div class="rounded-circle d-flex align-items-center justify-content-center bg-info bg-opacity-10 shadow-inner" style="width: 55px; height: 55px;">
+                    <i class="fas fa-video text-info fs-4"></i>
+                </div>
+            </div>
+        </div>
+        <!-- Completed -->
+        <div class="col-md-4">
+            <div class="glass-panel p-4 d-flex align-items-center justify-content-between rounded-4 border-success border-opacity-25 hover-scale shadow-sm">
+                <div>
+                    <h6 class="text-theme-secondary small text-uppercase tracking-widest fw-bold mb-2">Completed Logs</h6>
+                    <h3 class="fw-bold text-theme mb-0 display-6">{{ total_completed|default:"0" }}</h3>
+                </div>
+                <div class="rounded-circle d-flex align-items-center justify-content-center bg-success bg-opacity-10 shadow-inner" style="width: 55px; height: 55px;">
+                    <i class="fas fa-check-circle text-success fs-4"></i>
+                </div>
+            </div>
+        </div>
+        <!-- Cancelled -->
+        <div class="col-md-4">
+            <div class="glass-panel p-4 d-flex align-items-center justify-content-between rounded-4 border-danger border-opacity-25 hover-scale shadow-sm">
+                <div>
+                    <h6 class="text-theme-secondary small text-uppercase tracking-widest fw-bold mb-2">Terminated</h6>
+                    <h3 class="fw-bold text-theme mb-0 display-6">{{ total_cancelled|default:"0" }}</h3>
+                </div>
+                <div class="rounded-circle d-flex align-items-center justify-content-center bg-danger bg-opacity-10 shadow-inner" style="width: 55px; height: 55px;">
+                    <i class="fas fa-times-circle text-danger fs-4"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Master Schedule Table -->
+    <div class="glass-panel p-0 rounded-4 shadow-lg border-secondary border-opacity-25 overflow-hidden d-flex flex-column hover-lift" data-aos="fade-up" data-aos-delay="200">
+        <div class="p-4 border-bottom border-secondary border-opacity-10 bg-secondary bg-opacity-10 d-flex justify-content-between align-items-center">
+            <h5 class="fw-bold mb-0 text-theme d-flex align-items-center gap-2">
+                <i class="fas fa-calendar-alt text-primary"></i> Master Registry
+            </h5>
+            <div class="badge bg-secondary bg-opacity-25 text-theme border border-secondary border-opacity-50 px-3 py-2 rounded-pill shadow-inner">
+                {{ interviews|length }} Logs Found
+            </div>
+        </div>
+
+        <div class="table-responsive flex-grow-1">
+            <table class="table table-borderless align-middle mb-0 w-100 table-hover" style="--bs-table-bg: transparent; color: inherit;">
+                <thead class="bg-secondary bg-opacity-10 border-bottom border-secondary border-opacity-25 text-theme-secondary small text-uppercase tracking-widest" style="backdrop-filter: blur(10px);">
+                    <tr>
+                        <th class="ps-4 py-3 border-0">Timestamp</th>
+                        <th class="py-3 border-0">Candidate Entity</th>
+                        <th class="py-3 border-0">Designation</th>
+                        <th class="py-3 border-0">Vector Status</th>
+                        <th class="text-end pe-4 py-3 border-0">Access</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for interview in interviews %}
+                    <tr class="border-bottom border-light border-opacity-5 transition-all">
+                        <td class="ps-4 py-3">
+                            <div class="fw-bold text-theme mb-1">{{ interview.scheduled_time|date:"M d, Y" }}</div>
+                            <div class="text-info small fw-bold tracking-widest"><i class="far fa-clock me-1"></i>{{ interview.scheduled_time|time:"H:i T" }}</div>
+                        </td>
+                        <td class="py-3">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="avatar-circle shadow-inner flex-shrink-0" style="color: var(--accent-color, #0dcaf0); border-color: var(--accent-color, rgba(13,202,240,0.25));">{{ interview.application.candidate.full_name|slice:":1"|upper|default:"C" }}</div>
+                                <div>
+                                    <div class="fw-bold text-theme mb-0">{{ interview.application.candidate.full_name|default:"Candidate" }}</div>
+                                    <div class="text-theme-secondary small" style="font-size: 0.75rem;">{{ interview.application.candidate.email }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="py-3">
+                            <span class="badge bg-secondary bg-opacity-25 text-theme border border-secondary border-opacity-50 px-2 py-1 shadow-inner fw-normal"><i class="fas fa-crosshairs text-theme-secondary me-1"></i>{{ interview.application.job.title|truncatechars:25 }}</span>
+                        </td>
+                        <td class="py-3">
+                            {% if interview.status == 'SCHEDULED' %}
+                            <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25 px-2 py-1 rounded-pill"><i class="fas fa-broadcast-tower me-1 pulse-animation-slow" style="font-size: 0.65rem;"></i>Active</span>
+                            {% elif interview.status == 'CANCELLED' %}
+                            <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 px-2 py-1 rounded-pill"><i class="fas fa-times me-1" style="font-size: 0.65rem;"></i>Terminated</span>
+                            {% else %}
+                            <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2 py-1 rounded-pill"><i class="fas fa-check-double me-1" style="font-size: 0.65rem;"></i>Concluded</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end pe-4 py-3">
+                            {% if interview.meeting_link %}
+                            <a href="{{ interview.meeting_link }}" target="_blank" class="btn btn-sm btn-primary rounded-pill px-3 shadow-sm hover-scale fw-bold"><i class="fas fa-video me-1"></i> Connect</a>
+                            {% else %}
+                            <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25 px-3 py-2 rounded-pill fw-normal"><i class="fas fa-link-slash me-1"></i>Offline</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center py-5">
+                            <div class="p-4 bg-secondary bg-opacity-10 rounded-4 d-inline-block border border-secondary border-opacity-10 hover-scale-card">
+                                <i class="fas fa-calendar-times fa-3x text-theme-secondary opacity-50 mb-3"></i>
+                                <h6 class="fw-bold text-theme mb-1">Zero Database Entries</h6>
+                                <p class="text-theme-secondary small mb-0">{% if user.is_recruiter %}The schedule is empty. Initialize a meeting from the candidate pool.{% else %}No pending assessments detected in your queue.{% endif %}</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Scheduling Modal -->
+<div class="modal fade" id="scheduleModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content glass-panel border border-secondary border-opacity-50 shadow-lg" style="backdrop-filter: blur(20px);">
+            <div class="modal-header border-bottom border-secondary border-opacity-10">
+                <h5 class="modal-title fw-bold text-theme d-flex align-items-center gap-2">
+                    <i class="fas fa-network-wired text-primary"></i> Event Initialization
+                </h5>
+                <button type="button" class="btn-close opacity-50 text-theme" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            
+            <div class="modal-body text-center py-5 position-relative overflow-hidden">
+                <div class="position-absolute top-50 start-50 translate-middle opacity-5 w-100 h-100 d-flex justify-content-center align-items-center pointer-events-none">
+                    <i class="fas fa-vector-square fa-10x text-primary"></i>
+                </div>
+                
+                <div class="position-relative z-2">
+                    <div class="mb-4">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center bg-secondary bg-opacity-10 border border-secondary border-opacity-25 shadow-inner mx-auto hover-scale-card" style="width: 80px; height: 80px;">
+                            <i class="fas fa-users-viewfinder fa-2x text-info"></i>
+                        </div>
+                    </div>
+                    
+                    <h5 class="fw-bold text-theme mb-2">Target Required</h5>
+                    <p class="text-theme-secondary small mb-4 px-4 lh-base">Interview protocols must be anchored to an active application. Please navigate to the desired candidate profile to trigger the scheduling sequence.</p>
+                    
+                    <a href="{% url 'candidate_list' %}" class="btn btn-primary rounded-pill px-5 shadow-sm hover-scale fw-bold">
+                        <i class="fas fa-search me-2"></i> Access Candidate Matrix
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

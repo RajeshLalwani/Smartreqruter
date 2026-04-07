@@ -1,0 +1,44 @@
+# SmartRecruit - Technology Stack Deep Dive
+**Platform Type:** AI-Powered Recruitment & HR Management Portal
+
+The SmartRecruit project utilizes a modern, decoupled architecture allowing for high scalability, robust data management, and the seamless integration of heavy Artificial Intelligence processing logic.
+
+---
+
+## 1. Backend Framework & Architecture
+**Primary Framework:** Python / Django (Version 4.x+)
+**API Layer:** Django REST Framework (DRF)
+
+*   **Why Django?** Django's "batteries-included" philosophy provided us with an extremely secure Model-View-Template (MVT) architecture. We heavily utilized its built-in authentication system to manage complex Permission Groups (Recruiters vs. Candidates).
+*   **DRF (Django REST Framework):** Used to expose JSON-based lightweight endpoints for specific asynchronous front-end requests (like fetching real-time Analytics data for graphs without reloading the page). 
+*   **ORM (Object-Relational Mapping):** Allows us to interact with the database using Python objects rather than raw SQL, preventing SQL Injection attacks.
+
+## 2. Database Management
+**Development DB:** SQLite3
+**Production Target:** PostgreSQL
+
+*   **Schema Design:** The schema relies on highly relational data. For example, a `Job` model has a one-to-many relationship with `Application`, which in turn has related `Interview` and `Assessment` objects.
+*   **Data Integrity:** Foreign keys use `on_delete=models.CASCADE` carefully to ensure that deleting a Job also cleans up orphaned applications and resumes.
+
+## 3. Artificial Intelligence & Machine Learning (The Core Value)
+**Language:** Python 3.10
+*   **Natural Language Processing (NLP):** `SpaCy` (`en_core_web_sm` model). Used inside the `Resume_Parser` module to perform Named Entity Recognition (NER), extracting names, emails, and exact skills from raw unstructured PDF/DOCX text.
+*   **Data Ranking & Scoring:** `Scikit-learn` (specifically TF-IDF Vectorization and Cosine Similarity). This mathematically compares a candidate's parsed skills against the Job Description to assign an objective `ai_score` (out of 100), shortlisting hundreds of resumes instantly.
+*   **Computer Vision (Proctoring):** `OpenCV`. Utilized during the assessment phase to monitor webcam feeds, tracking eye movement and detecting multiple faces to flag cheating attempts.
+*   **Agentic Conversational AI:** Implementation of Large Language Model (LLM) APIs (or prompt-based logic) to conduct dynamic Round 3 Technical Interviews, responding logically to candidate answers.
+
+## 4. Frontend Application Layer
+**Core Trio:** HTML5, CSS3, Vanilla JavaScript
+**Frameworks:** Bootstrap 5.x
+
+*   **Design Philosophy:** Avoided heavy, bloated JS frameworks (like React/Angular) in favor of lightning-fast rendered Django Templates enhanced with Vanilla JavaScript for DOM manipulation.
+*   **Styling Structure:** Used a master `enhancements.css` file to manage global CSS variables (`:root`). This enabled our dynamic "Appearance" engine—allowing real-time switching of colors, gradients, and font families via DOM updates and `localStorage`.
+*   **Data Visualization:** `Chart.js` is implemented on the Recruiter Dashboard to render beautiful, animated application funnels, bar charts, and historical metrics.
+
+## 5. File & Media Management
+*   **Resume/PDF Parsing:** `PyPDF2` (or similar libraries). Used to read binary files uploaded via `multipart/form-data` forms securely.
+*   **Dynamic Document Generation:** We use HTML-to-PDF rendering logic to automatically take an accepted Candidate's details and generate a signed Offer Letter PDF dynamically.
+
+## 6. Development & Deployment Tools
+*   **Environment Management:** Python `venv` ensures local dependencies (like heavy ML libraries) do not conflict with the system OS.
+*   **Version Control:** Git, utilizing feature-branching for our 3-person collaborative efforts.

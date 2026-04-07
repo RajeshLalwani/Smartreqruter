@@ -1,0 +1,29 @@
+
+===================================================
+SMARTRECRUIT - HIGH LEVEL SYSTEM ARCHITECTURE
+===================================================
+
+[ CANDIDATE ]      [ RECRUITER ]
+      |                  |
+      | (Apply)          | (View Results)
+      v                  v
++-------------------------------------------------+
+|             WEB PORTAL (DJANGO)                 |
+|       (Handles Requests, Auth, Database)        |
++-------------------------------------------------+
+      |                  ^
+      | (Send Resume)    | (Return Score)
+      v                  |
++-------------------------------------------------+
+|               AI PROCESSING UNIT                |
+|  1. Resume Parser (NLTK/Spacy) -> Extract Skill |
+|  2. Proctoring (OpenCV) -> Detect Face/Fraud    |
+|  3. Interview Bot (Speech) -> Auto-Interview    |
++-------------------------------------------------+
+      |                  ^
+      | (Store Data)     | (Fetch History)
+      v                  |
++-------------------------------------------------+
+|               DATABASE (PostgreSQL)             |
+|   (Candidates, Jobs, Test_Scores, Interviews)   |
++-------------------------------------------------+

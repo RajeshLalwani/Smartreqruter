@@ -1,0 +1,394 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+
+    <!-- Header -->
+    <div class="glass-panel p-4 mb-4"
+        style="background: linear-gradient(135deg, rgba(255,152,0,0.12), rgba(255,87,34,0.12), rgba(102,126,234,0.08)); border: 1px solid rgba(255,152,0,0.35);">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div>
+                <h3 class="fw-bold text-theme mb-1">
+                    🎯 Talent Intelligence Report
+                </h3>
+                <p class="text-secondary mb-0">
+                    Salary Estimation · Cultural Fit · Offer Acceptance — for
+                    <span class="fw-bold text-warning">{{ application.candidate.full_name }}</span>
+                    applying to
+                    <span class="fw-bold text-theme">{{ application.job.title }}</span>
+                </p>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="{% url 'application_details' application.id %}"
+                    class="btn btn-outline-secondary rounded-pill px-4">
+                    <i class="fas fa-arrow-left me-2"></i>Back
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top KPI Row -->
+    <div class="row g-4 mb-4">
+
+        <!-- Salary Range Card -->
+        <div class="col-xl-4 col-md-6">
+            <div class="glass-panel p-4 h-100 position-relative overflow-hidden">
+                <div class="position-absolute top-0 end-0 p-3 opacity-10" style="font-size: 4rem;">💰</div>
+                <div class="d-flex align-items-center gap-2 mb-3">
+                    <div class="rounded-circle bg-success bg-opacity-15 d-flex align-items-center justify-content-center"
+                        style="width: 40px; height: 40px;">
+                        <i class="fas fa-rupee-sign text-success"></i>
+                    </div>
+                    <span class="fw-bold text-muted small text-uppercase">AI Salary Estimate</span>
+                </div>
+                <div class="d-flex align-items-end gap-2 mb-2">
+                    <h2 class="fw-bold text-theme mb-0">
+                        ₹{{ salary.salary_min }}–{{ salary.salary_max }}
+                    </h2>
+                    <span class="text-muted small mb-1">LPA</span>
+                </div>
+                <div
+                    class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 rounded-pill px-3 py-1 mb-3">
+                    Mid: ₹{{ salary.salary_mid }} LPA
+                </div>
+                <div class="d-flex gap-4 text-center border-top border-light border-opacity-10 pt-3">
+                    <div>
+                        <div class="small text-muted">Level</div>
+                        <div class="fw-bold small">{{ salary.experience_level }}</div>
+                    </div>
+                    <div>
+                        <div class="small text-muted">Confidence</div>
+                        <div
+                            class="fw-bold small text-{% if salary.confidence == 'Very High' or salary.confidence == 'High' %}success{% elif salary.confidence == 'Moderate' %}warning{% else %}danger{% endif %}">
+                            {{ salary.confidence }}
+                        </div>
+                    </div>
+                    <div>
+                        <div class="small text-muted">Role</div>
+                        <div class="fw-bold small">{{ salary.role_matched }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cultural Fit Card -->
+        <div class="col-xl-4 col-md-6">
+            <div class="glass-panel p-4 h-100 position-relative overflow-hidden">
+                <div class="position-absolute top-0 end-0 p-3 opacity-10" style="font-size: 4rem;">🤝</div>
+                <div class="d-flex align-items-center gap-2 mb-3">
+                    <div class="rounded-circle bg-info bg-opacity-15 d-flex align-items-center justify-content-center"
+                        style="width: 40px; height: 40px;">
+                        <i class="{{ culture.fit_icon }} text-info"></i>
+                    </div>
+                    <span class="fw-bold text-muted small text-uppercase">Cultural Fit Score</span>
+                </div>
+                <div class="d-flex align-items-end gap-2 mb-3">
+                    <h2 class="fw-bold text-theme mb-0">{{ culture.overall_score }}%</h2>
+                </div>
+                <span
+                    class="badge bg-{{ culture.fit_color }} bg-opacity-15 text-{{ culture.fit_color }} border border-{{ culture.fit_color }} border-opacity-25 rounded-pill px-3 py-1 mb-3">
+                    {{ culture.fit_label }}
+                </span>
+                <div class="progress mb-2" style="height: 8px; border-radius: 4px;">
+                    <div class="progress-bar bg-{{ culture.fit_color }}"
+                        style="width: {{ culture.overall_score }}%; transition: width 1.5s ease;"></div>
+                </div>
+                <div class="d-flex flex-wrap gap-1 mt-2">
+                    {% for signal in culture.top_signals %}
+                    <span class="badge rounded-pill"
+                        style="background: rgba(0,176,255,0.12); border: 1px solid rgba(0,176,255,0.25); color: #4FC3F7; font-size: 0.7rem;">{{                         signal }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Offer Acceptance Card -->
+        <div class="col-xl-4 col-md-12">
+            <div class="glass-panel p-4 h-100 position-relative overflow-hidden">
+                <div class="position-absolute top-0 end-0 p-3 opacity-10" style="font-size: 4rem;">🤲</div>
+                <div class="d-flex align-items-center gap-2 mb-3">
+                    <div class="rounded-circle bg-warning bg-opacity-15 d-flex align-items-center justify-content-center"
+                        style="width: 40px; height: 40px;">
+                        <i class="fas fa-handshake text-warning"></i>
+                    </div>
+                    <span class="fw-bold text-muted small text-uppercase">Offer Acceptance Probability</span>
+                </div>
+                <div class="d-flex align-items-end gap-2 mb-3">
+                    <h2 class="fw-bold text-theme mb-0">{{ offer.probability }}%</h2>
+                </div>
+                <span class="badge bg-{{ offer.color }} rounded-pill px-3 py-1 mb-3">
+                    {{ offer.label }}
+                </span>
+                <div class="progress mb-3" style="height: 8px;">
+                    <div class="progress-bar bg-{{ offer.color }}"
+                        style="width: {{ offer.probability }}%; transition: width 1.5s ease;"></div>
+                </div>
+                <div class="d-flex gap-3 text-center border-top border-light border-opacity-10 pt-3">
+                    <div>
+                        <div class="small text-muted">Salary Comp.</div>
+                        <div
+                            class="fw-bold small {% if offer.salary_competitiveness >= 100 %}text-success{% elif offer.salary_competitiveness >= 90 %}text-warning{% else %}text-danger{% endif %}">
+                            {{ offer.salary_competitiveness }}%
+                        </div>
+                    </div>
+                    <div>
+                        <div class="small text-muted">Culture Fit</div>
+                        <div class="fw-bold small">{{ culture.overall_score }}%</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+
+        <!-- LEFT: Salary Deep Dive -->
+        <div class="col-lg-6">
+
+            <!-- Salary Breakdown -->
+            <div class="glass-panel p-4 mb-4">
+                <h5 class="fw-bold text-theme mb-4">
+                    <i class="fas fa-chart-bar me-2 text-success"></i>Salary Factor Breakdown
+                </h5>
+                <canvas id="salaryFactorChart" height="200"></canvas>
+                <div class="mt-4 p-3 rounded-3"
+                    style="background: rgba(0,200,83,0.08); border: 1px solid rgba(0,200,83,0.25);">
+                    <div class="row text-center g-2">
+                        <div class="col-3">
+                            <div class="small text-muted">P25</div>
+                            <div class="fw-bold text-success">₹{{ salary.market_percentiles.p25 }}</div>
+                        </div>
+                        <div class="col-3">
+                            <div class="small text-muted">P50</div>
+                            <div class="fw-bold text-primary">₹{{ salary.market_percentiles.p50 }}</div>
+                        </div>
+                        <div class="col-3">
+                            <div class="small text-muted">P75</div>
+                            <div class="fw-bold text-warning">₹{{ salary.market_percentiles.p75 }}</div>
+                        </div>
+                        <div class="col-3">
+                            <div class="small text-muted">P90</div>
+                            <div class="fw-bold text-danger">₹{{ salary.market_percentiles.p90 }}</div>
+                        </div>
+                    </div>
+                    <div class="small text-muted text-center mt-1">Market Percentiles (INR LPA)</div>
+                </div>
+                <!-- Negotiation Zone -->
+                <div class="mt-3 p-3 rounded-3"
+                    style="background: rgba(255,193,7,0.08); border-left: 4px solid #FFC107;">
+                    <div class="fw-bold small text-warning mb-1">
+                        <i class="fas fa-balance-scale me-2"></i>Negotiation Zone
+                    </div>
+                    <div class="text-theme fw-bold">
+                        ₹{{ salary.negotiation_zone.low }} — ₹{{ salary.negotiation_zone.high }} LPA
+                    </div>
+                    <div class="small text-muted mt-1">Fair negotiation bandwidth for this candidate profile.</div>
+                </div>
+            </div>
+
+            <!-- Premium Skills -->
+            {% if salary.premium_skills %}
+            <div class="glass-panel p-4 mb-4">
+                <h6 class="fw-bold text-theme mb-3">
+                    <i class="fas fa-star me-2 text-warning"></i>Premium Skills Detected
+                </h6>
+                <div class="d-flex flex-wrap gap-2">
+                    {% for skill in salary.premium_skills %}
+                    <span class="badge rounded-pill px-3 py-2"
+                        style="background: rgba(255,193,7,0.15); border: 1px solid rgba(255,193,7,0.4); color: #FFD740;">
+                        <i class="fas fa-bolt me-1"></i>{{ skill }}
+                    </span>
+                    {% endfor %}
+                </div>
+                <p class="small text-muted mt-3 mb-0">These high-demand skills command salary premiums in the current
+                    market.</p>
+            </div>
+            {% endif %}
+
+            <!-- Offer Risks & Boosters -->
+            <div class="glass-panel p-4">
+                <h6 class="fw-bold text-theme mb-3">
+                    <i class="fas fa-exclamation-triangle me-2 text-warning"></i>Offer Acceptance Signals
+                </h6>
+                {% if offer.risks %}
+                <div class="mb-3">
+                    <div class="small fw-bold text-danger text-uppercase mb-2">Risk Factors</div>
+                    {% for risk in offer.risks %}
+                    <div class="d-flex align-items-start gap-2 p-2 rounded-3 mb-2"
+                        style="background: rgba(255,82,82,0.08); border-left: 3px solid #FF5252;">
+                        <i class="fas fa-times-circle text-danger mt-1 small"></i>
+                        <span class="small">{{ risk }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                {% if offer.boosters %}
+                <div>
+                    <div class="small fw-bold text-success text-uppercase mb-2">Confidence Boosters</div>
+                    {% for booster in offer.boosters %}
+                    <div class="d-flex align-items-start gap-2 p-2 rounded-3 mb-2"
+                        style="background: rgba(0,200,83,0.08); border-left: 3px solid #00C853;">
+                        <i class="fas fa-check-circle text-success mt-1 small"></i>
+                        <span class="small">{{ booster }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- RIGHT: Cultural Fit Deep Dive -->
+        <div class="col-lg-6">
+
+            <!-- Cultural Fit Radar -->
+            <div class="glass-panel p-4 mb-4">
+                <h5 class="fw-bold text-theme mb-4">
+                    <i class="fas fa-chart-radar me-2 text-info"></i>Cultural Alignment Radar
+                </h5>
+                <canvas id="cultureRadarChart" height="280"></canvas>
+            </div>
+
+            <!-- Category Breakdown -->
+            <div class="glass-panel p-4 mb-4">
+                <h6 class="fw-bold text-theme mb-3">
+                    <i class="fas fa-th me-2 text-warning"></i>Culture Category Breakdown
+                </h6>
+                {% for category, data in culture.category_scores.items %}
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="small fw-semibold">{{ category }}</span>
+                        <span
+                            class="small fw-bold {% if data.score >= 70 %}text-success{% elif data.score >= 40 %}text-warning{% else %}text-danger{% endif %}">
+                            {{ data.score }}%
+                        </span>
+                    </div>
+                    <div class="progress mb-1" style="height: 6px;">
+                        <div class="progress-bar {% if data.score >= 70 %}bg-success{% elif data.score >= 40 %}bg-warning{% else %}bg-danger{% endif %}"
+                            style="width: {{ data.score }}%; transition: width 1.5s ease;"></div>
+                    </div>
+                    {% if data.matched %}
+                    <div class="d-flex flex-wrap gap-1">
+                        {% for kw in data.matched %}
+                        <span class="badge rounded-pill"
+                            style="background: rgba(0,176,255,0.1); color: #4FC3F7; font-size: 0.65rem;">{{ kw }}</span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Culture Recommendation -->
+            <div class="glass-panel p-4">
+                <h6 class="fw-bold text-theme mb-2">
+                    <i class="fas fa-robot me-2 text-primary"></i>AI Recommendation
+                </h6>
+                <div class="p-3 rounded-3"
+                    style="background: rgba(102,126,234,0.08); border-left: 4px solid rgba(102,126,234,0.5);">
+                    <p class="small mb-0">{{ culture.recommendation }}</p>
+                </div>
+                {% if culture.weak_areas %}
+                <div class="mt-3">
+                    <div class="small fw-bold text-muted text-uppercase mb-2">Areas to Probe in HR Round</div>
+                    <div class="d-flex flex-wrap gap-2">
+                        {% for area in culture.weak_areas %}
+                        <span class="badge rounded-pill px-3 py-1"
+                            style="background: rgba(255,152,0,0.12); border: 1px solid rgba(255,152,0,0.3); color: #FFB74D;">
+                            <i class="fas fa-question me-1" style="font-size: 0.65rem;"></i>{{ area }}
+                        </span>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+    const salaryFactors = {{ salary_factors_json| safe }};
+    const cultureData = {{ culture_radar_json| safe }};
+
+    // ─── Salary Factor Bar Chart ─────────────────────────────────
+    new Chart(document.getElementById('salaryFactorChart'), {
+        type: 'bar',
+        data: {
+            labels: Object.keys(salaryFactors).map(k => k),
+            datasets: [{
+                label: 'Contribution (%)',
+                data: Object.values(salaryFactors).map(v => typeof v === 'number' ? Math.abs(v) : 0),
+                backgroundColor: [
+                    'rgba(102,126,234,0.7)',
+                    'rgba(156,39,176,0.7)',
+                    'rgba(41,121,255,0.7)',
+                    'rgba(255,193,7,0.7)',
+                    'rgba(0,200,83,0.7)',
+                ],
+                borderRadius: 6,
+                borderWidth: 0,
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: (ctx) => ` +${ctx.parsed.x}% impact on salary`
+                    }
+                }
+            },
+            scales: {
+                x: { beginAtZero: true, ticks: { color: '#adb5bd', callback: v => v + '%' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+                y: { ticks: { color: '#adb5bd' }, grid: { display: false } }
+            }
+        }
+    });
+
+    // ─── Culture Radar Chart ─────────────────────────────────────
+    new Chart(document.getElementById('cultureRadarChart'), {
+        type: 'radar',
+        data: {
+            labels: Object.keys(cultureData),
+            datasets: [
+                {
+                    label: 'Cultural Alignment',
+                    data: Object.values(cultureData),
+                    backgroundColor: 'rgba(0, 176, 255, 0.12)',
+                    borderColor: '#00B0FF',
+                    pointBackgroundColor: '#00B0FF',
+                    borderWidth: 2,
+                },
+                {
+                    label: 'Target (100%)',
+                    data: Object.keys(cultureData).map(() => 100),
+                    backgroundColor: 'transparent',
+                    borderColor: 'rgba(255,255,255,0.1)',
+                    borderDash: [5, 5],
+                    borderWidth: 1,
+                    pointRadius: 0,
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                r: {
+                    min: 0, max: 100,
+                    angleLines: { color: 'rgba(255,255,255,0.1)' },
+                    grid: { color: 'rgba(255,255,255,0.08)' },
+                    pointLabels: { color: '#adb5bd', font: { size: 11, weight: 'bold' } },
+                    ticks: { display: false }
+                }
+            },
+            plugins: {
+                legend: { position: 'bottom', labels: { color: '#adb5bd', usePointStyle: true, font: { size: 11 } } }
+            }
+        }
+    });
+</script>
+{% endblock %}

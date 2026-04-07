@@ -1,0 +1,240 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Edit Question | SmartRecruit Intelligence{% endblock %}
+
+{% block body_class %}has-sidebar{% endblock %}
+
+{% block sidebar %}
+    {% include 'sidebar.html' %}
+{% endblock %}
+
+{% block content %}
+<style>
+    /* === INTERNAL FORM ARCHITECTURE === */
+    .glass-input, .form-control, .form-select {
+        background-color: rgba(0, 0, 0, 0.25) !important;
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        color: #e0e0e0 !important;
+        border-radius: 0.75rem !important;
+        padding: 0.8rem 1rem !important;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    }
+
+    [data-bs-theme="light"] .glass-input, 
+    [data-bs-theme="light"] .form-control,
+    [data-bs-theme="light"] .form-select {
+        background-color: rgba(255, 255, 255, 0.6) !important;
+        color: #1a1a1a !important;
+        border: 1px solid rgba(0, 0, 0, 0.1) !important;
+    }
+
+    .glass-input:hover, .form-control:hover, .form-select:hover {
+        background-color: rgba(255, 255, 255, 0.08) !important;
+        border-color: rgba(255, 255, 255, 0.2) !important;
+    }
+
+    [data-bs-theme="light"] .glass-input:hover, 
+    [data-bs-theme="light"] .form-control:hover,
+    [data-bs-theme="light"] .form-select:hover {
+        background-color: rgba(255, 255, 255, 0.9) !important;
+    }
+
+    .glass-input:focus, .form-control:focus, .form-select:focus {
+        background-color: rgba(0, 0, 0, 0.35) !important;
+        border-color: #00e676 !important; /* Neon Mint Focus */
+        color: white !important;
+        outline: none !important;
+        box-shadow: 0 0 15px rgba(0, 230, 118, 0.3) !important;
+    }
+
+    [data-bs-theme="light"] .glass-input:focus, 
+    [data-bs-theme="light"] .form-control:focus,
+    [data-bs-theme="light"] .form-select:focus {
+        background-color: #ffffff !important;
+        border-color: #007bff !important;
+        box-shadow: 0 0 15px rgba(0, 123, 255, 0.2) !important;
+        color: #1a1a1a !important;
+    }
+
+    .glass-input::placeholder, .form-control::placeholder {
+        color: rgba(255, 255, 255, 0.4) !important;
+    }
+
+    [data-bs-theme="light"] .glass-input::placeholder, 
+    [data-bs-theme="light"] .form-control::placeholder {
+        color: rgba(0, 0, 0, 0.4) !important;
+    }
+
+    .form-label-sv {
+        font-size: 0.75rem;
+        letter-spacing: 0.1rem;
+        color: var(--text-secondary) !important;
+        text-transform: uppercase;
+        font-weight: 800;
+        margin-bottom: 0.5rem;
+        display: block;
+        transition: color 0.3s ease;
+    }
+
+    .edit-hero {
+        background: linear-gradient(135deg, rgba(13, 110, 253, 0.08) 0%, rgba(13, 202, 240, 0.08) 100%);
+    }
+
+    /* Ripple Effect for Buttons */
+    .btn-ripple {
+        position: relative;
+        overflow: hidden;
+    }
+    
+    /* Animation Helpers */
+    .stagger-1 { animation-delay: 0.1s; }
+    .stagger-2 { animation-delay: 0.2s; }
+</style>
+
+<div class="container-fluid">
+    <!-- Header Section -->
+    <section class="page-hero edit-hero mb-4 glass-panel p-5 border-light border-opacity-10 shadow-lg position-relative overflow-hidden" data-aos="fade-down">
+        <div class="row align-items-center g-4 position-relative z-2">
+            <div class="col-lg-8">
+                <div class="badge bg-info text-info border-info bg-opacity-10 border border-opacity-25 px-3 py-2 rounded-pill mb-3 text-uppercase tracking-widest small fw-bold">
+                    <i class="fas fa-microchip me-2"></i>Intelligence Node Configuration
+                </div>
+                <h1 class="display-6 fw-bold text-white mb-2 tracking-tight">Calibrate <span class="text-transparent bg-clip-text bg-gradient-info">Knowledge Vector</span></h1>
+                <p class="lead text-secondary mb-0">Modify neural assessment parameters to maintain high-fidelity candidate evaluations.</p>
+            </div>
+            <div class="col-lg-4 text-lg-end">
+                <a href="{% url 'question_list' %}" class="btn btn-outline-secondary rounded-pill px-4 hover-scale shadow-sm">
+                    <i class="fas fa-arrow-left me-2"></i> Return to Registry
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <div class="row g-4">
+        <!-- Main Form Panel -->
+        <div class="col-xl-8" data-aos="fade-right" data-aos-delay="100">
+            <div class="glass-panel p-4 p-md-5 border-light border-opacity-10 shadow-lg" data-tilt>
+                <form method="POST" class="needs-validation" novalidate>
+                    {% csrf_token %}
+
+                    {% if form.errors %}
+                    <div class="alert glass-panel border-danger border-opacity-25 bg-danger bg-opacity-10 text-danger mb-4 d-flex align-items-center gap-3 py-3">
+                        <i class="fas fa-shield-virus fa-lg"></i>
+                        <div class="small fw-bold">Anomaly Detected: Please resolve validation errors below.</div>
+                    </div>
+                    {% endif %}
+
+                    <div class="mb-4">
+                        <label for="{{ form.text.id_for_label }}" class="form-label form-label-sv mb-2">Question String</label>
+                        {{ form.text }}
+                        {% if form.text.errors %}<div class="text-danger small mt-1 py-1 fw-bold"><i class="fas fa-info-circle me-1"></i> {{ form.text.errors.0 }}</div>{% endif %}
+                    </div>
+
+                    <div class="row g-4 mb-4">
+                        <div class="col-md-6">
+                            <label for="{{ form.category.id_for_label }}" class="form-label form-label-sv mb-2">Domain Category</label>
+                            {{ form.category }}
+                            {% if form.category.errors %}<div class="text-danger small mt-1 py-1 fw-bold"><i class="fas fa-info-circle me-1"></i> {{ form.category.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="{{ form.difficulty.id_for_label }}" class="form-label form-label-sv mb-2">Complexity Level</label>
+                            {{ form.difficulty }}
+                            {% if form.difficulty.errors %}<div class="text-danger small mt-1 py-1 fw-bold"><i class="fas fa-info-circle me-1"></i> {{ form.difficulty.errors.0 }}</div>{% endif %}
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="{{ form.options.id_for_label }}" class="form-label form-label-sv mb-2">Option Matrix (JSON)</label>
+                        <div class="position-relative">
+                            <div class="position-absolute top-50 start-0 translate-middle-y ps-3 text-secondary opacity-50 z-3" style="pointer-events: none;">
+                                <i class="fas fa-brackets-curly"></i>
+                            </div>
+                            <div class="ps-1">{{ form.options }}</div>
+                        </div>
+                        {% if form.options.errors %}<div class="text-danger small mt-1 py-1 fw-bold"><i class="fas fa-info-circle me-1"></i> {{ form.options.errors.0 }}</div>{% endif %}
+                        <div class="p-3 bg-dark bg-opacity-25 rounded-3 border border-secondary border-opacity-10 mt-2">
+                            <code class="text-info small opacity-75 d-block">SYNTAX: ["Option 1", "Option 2", "Option 3", "Option 4"]</code>
+                        </div>
+                    </div>
+
+                    <div class="mb-5">
+                        <label for="{{ form.correct_answer.id_for_label }}" class="form-label form-label-sv mb-2">Truth Constant (Correct Answer)</label>
+                        <div class="position-relative">
+                            <div class="position-absolute top-50 start-0 translate-middle-y ps-3 text-success opacity-50 z-3" style="pointer-events: none;">
+                                <i class="fas fa-check-double"></i>
+                            </div>
+                            <div class="ps-1">{{ form.correct_answer }}</div>
+                        </div>
+                        {% if form.correct_answer.errors %}<div class="text-danger small mt-1 py-1 fw-bold"><i class="fas fa-info-circle me-1"></i> {{ form.correct_answer.errors.0 }}</div>{% endif %}
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-3 pt-4 border-top border-light border-opacity-5">
+                        <button type="submit" class="btn btn-info rounded-pill px-5 py-3 shadow-lg hover-scale text-dark fw-bold btn-ripple">
+                            <i class="fas fa-satellite-dish me-2"></i> Update Intelligence Database
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Guidance Sidebar -->
+        <div class="col-xl-4" data-aos="fade-left" data-aos-delay="200">
+            <div class="glass-panel p-4 bg-dark bg-opacity-50 border-info border-opacity-10 shadow-lg h-100 position-relative overflow-hidden" data-tilt>
+                <div class="position-absolute top-0 end-0 p-3 opacity-5"><i class="fas fa-brain fa-6x text-info"></i></div>
+                
+                <h5 class="fw-bold text-white mb-4 d-flex align-items-center gap-2">
+                    <i class="fas fa-compass text-info"></i> Configuration Guide
+                </h5>
+                
+                <div class="mb-4">
+                    <div class="small text-info fw-bold mb-2 text-uppercase tracking-widest" style="font-size: 0.65rem;">Precision Matters</div>
+                    <p class="text-secondary small lh-base">The options array must be valid JSON. Ensure there are no trailing commas or missing quotes, as this will break the assessment engine during live evaluations.</p>
+                </div>
+
+                <div class="space-y-4">
+                    <div class="d-flex gap-3 mb-4">
+                        <div class="rounded-circle bg-success bg-opacity-10 shadow-inner flex-shrink-0 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                            <i class="fas fa-check text-success small"></i>
+                        </div>
+                        <div>
+                            <div class="text-white small fw-bold">Validate Match</div>
+                            <div class="text-secondary small" style="font-size: 0.75rem;">Correct answer must exactly match one string in the options array.</div>
+                        </div>
+                    </div>
+                    <div class="d-flex gap-3 mb-4">
+                        <div class="rounded-circle bg-info bg-opacity-10 shadow-inner flex-shrink-0 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                            <i class="fas fa-code-branch text-info small"></i>
+                        </div>
+                        <div>
+                            <div class="text-white small fw-bold">Category Drift</div>
+                            <div class="text-secondary small" style="font-size: 0.75rem;">Maintain domain consistency to ensure AI recommendations remain accurate.</div>
+                        </div>
+                    </div>
+                    <div class="d-flex gap-3">
+                        <div class="rounded-circle bg-warning bg-opacity-10 shadow-inner flex-shrink-0 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                            <i class="fas fa-bolt text-warning small"></i>
+                        </div>
+                        <div>
+                            <div class="text-white small fw-bold">Complexity Audit</div>
+                            <div class="text-secondary small" style="font-size: 0.75rem;">Adjust difficulty if candidates are consistently failing or passing too easily.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-5 p-4 rounded-4 bg-primary bg-opacity-5 border border-primary border-opacity-10">
+                    <div class="small text-primary fw-bold text-uppercase tracking-widest mb-1" style="font-size: 0.6rem;">System Note</div>
+                    <p class="text-secondary small mb-0 fst-italic">Every modification is logged in the system audit trail for security and reproducibility.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Force sidebar class on load
+    document.body.classList.add('has-sidebar');
+</script>
+{% endblock %}

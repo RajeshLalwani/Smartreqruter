@@ -1,0 +1,274 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Elite Bridge-Skilling | {{ job_title }}{% endblock %}
+
+{% block sidebar %}
+    {% include 'jobs/_candidate_sidebar.html' %}
+{% endblock %}
+
+{% block content %}
+<div class="d-flex" id="candidate-wrapper" style="min-height:calc(100vh - 72px)">
+    <!-- Sidebar is handled by block sidebar in app-shell -->
+    
+    <main class="flex-grow-1 p-4 p-lg-5 overflow-auto">
+        <div class="container-fluid fade-up">
+<div class="container-fluid py-5 px-4 overflow-hidden">
+    <!-- Header -->
+    <div class="glass-panel p-5 mb-5 border-primary border-opacity-20 shadow-2v position-relative overflow-hidden"
+        data-aos="zoom-in">
+        <div class="position-absolute top-0 end-0 p-4 opacity-10">
+            <i class="fas fa-rocket fa-6x text-primary rotate-15"></i>
+        </div>
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <span
+                        class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-20 px-3 py-2 uppercase tracking-widest x-small">
+                        AI Career Architect: Active
+                    </span>
+                </div>
+                <h1 class="display-5 fw-bold text-theme mb-3">Your Bridge-Skilling Roadmap</h1>
+                <p class="lead text-muted mb-4 lh-base" style="max-width: 600px;">
+                    Our AI has analyzed your profile against the <span class="text-primary fw-bold">{{ job_title                         }}</span> role.
+                    Here is your strategic path to mastery.
+                </p>
+                <div class="d-flex gap-3">
+                    <button class="btn btn-primary rounded-pill px-4 py-2 shadow-sm border-0 glass-effect"
+                        onclick="window.print()">
+                        <i class="fas fa-download me-2"></i> Export Roadmap
+                    </button>
+                    <a href="{% url 'candidate_applications' %}"
+                        class="btn btn-dark bg-opacity-40 border-secondary border-opacity-20 rounded-pill px-4 py-2">
+                        <i class="fas fa-arrow-left me-2"></i> Applications
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if not milestones %}
+    <div class="glass-panel p-5 text-center shadow-lg border-success border-opacity-10" data-aos="fade-up">
+        <div
+            class="avatar-lg bg-success bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-4">
+            <i class="fas fa-check-double text-success fs-1"></i>
+        </div>
+        <h3 class="fw-bold text-theme">Zero Skill-Gap Detected</h3>
+        <p class="text-muted mx-auto" style="max-width: 500px;">
+            Your current expertise perfectly aligns with the requirements for this role.
+            We recommend focusing on your interview narrative and portfolio presentation.
+        </p>
+    </div>
+    {% else %}
+    <div class="row g-5">
+        <!-- Left Column: Strategy & Milestones -->
+        <div class="col-lg-7">
+            <div class="mb-5" data-aos="fade-right">
+                <h4 class="fw-bold text-theme mb-4 d-flex align-items-center gap-3">
+                    <span class="bg-primary bg-opacity-10 p-2 rounded-3"><i
+                            class="fas fa-brain text-primary"></i></span>
+                    AI Executive Summary
+                </h4>
+                <div
+                    class="alert alert-dark bg-dark bg-opacity-30 border-0 rounded-4 p-4 shadow-sm border-start border-primary border-4">
+                    <p class="small text-theme italic lh-lg mb-0">
+                        "{{ summary }}"
+                    </p>
+                </div>
+            </div>
+
+            <h4 class="fw-bold text-theme mb-4 d-flex align-items-center gap-3" data-aos="fade-right">
+                <span class="bg-info bg-opacity-10 p-2 rounded-3"><i class="fas fa-map-signs text-info"></i></span>
+                Strategic Milestones
+            </h4>
+
+            <div class="timeline-v2">
+                {% for milestone in milestones %}
+                <div class="timeline-item mb-5 position-relative" data-aos="fade-up"
+                    data-aos-delay="{{ forloop.counter0|add:1 }}00">
+                    <div class="timeline-marker bg-primary shadow-primary"></div>
+                    <div class="glass-panel p-4 ms-4 border-secondary border-opacity-10 hover-lift">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <h5 class="fw-bold text-theme mb-0">{{ milestone.title }}</h5>
+                            <span
+                                class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-20 xx-small">{{                                 milestone.weeks }}</span>
+                        </div>
+                        <p class="small text-muted mb-3">{{ milestone.goal }}</p>
+
+                        <div class="milestone-resources">
+                            <h6 class="xx-small text-muted uppercase tracking-widest mb-2 font-monospace">Recommended
+                                Resources</h6>
+                            <div class="d-flex flex-wrap gap-2">
+                                {% for res in milestone.resources %}
+                                <a href="#"
+                                    class="btn btn-dark bg-opacity-40 border-secondary border-opacity-10 btn-sm rounded-pill x-small py-1 px-3 d-flex align-items-center gap-2">
+                                    <i class="fas fa-external-link-alt text-primary opacity-50"></i> {{ res }}
+                                </a>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Right Column: Capstone & Stats -->
+        <div class="col-lg-5">
+            {% if poc_project %}
+            <div class="glass-panel p-4 mb-5 shadow-lg border-warning border-opacity-20 overflow-hidden position-relative"
+                data-aos="fade-left">
+                <div class="position-absolute top-0 end-0 p-3 opacity-10">
+                    <i class="fas fa-cube fa-4x text-warning"></i>
+                </div>
+                <h5 class="fw-bold text-theme mb-4 d-flex align-items-center gap-3">
+                    <span class="bg-warning bg-opacity-10 p-2 rounded-3"><i
+                            class="fas fa-project-diagram text-warning"></i></span>
+                    Capstone Challenge
+                </h5>
+                <div class="p-4 rounded-4 bg-dark bg-opacity-40 border border-secondary border-opacity-10">
+                    <h6 class="fw-bold text-warning mb-2">{{ poc_project.title }}</h6>
+                    <p class="small text-muted mb-0 lh-lg">
+                        {{ poc_project.description }}
+                    </p>
+                </div>
+                <div
+                    class="mt-4 p-3 rounded-4 bg-success bg-opacity-5 border border-success border-opacity-10 d-flex align-items-center gap-3">
+                    <i class="fas fa-trophy text-success"></i>
+                    <span class="xx-small text-success fw-bold uppercase">Building this significantly boosts
+                        hireability.</span>
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="glass-panel p-4 shadow-sm border-info border-opacity-10" data-aos="fade-left"
+                data-aos-delay="200">
+                <h6 class="fw-bold text-theme mb-4">Estimated Effort</h6>
+                <div class="d-flex flex-column gap-4">
+                    <div class="effort-stat">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="small text-muted">Technical Deep Dive</span>
+                            <span class="small fw-bold text-info">85%</span>
+                        </div>
+                        <div class="progress" style="height: 6px;">
+                            <div class="progress-bar bg-info" style="width: 85%"></div>
+                        </div>
+                    </div>
+                    <div class="effort-stat">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="small text-muted">Practical Implementation</span>
+                            <span class="small fw-bold text-primary">70%</span>
+                        </div>
+                        <div class="progress" style="height: 6px;">
+                            <div class="progress-bar bg-primary" style="width: 70%"></div>
+                        </div>
+                    </div>
+                    <div class="effort-stat">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="small text-muted">Standard Preparation</span>
+                            <span class="small fw-bold text-success">90%</span>
+                        </div>
+                        <div class="progress" style="height: 6px;">
+                            <div class="progress-bar bg-success" style="width: 90%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+    .shadow-2v {
+        box-shadow: 0 40px 100px -20px rgba(0, 0, 0, 0.4);
+    }
+
+    .rotate-15 {
+        transform: rotate(15deg);
+    }
+
+    .timeline-v2 {
+        position: relative;
+        padding-left: 20px;
+    }
+
+    .timeline-v2::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 25px;
+        width: 1px;
+        background: rgba(255, 255, 255, 0.05);
+    }
+
+    .timeline-marker {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        position: absolute;
+        left: 0;
+        top: 25px;
+        z-index: 2;
+    }
+
+    .shadow-primary {
+        box-shadow: 0 0 15px var(--bs-primary);
+    }
+
+    .hover-lift {
+        transition: transform 0.3s ease, background 0.3s ease;
+    }
+
+    .hover-lift:hover {
+        transform: translateY(-5px);
+        background: rgba(255, 255, 255, 0.05);
+    }
+
+    .xx-small {
+        font-size: 0.65rem;
+    }
+
+    .x-small {
+        font-size: 0.75rem;
+    }
+
+    .uppercase {
+        text-transform: uppercase;
+    }
+
+    .tracking-widest {
+        letter-spacing: 0.15em;
+    }
+
+    .italic {
+        font-style: italic;
+    }
+
+    @media print {
+
+        .btn,
+        .glass-panel::before {
+            display: none !important;
+        }
+
+        body {
+            background: white !important;
+            color: black !important;
+        }
+
+        .glass-panel {
+            border: 1px solid #ddd !important;
+            background: none !important;
+            color: black !important;
+        }
+
+        .text-muted {
+            color: #666 !important;
+        }
+    }
+        </div>
+    </main>
+</div>
+{% endblock %}

@@ -1,0 +1,281 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block sidebar %}
+    {% if request.user.is_recruiter %}
+        {% include 'jobs/_recruiter_sidebar.html' %}
+    {% else %}
+        {% include 'jobs/_candidate_sidebar.html' %}
+    {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="candidate-wrapper d-flex flex-grow-1" style="background: #0a0b10; min-height: 100vh;">
+    <div class="main-content flex-grow-1 p-4" style="max-height: 100vh; overflow-y: auto; scrollbar-width: none;">
+<div class="container mt-5">
+    <div
+        class="glass-panel p-5 mb-5 border-info border-opacity-10 shadow-lg text-center position-relative overflow-hidden">
+        <div class="position-absolute top-0 start-0 w-100 h-100 bg-gradient opacity-10"
+            style="background: radial-gradient(circle at 50% 50%, rgba(0, 230, 118, 0.1), transparent);"></div>
+        <div class="container-fluid py-5 px-4"
+            style="background: radial-gradient(circle at top right, rgba(99, 102, 241, 0.05), transparent 600px);">
+            <div class="max-w-7xl mx-auto">
+                <!-- Header -->
+                <div class="glass-panel p-5 mb-5 border-primary border-opacity-10 shadow-2xl position-relative overflow-hidden"
+                    style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.08), rgba(168, 85, 247, 0.08));">
+                    <div class="row align-items-center position-relative" style="z-index: 2;">
+                        <div class="col-md-8">
+                            <span
+                                class="badge rounded-pill bg-primary bg-opacity-10 text-primary border border-primary border-opacity-20 px-3 py-1 xx-small uppercase fw-bold tracking-widest mb-3">MISSION
+                                PROTOCOL</span>
+                            <h1 class="display-4 fw-bold text-theme mb-2 ls-1 dark:text-white">Your Success Roadmap</h1>
+                            <p class="text-muted lead mb-0">Prepare for liftoff. Here is your structured path for the
+                                first 90 days at Tech Elecon.</p>
+                        </div>
+                        <div class="col-md-4 text-end d-none d-md-block">
+                            <div class="d-inline-flex flex-column align-items-end">
+                                <div class="text-primary fw-bold display-6 ls-1 mb-0">Phase 01</div>
+                                <div class="text-muted small uppercase tracking-widest">Initialization</div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Decorative Glow -->
+                    <div class="position-absolute top-0 end-0 w-25 h-100"
+                        style="background: radial-gradient(circle, rgba(99, 102, 241, 0.1) 0%, transparent 70%);"></div>
+                </div>
+
+                <div class="row g-5">
+                    <!-- Timeline Column -->
+                    <div class="col-lg-8">
+                        <div class="vertical-timeline ps-4 position-relative">
+                            <div class="timeline-line"></div>
+
+                            <!-- Pre-boarding (Day 0) -->
+                            <div class="timeline-group mb-5 animate-fade-in-up" style="animation-delay: 0.1s;">
+                                <div class="timeline-marker-main">
+                                    <i class="fas fa-rocket text-primary"></i>
+                                </div>
+                                <div class="ms-5">
+                                    <h4 class="fw-bold text-theme mb-4 d-flex align-items-center">
+                                        Day 0: Pre-boarding
+                                        <span
+                                            class="ms-3 badge bg-success bg-opacity-10 text-success xx-small border border-success border-opacity-20">READY</span>
+                                    </h4>
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <div class="glass-panel p-4 h-100 hover-lift">
+                                                <div class="d-flex align-items-center mb-3">
+                                                    <div class="icon-box bg-primary bg-opacity-10 text-primary me-3">
+                                                        <i class="fas fa-id-card"></i>
+                                                    </div>
+                                                    <h6 class="mb-0 fw-bold">KYC & Verification</h6>
+                                                </div>
+                                                <p class="text-muted small mb-3">Finalize your digital identity and
+                                                    document verification process.</p>
+                                                <div class="progress"
+                                                    style="height: 4px; background: rgba(255,255,255,0.05);">
+                                                    <div class="progress-bar bg-primary" style="width: 100%;"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="glass-panel p-4 h-100 hover-lift">
+                                                <div class="d-flex align-items-center mb-3">
+                                                    <div class="icon-box bg-info bg-opacity-10 text-info me-3">
+                                                        <i class="fas fa-laptop-code"></i>
+                                                    </div>
+                                                    <h6 class="mb-0 fw-bold">Tooling Setup</h6>
+                                                </div>
+                                                <p class="text-muted small mb-3">Access your professional workstation
+                                                    and communication suite.</p>
+                                                <div class="progress"
+                                                    style="height: 4px; background: rgba(255,255,255,0.05);">
+                                                    <div class="progress-bar bg-info" style="width: 40%;"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 30-60-90 Sections -->
+                            {% for phase in phases %}
+                            <div class="timeline-group mb-5 animate-fade-in-up"
+                                style="animation-delay: {{ forloop.counter|add:1|multiply:0.1 }}s;">
+                                <div class="timeline-marker">
+                                    <span>{{ phase.days }}d</span>
+                                </div>
+                                <div class="ms-5">
+                                    <h4 class="fw-bold text-theme mb-4">{{ phase.title }}</h4>
+                                    <div class="glass-panel p-0 overflow-hidden border-opacity-10 shadow-xl">
+                                        <div class="list-group list-group-flush bg-transparent">
+                                            {% for task in phase.tasks %}
+                                            <div
+                                                class="list-group-item bg-transparent border-opacity-5 p-4 d-flex align-items-center gap-4 hover-bg-white-5">
+                                                <div class="checkbox-wrapper">
+                                                    <input type="checkbox" class="task-check" {% if task.completed
+                                                        %}checked{% endif %}>
+                                                </div>
+                                                <div class="flex-grow-1">
+                                                    <h6
+                                                        class="mb-1 fw-bold text-theme {% if task.completed %}text-decoration-line-through opacity-50{% endif %}">
+                                                        {{ task.name }}</h6>
+                                                    <p class="text-muted small mb-0">{{ task.desc|default:"High-priority
+                                                        task for this phase." }}</p>
+                                                </div>
+                                                <div class="text-end d-none d-sm-block">
+                                                    <span
+                                                        class="badge rounded-pill bg-light bg-opacity-5 text-muted xx-small uppercase tracking-widest">{{
+                                                        task.tag|default:"GOAL" }}</span>
+                                                </div>
+                                            </div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- Sidebar / Stats -->
+                    <div class="col-lg-4">
+                        <div class="sticky-top" style="top: 100px;">
+                            <div
+                                class="glass-panel p-4 mb-4 shadow-xl border-primary border-opacity-20 overflow-hidden position-relative">
+                                <div class="position-relative" style="z-index: 2;">
+                                    <h5 class="fw-bold mb-4 d-flex align-items-center">
+                                        <i class="fas fa-chart-line me-3 text-primary"></i>
+                                        Mission Progress
+                                    </h5>
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span class="text-muted small">Completion Rate</span>
+                                        <span class="text-primary fw-bold">65%</span>
+                                    </div>
+                                    <div class="progress mb-4"
+                                        style="height: 10px; background: rgba(255,255,255,0.05); border-radius: 10px;">
+                                        <div class="progress-bar bg-primary shadow-glow-primary" style="width: 65%;">
+                                        </div>
+                                    </div>
+                                    <div class="row g-2">
+                                        <div class="col-6">
+                                            <div class="p-3 rounded-4 bg-white bg-opacity-5 text-center">
+                                                <div class="h4 fw-bold mb-0">12</div>
+                                                <div class="xx-small text-muted uppercase tracking-widest">Tasks Done
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="p-3 rounded-4 bg-white bg-opacity-5 text-center">
+                                                <div class="h4 fw-bold mb-0">08</div>
+                                                <div class="xx-small text-muted uppercase tracking-widest">Pending</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="glass-panel p-4 border-info border-opacity-10">
+                                <h6 class="fw-bold mb-3">Onboarding Buddy</h6>
+                                <div class="d-flex align-items-center gap-3">
+                                    <img src="https://ui-avatars.com/api/?name=Raj+Mehta&background=6366f1&color=fff"
+                                        class="rounded-circle" width="48" height="48">
+                                    <div>
+                                        <div class="fw-bold text-theme">Raj Mehta</div>
+                                        <div class="xx-small text-muted uppercase tracking-widest">Lead Engineer</div>
+                                    </div>
+                                    <button class="btn btn-icon btn-sm ms-auto bg-primary bg-opacity-10 text-primary">
+                                        <i class="fas fa-comment"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <style>
+            .ls-1 {
+                letter-spacing: 0.05em;
+            }
+
+            .phase-number {
+                width: 40px;
+                height: 40px;
+                background: var(--primary-color);
+                color: white;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-weight: 900;
+                box-shadow: 0 0 20px rgba(var(--primary-rgb), 0.3);
+            }
+
+            .roadmap-line {
+                border-left: 2px dashed rgba(255, 255, 255, 0.1);
+                padding-left: 20px;
+                margin-left: 20px;
+            }
+
+            .roadmap-card {
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                cursor: default;
+            }
+
+            .hover-lift:hover {
+                transform: translateY(-5px) translateX(5px);
+                border-color: rgba(var(--primary-rgb), 0.4) !important;
+                background: rgba(255, 255, 255, 0.05);
+            }
+
+            .bg-technical {
+                background-color: #00bcd4 !important;
+                color: #fff !important;
+            }
+
+            .bg-cultural {
+                background-color: #e91e63 !important;
+                color: #fff !important;
+            }
+
+            .bg-administrative {
+                background-color: #ff9800 !important;
+                color: #fff !important;
+            }
+
+            .xx-small {
+                font-size: 0.6rem;
+            }
+
+            @media print {
+
+                .btn,
+                .btn-link {
+                    display: none !important;
+                }
+
+                .glass-panel {
+                    border: 1px solid #ddd !important;
+                    background: white !important;
+                    color: black !important;
+                }
+
+                body {
+                    background: white !important;
+                    color: black !important;
+                }
+
+                .text-theme {
+                    color: black !important;
+                }
+
+                .text-muted {
+                    color: #666 !important;
+                }
+            }
+        </style>
+        {% endblock %}

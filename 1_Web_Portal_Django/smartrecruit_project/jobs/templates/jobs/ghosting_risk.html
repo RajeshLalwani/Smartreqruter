@@ -1,0 +1,139 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Ghosting Risk Index | SmartRecruit AI{% endblock %}
+
+{% block content %}
+<style>
+    /* Z-INDEX SAFEGUARDS */
+    .modal { z-index: 2000 !important; }
+    .modal-backdrop { z-index: 1050 !important; }
+    .tracking-widest { letter-spacing: 0.15em; }
+    .x-small { font-size: 0.75rem; }
+    .xx-small { font-size: 0.65rem; }
+
+    .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+    /* Risk table row */
+    .risk-row { border-bottom: 1px solid rgba(255,255,255,0.05); transition: background 0.15s ease; }
+    .risk-row:hover td { background: rgba(255,255,255,0.015) !important; }
+
+    /* Mitigation button */
+    .btn-mitigation { font-size: 0.7rem; border-radius: 999px; padding: 0.25rem 0.75rem; transition: background 0.15s ease; }
+    .btn-mitigation:hover { background: rgba(255,255,255,0.06) !important; }
+</style>
+
+<div class="container-fluid px-4 mt-4 fade-up">
+
+    <!-- ─── Hero ─── -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-5 gap-3" data-aos="fade-down">
+        <div>
+            <div class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 px-3 py-2 rounded-pill mb-3 tracking-widest text-uppercase x-small fw-bold">
+                <i class="fas fa-ghost me-2"></i>AI Dropout Prediction
+            </div>
+            <h1 class="display-6 fw-bold text-white mb-2" style="font-family: 'Space Grotesk', sans-serif;">Ghosting Risk <span style="background: linear-gradient(90deg, #FF4444, #FF6D00); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">Index</span></h1>
+            <p class="lead text-secondary mb-0">AI-driven probability model analyzing candidate drop-off patterns.</p>
+        </div>
+        <div>
+            <span class="badge rounded-pill px-4 py-3 fw-bold shadow-sm" style="background: rgba(255,68,68,0.15); border: 1px solid rgba(255,68,68,0.3); color: #ff8a80; font-size: 0.8rem;">
+                <i class="fas fa-exclamation-triangle me-2"></i>{{ high_risk_count }} High Risk Candidates Detected
+            </span>
+        </div>
+    </div>
+
+    <!-- ─── Stat Cards ─── -->
+    <div class="row g-4 mb-5" data-aos="fade-up">
+        <div class="col-md-4">
+            <div class="glass-panel p-4 text-center rounded-4 border-primary border-opacity-25 hover-scale">
+                <div class="x-small text-secondary fw-bold tracking-widest text-uppercase mb-2">Total Analyzed</div>
+                <div class="display-6 fw-bold text-white" style="font-family: 'Space Grotesk', sans-serif;">{{ total_analyzed }}</div>
+                <div class="progress mt-3" style="height: 4px; background: rgba(255,255,255,0.05); border-radius: 4px;">
+                    <div class="progress-bar bg-primary" style="width: 100%; border-radius: 4px;"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="glass-panel p-4 text-center rounded-4 border-warning border-opacity-25 hover-scale">
+                <div class="x-small text-secondary fw-bold tracking-widest text-uppercase mb-2">Avg Risk Probability</div>
+                <div class="display-6 fw-bold text-warning" style="font-family: 'Space Grotesk', sans-serif;">42%</div>
+                <div class="progress mt-3" style="height: 4px; background: rgba(255,255,255,0.05); border-radius: 4px;">
+                    <div class="progress-bar bg-warning" style="width: 42%; border-radius: 4px;"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="glass-panel p-4 text-center rounded-4 border-success border-opacity-25 hover-scale">
+                <div class="x-small text-secondary fw-bold tracking-widest text-uppercase mb-2">Potential Hires Saved</div>
+                <div class="display-6 fw-bold text-success" style="font-family: 'Space Grotesk', sans-serif;">18</div>
+                <div class="progress mt-3" style="height: 4px; background: rgba(255,255,255,0.05); border-radius: 4px;">
+                    <div class="progress-bar bg-success" style="width: 100%; border-radius: 4px;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ─── Risk Heatmap Table ─── -->
+    <div class="glass-panel p-0 rounded-4 overflow-hidden border-secondary border-opacity-25 shadow-lg" data-aos="fade-up" data-aos-delay="100">
+        <div class="p-4 border-bottom border-light border-opacity-10 bg-dark bg-opacity-25 d-flex align-items-center gap-2">
+            <i class="fas fa-list text-info"></i>
+            <h5 class="fw-bold text-white mb-0 x-small tracking-widest text-uppercase">Candidate Risk Heatmap</h5>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-borderless align-middle mb-0 text-white w-100">
+                <thead class="text-secondary x-small tracking-widest text-uppercase border-bottom border-light border-opacity-10 bg-light bg-opacity-5">
+                    <tr>
+                        <th class="ps-4 py-3 border-0">Candidate</th>
+                        <th class="py-3 border-0">Job Role</th>
+                        <th class="py-3 border-0">Risk Score</th>
+                        <th class="py-3 border-0">Ghosting Level</th>
+                        <th class="py-3 border-0">AI Insight</th>
+                        <th class="py-3 pe-4 border-0 text-end">Mitigation</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in risk_data %}
+                    <tr class="risk-row">
+                        <td class="ps-4 py-3">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="rounded-circle d-flex align-items-center justify-content-center fw-bold flex-shrink-0" style="width: 36px; height: 36px; background: {{ item.color }}22; color: {{ item.color }}; font-family: 'Space Grotesk', sans-serif;">{{ item.app.candidate.full_name|first }}</div>
+                                <div>
+                                    <div class="fw-bold text-white x-small">{{ item.app.candidate.full_name }}</div>
+                                    <div class="text-secondary xx-small">Applied {{ item.app.applied_at|timesince }} ago</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="py-3"><span class="text-secondary x-small">{{ item.app.job.title }}</span></td>
+                        <td class="py-3">
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="progress" style="width: 70px; height: 5px; background: rgba(255,255,255,0.05); border-radius: 4px;">
+                                    <div class="progress-bar" style="width: {{ item.score }}%; background: {{ item.color }}; border-radius: 4px;"></div>
+                                </div>
+                                <span class="fw-bold x-small" style="color: {{ item.color }}; font-family: 'Space Grotesk', sans-serif;">{{ item.score }}%</span>
+                            </div>
+                        </td>
+                        <td class="py-3">
+                            <span class="badge rounded-pill px-2 py-1 x-small fw-bold" style="background: {{ item.color }}22; color: {{ item.color }}; border: 1px solid {{ item.color }}44;">{{ item.level }} RISK</span>
+                        </td>
+                        <td class="py-3" style="max-width: 280px;">
+                            <p class="text-secondary x-small mb-0 fst-italic line-clamp-2">"{{ item.reason }}"</p>
+                        </td>
+                        <td class="py-3 pe-4 text-end">
+                            <button class="btn-mitigation" style="border: 1px solid {{ item.color }}88; color: {{ item.color }}; background: transparent;">{{ item.action }}</button>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-5">
+                            <div class="rounded-circle d-flex align-items-center justify-content-center bg-dark border border-success border-opacity-25 mx-auto mb-3" style="width: 64px; height: 64px;">
+                                <i class="fas fa-shield-check text-success fa-lg opacity-50"></i>
+                            </div>
+                            <h6 class="fw-bold text-white mb-1">No High Risk Prospects Found</h6>
+                            <p class="text-secondary small">All candidates appear engaged. Keep monitoring!</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

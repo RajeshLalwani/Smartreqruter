@@ -1,0 +1,736 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<section class="dashboard-hero glass-card" data-entrance id="candidate-overview">
+    <div class="hero-stage">
+        <div class="hero-stage__content">
+            <span class="hero-eyebrow"><i class="fa-solid fa-user"></i>Candidate Dashboard</span>
+            <h1 class="hero-title">Track your job progress with <span class="text-transparent bg-clip-text bg-gradient-primary">clarity, speed, and control</span>.</h1>
+            <p class="hero-copy">
+                Monitor your applications, take the next steps, see AI feedback, and book interviews in one simple dashboard.
+            </p>
+            <div class="hero-stage__actions">
+                <a href="{% url 'job_list' %}" class="btn thunder-btn thunder-btn--primary">
+                    <i class="fa-solid fa-briefcase me-2"></i>Browse Roles
+                </a>
+                <a href="{% url 'candidate_applications' %}" class="btn thunder-btn thunder-btn--ghost">
+                    <i class="fa-solid fa-layer-group me-2"></i>View Applications
+                </a>
+                <a href="#next-moves" class="btn thunder-btn thunder-btn--ghost">
+                    <i class="fa-solid fa-bolt me-2"></i>Next Moves
+                </a>
+            </div>
+        </div>
+
+        <aside class="hero-stage__summary">
+            <span class="signal-pill"><i class="fa-solid fa-satellite-dish"></i>Status</span>
+            <div class="meta-stat-grid">
+                <div class="meta-stat">
+                    <span class="meta-stat__label">Today</span>
+                    <strong class="meta-stat__value">{{ today_date|date:"M d" }}</strong>
+                </div>
+                <div class="meta-stat">
+                    <span class="meta-stat__label">Performance</span>
+                    <strong class="meta-stat__value">{{ market_standing|default:0 }}%</strong>
+                </div>
+                <div class="meta-stat">
+                    <span class="meta-stat__label">Skills Match</span>
+                    <strong class="meta-stat__value">{{ skill_readiness|default:0 }}%</strong>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <div class="signal-strip">
+        <div class="signal-item">
+            <strong>{% if my_applications %}Latest Application{% else %}Ready to Start{% endif %}</strong>
+            <span>
+                {% if my_applications %}
+                    {{ my_applications.0.job.title }} | {{ my_applications.0.get_status_display }}
+                {% else %}
+                    Apply to an open role to start your journey.
+                {% endif %}
+            </span>
+        </div>
+        <div class="signal-item">
+            <strong>Interview Queue</strong>
+            <span>{{ stats.interviews|default:0 }} scheduled interview session(s) are currently on your calendar.</span>
+        </div>
+        <div class="signal-item">
+            <strong>{% if user.candidate_profile.is_verified %}Profile Verified{% else %}Profile Pending{% endif %}</strong>
+            <span>
+                {% if user.candidate_profile.is_verified %}
+                    Your profile is fully verified for selection.
+                {% else %}
+                    Finish an interview to verify your profile.
+                {% endif %}
+            </span>
+        </div>
+    </div>
+</section>
+
+<section class="metric-grid">
+    <article class="metric-card glass-card" data-entrance>
+        <div class="metric-card__top">
+            <div class="metric-card__icon"><i class="fa-solid fa-paper-plane"></i></div>
+            <span class="metric-card__delta">Total</span>
+        </div>
+        <span class="metric-card__label">Applications</span>
+        <strong class="metric-card__value">{{ stats.total_applied|default:0 }}</strong>
+        <span class="metric-card__subtext">Roles you have applied for.</span>
+    </article>
+
+    <article class="metric-card glass-card" data-entrance>
+        <div class="metric-card__top">
+            <div class="metric-card__icon"><i class="fa-solid fa-wave-square"></i></div>
+            <span class="metric-card__delta">Active</span>
+        </div>
+        <span class="metric-card__label">Active</span>
+        <strong class="metric-card__value">{{ stats.active|default:0 }}</strong>
+        <span class="metric-card__subtext">Applications currently in progress.</span>
+    </article>
+
+    <article class="metric-card glass-card" data-entrance>
+        <div class="metric-card__top">
+            <div class="metric-card__icon"><i class="fa-solid fa-video"></i></div>
+            <span class="metric-card__delta">Queued</span>
+        </div>
+        <span class="metric-card__label">Interviews</span>
+        <strong class="metric-card__value">{{ stats.interviews|default:0 }}</strong>
+        <span class="metric-card__subtext">Scheduled live sessions waiting on your next move.</span>
+    </article>
+
+    <article class="metric-card glass-card" data-entrance>
+        <div class="metric-card__top">
+            <div class="metric-card__icon"><i class="fa-solid fa-award"></i></div>
+            <span class="metric-card__delta">Offers</span>
+        </div>
+        <span class="metric-card__label">Offers</span>
+        <strong class="metric-card__value">{{ stats.offers|default:0 }}</strong>
+        <span class="metric-card__subtext">Job offers ready for you to review.</span>
+    </article>
+</section>
+
+<section class="dashboard-grid">
+    <article class="panel-card glass-card" data-entrance>
+        <div class="panel-card__header">
+            <div>
+                <span class="panel-eyebrow">Summary</span>
+                <h2 class="panel-card__title">Next Step</h2>
+            </div>
+            <a href="{% url 'candidate_applications' %}" class="panel-card__link">Full history</a>
+        </div>
+
+        {% if my_applications %}
+            {% with current_app=my_applications.0 %}
+            <div class="signal-block">
+                <strong>{{ current_app.job.title }}</strong>
+                <span>{{ current_app.job.location }} | Applied {{ current_app.applied_at|date:"M d, Y" }}</span>
+                <span>
+                    {{ current_app.get_status_display }} | Resume Score {{ current_app.ai_score|floatformat:0 }}%
+                    {% if current_app.job.salary_range %} | {{ current_app.job.salary_range }}{% endif %}
+                </span>
+            </div>
+
+            <div class="data-list mt-4">
+                <div class="data-list__item">
+                    <div class="data-list__head">
+                        <span class="data-list__title">Status</span>
+                        <span class="data-list__value">Active</span>
+                    </div>
+                    <span class="table-meta">Your application is in the system and ready for review.</span>
+                </div>
+                <div class="data-list__item">
+                    <div class="data-list__head">
+                        <span class="data-list__title">Current stage</span>
+                        <span class="data-list__value">{{ current_app.get_status_display }}</span>
+                    </div>
+                    <span class="table-meta">This is where you are in the hiring process.</span>
+                </div>
+                <div class="data-list__item">
+                    <div class="data-list__head">
+                        <span class="data-list__title">Next recommended move</span>
+                        <span class="data-list__value">
+                            {% if current_app.status == 'RESUME_SELECTED' %}
+                                Aptitude test
+                            {% elif current_app.status == 'ROUND_1_PASSED' %}
+                                Practical round
+                            {% elif current_app.status == 'ROUND_2_PASSED' or current_app.status == 'ROUND_3_PASSED' %}
+                                Schedule interview
+                            {% elif current_app.status == 'OFFER_GENERATED' %}
+                                Review offer
+                            {% elif current_app.status == 'HIRED' %}
+                                Onboarding ready
+                            {% elif current_app.status == 'REJECTED' or current_app.status == 'REJECTED_TIMEOUT' %}
+                                Closed cycle
+                            {% else %}
+                                Await recruiter update
+                            {% endif %}
+                        </span>
+                    </div>
+                    <span class="table-meta">
+                        {% if current_app.status == 'RESUME_SELECTED' %}
+                            Start the online test to move forward.
+                        {% elif current_app.status == 'ROUND_1_PASSED' %}
+                            Your coding test is ready to start.
+                        {% elif current_app.status == 'ROUND_2_PASSED' or current_app.status == 'ROUND_3_PASSED' %}
+                            Pick a time and book your interview.
+                        {% elif current_app.status == 'OFFER_GENERATED' %}
+                            Review your job offer and decide.
+                        {% elif current_app.status == 'HIRED' %}
+                            You have finished the process successfully!
+                        {% elif current_app.status == 'REJECTED' or current_app.status == 'REJECTED_TIMEOUT' %}
+                            This application is closed. Check feedback for tips.
+                        {% else %}
+                            We are reviewing your application.
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+            {% endwith %}
+        {% else %}
+            <div class="empty-state">
+                <i class="fa-solid fa-compass"></i>
+                <strong>No active applications yet</strong>
+                <span>Apply for jobs to see your progress here.</span>
+                <a href="{% url 'job_list' %}" class="btn thunder-btn thunder-btn--primary">Browse Jobs</a>
+            </div>
+        {% endif %}
+    </article>
+
+    <div class="panel-stack">
+        <article class="panel-card glass-card" data-entrance>
+            <div class="panel-card__header">
+                <div>
+                    <span class="panel-eyebrow">Skills</span>
+                    <h2 class="panel-card__title">My Profile</h2>
+                </div>
+            </div>
+
+            <div class="profile-highlight">
+                <div class="profile-highlight__identity">
+                    <span class="profile-highlight__avatar">{{ user.first_name|default:user.username|slice:":1"|upper }}</span>
+                    <div class="profile-highlight__copy">
+                        <strong>{{ user.get_full_name|default:user.username }}</strong>
+                        <span>{{ user.candidate_profile.current_role|default:"Candidate" }} | {{ user.candidate_profile.current_location|default:"Remote" }}</span>
+                    </div>
+                </div>
+
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <strong>Market standing</strong>
+                        <span>{{ market_standing|default:0 }}% against the latest compared applicant pool.</span>
+                    </div>
+                    <div class="feature-card">
+                        <strong>Skill readiness</strong>
+                        <span>{{ skill_readiness|default:0 }}% overlap with currently recommended role requirements.</span>
+                    </div>
+                </div>
+
+                <div class="insight-bars">
+                    <div class="insight-row">
+                        <div class="insight-row__head">
+                            <span>Market standing</span>
+                            <strong>{{ market_standing|default:0 }}%</strong>
+                        </div>
+                        <div class="insight-row__track">
+                            <span class="insight-row__bar" data-meter="{{ market_standing|default:0 }}" style="width: {{ market_standing|default:0 }}%;"></span>
+                        </div>
+                    </div>
+                    <div class="insight-row">
+                        <div class="insight-row__head">
+                            <span>Skill readiness</span>
+                            <strong>{{ skill_readiness|default:0 }}%</strong>
+                        </div>
+                        <div class="insight-row__track">
+                            <span class="insight-row__bar" data-meter="{{ skill_readiness|default:0 }}" style="width: {{ skill_readiness|default:0 }}%;"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </article>
+
+        <article class="panel-card glass-card" data-entrance>
+            <div class="panel-card__header">
+                <div>
+                    <span class="panel-eyebrow">Verified Skills</span>
+                    <h2 class="panel-card__title">Verification Status</h2>
+                </div>
+            </div>
+
+            {% if user.candidate_profile and user.candidate_profile.is_verified_on_chain %}
+            <div class="signal-block">
+                <strong>Verified interview results</strong>
+                <span>Your interview scores are verified and stored securely.</span>
+                <span class="table-meta">{{ user.candidate_profile.blockchain_hash|default:"Hash unavailable" }}</span>
+            </div>
+            <div class="quick-links mt-4">
+                <a href="https://sepolia.polygonscan.com/tx/{{ user.candidate_profile.blockchain_tx_id }}" target="_blank" rel="noopener noreferrer" class="quick-link">
+                    <span class="quick-link__icon"><i class="fa-solid fa-arrow-up-right-from-square"></i></span>
+                    <span class="quick-link__copy">
+                        <strong>Open Explorer</strong>
+                        <span>Inspect the ledger transaction.</span>
+                    </span>
+                </a>
+                <a href="{% url 'candidate_profile' %}" class="quick-link">
+                    <span class="quick-link__icon"><i class="fa-solid fa-id-card"></i></span>
+                    <span class="quick-link__copy">
+                        <strong>Update Profile</strong>
+                        <span>Keep your candidate signal current.</span>
+                    </span>
+                </a>
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <i class="fa-solid fa-shield"></i>
+                <strong>No verified results yet</strong>
+                <span>Finish your interviews to see your verified scores here.</span>
+                <a href="{% url 'candidate_profile' %}" class="btn thunder-btn thunder-btn--ghost">Open Profile</a>
+            </div>
+            {% endif %}
+        </article>
+    </div>
+</section>
+
+<section class="dashboard-grid dashboard-grid--equal">
+    <article class="panel-card glass-card" data-entrance>
+        <div class="panel-card__header">
+            <div>
+                <span class="panel-eyebrow">Interviews</span>
+                <h2 class="panel-card__title">Feedback</h2>
+            </div>
+        </div>
+
+        {% if my_applications %}
+        <div class="report-grid">
+            {% for app in my_applications|slice:":3" %}
+            <div class="signal-block">
+                <strong>{{ app.job.title }}</strong>
+                <span>Last updated {{ app.updated_at|date:"M d, Y" }} | {{ app.get_status_display }}</span>
+
+                {% if app.candidate_feedback %}
+                <div class="insight-bars mt-3">
+                    <div class="insight-row">
+                        <div class="insight-row__head">
+                            <span>Technical</span>
+                            <strong>{{ app.technical_score|floatformat:0 }}%</strong>
+                        </div>
+                        <div class="insight-row__track">
+                            <span class="insight-row__bar" data-meter="{{ app.technical_score|floatformat:0 }}" style="width: {{ app.technical_score|floatformat:0 }}%;"></span>
+                        </div>
+                    </div>
+                    <div class="insight-row">
+                        <div class="insight-row__head">
+                            <span>Communication</span>
+                            <strong>{{ app.communication_score|floatformat:0 }}%</strong>
+                        </div>
+                        <div class="insight-row__track">
+                            <span class="insight-row__bar" data-meter="{{ app.communication_score|floatformat:0 }}" style="width: {{ app.communication_score|floatformat:0 }}%;"></span>
+                        </div>
+                    </div>
+                    <div class="insight-row">
+                        <div class="insight-row__head">
+                            <span>Confidence</span>
+                            <strong>{{ app.confidence_score|floatformat:0 }}%</strong>
+                        </div>
+                        <div class="insight-row__track">
+                            <span class="insight-row__bar" data-meter="{{ app.confidence_score|floatformat:0 }}" style="width: {{ app.confidence_score|floatformat:0 }}%;"></span>
+                        </div>
+                    </div>
+                    <div class="insight-row">
+                        <div class="insight-row__head">
+                            <span>Integrity</span>
+                            <strong>{{ app.integrity_score|floatformat:0 }}%</strong>
+                        </div>
+                        <div class="insight-row__track">
+                            <span class="insight-row__bar" data-meter="{{ app.integrity_score|floatformat:0 }}" style="width: {{ app.integrity_score|floatformat:0 }}%;"></span>
+                        </div>
+                    </div>
+                    <div class="insight-row">
+                        <div class="insight-row__head">
+                            <span>Problem Solving</span>
+                            <strong>{{ app.problem_solving_score|floatformat:0 }}%</strong>
+                        </div>
+                        <div class="insight-row__track">
+                            <span class="insight-row__bar" data-meter="{{ app.problem_solving_score|floatformat:0 }}" style="width: {{ app.problem_solving_score|floatformat:0 }}%;"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="report-copy mt-3">{{ app.candidate_feedback|safe }}</div>
+                {% else %}
+                <div class="empty-state empty-state--inline">
+                    <i class="fa-solid fa-hourglass-half"></i>
+                    <strong>No feedback yet</strong>
+                    <span>Your scores will appear here after you finish your interviews.</span>
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <i class="fa-solid fa-clipboard-check"></i>
+            <strong>No report cards yet</strong>
+            <span>Interview feedback cards will populate here as your application journey advances.</span>
+        </div>
+        {% endif %}
+    </article>
+
+    <article class="panel-card glass-card" data-entrance>
+        <div class="panel-card__header">
+            <div>
+                <span class="panel-eyebrow">Recent Activity</span>
+                <h2 class="panel-card__title">History</h2>
+            </div>
+        </div>
+
+        <div class="activity-list">
+            {% for app in my_applications|slice:":6" %}
+            <div class="activity-entry">
+                <div class="activity-entry__copy">
+                    <strong>{{ app.job.title }}</strong>
+                    <span>Updated {{ app.updated_at|date:"M d, Y" }} | {{ app.get_status_display }}</span>
+                </div>
+                <span class="activity-entry__time">{{ app.ai_score|floatformat:0 }}%</span>
+            </div>
+            {% empty %}
+            <div class="empty-state">
+                <i class="fa-solid fa-clock-rotate-left"></i>
+                <strong>No history yet</strong>
+                <span>Your updates will appear here once you apply for jobs.</span>
+            </div>
+            {% endfor %}
+        </div>
+    </article>
+</section>
+
+{% block body_class %}has-sidebar{% endblock %}
+
+{% block sidebar %}
+    {% include 'sidebar.html' %}
+{% endblock %}
+
+
+
+<section class="dashboard-grid">
+    <article class="panel-card glass-card" data-entrance>
+        <div class="panel-card__header">
+            <div>
+                <span class="panel-eyebrow">Jobs for You</span>
+                <h2 class="panel-card__title">Matches</h2>
+            </div>
+            <a href="{% url 'job_list' %}" class="panel-card__link">Open job board</a>
+        </div>
+
+        <div class="recommendation-grid">
+            {% for item in recent_jobs|slice:":4" %}
+            <a href="{% url 'job_detail' item.job.id %}" class="recommendation-card">
+                <div class="action-card__head">
+                    <div class="action-card__copy">
+                        <strong>{{ item.job.title }}</strong>
+                        <span>{{ item.job.location }} | {{ item.job.get_job_type_display }}</span>
+                    </div>
+                    <span class="status-pill status-pill--success">{{ item.match_score|default:0 }}%</span>
+                </div>
+                <p class="table-meta">
+                    {% if item.reasons %}
+                        {{ item.reasons|join:", " }}
+                    {% else %}
+                        Recommended from your current skill profile and recent activity.
+                    {% endif %}
+                </p>
+                <div class="recommendation-card__tags">
+                    {% for skill in item.matched|slice:":3" %}
+                    <span class="status-pill status-pill--success">{{ skill }}</span>
+                    {% endfor %}
+                    {% for skill in item.missing|slice:":1" %}
+                    <span class="status-pill status-pill--warning">{{ skill }} gap</span>
+                    {% endfor %}
+                </div>
+            </a>
+            {% empty %}
+            <div class="empty-state recommendation-card recommendation-card--empty">
+                <i class="fa-solid fa-atom"></i>
+                <strong>Recommendations are warming up</strong>
+                <span>Update your profile and applications to sharpen the matching engine.</span>
+            </div>
+            {% endfor %}
+        </div>
+    </article>
+
+    <div class="panel-stack">
+        <article class="panel-card glass-card" data-entrance>
+            <div class="panel-card__header">
+                <div>
+                    <span class="panel-eyebrow">Calendar</span>
+                    <h2 class="panel-card__title">Upcoming Interviews</h2>
+                </div>
+            </div>
+
+            <div class="activity-list">
+                {% for interview in upcoming_interviews %}
+                <div>
+                    <div class="activity-entry">
+                        <div class="activity-entry__copy">
+                            <strong>{{ interview.application.job.title }}</strong>
+                            <span>{{ interview.get_interview_type_display }} | {{ interview.scheduled_time|date:"M d, Y" }} at {{ interview.scheduled_time|time:"h:i A" }}</span>
+                        </div>
+                        <button type="button" class="btn thunder-btn thunder-btn--ghost thunder-btn--small" onclick="requestReschedule({{ interview.application.id }}, '{{ csrf_token }}', 'reschedule-feedback-{{ interview.application.id }}')">
+                            Reschedule
+                        </button>
+                    </div>
+                    <div id="reschedule-feedback-{{ interview.application.id }}" class="slot-feedback"></div>
+                </div>
+                {% empty %}
+                <div class="empty-state">
+                    <i class="fa-solid fa-calendar-xmark"></i>
+                    <strong>No interviews scheduled</strong>
+                    <span>Your next booked conversation will appear here with the exact date and time.</span>
+                </div>
+                {% endfor %}
+            </div>
+        </article>
+
+        <article class="panel-card glass-card" data-entrance id="next-moves">
+            <div class="panel-card__header">
+                <div>
+                    <span class="panel-eyebrow">To-Do</span>
+                    <h2 class="panel-card__title">Tasks</h2>
+                </div>
+            </div>
+
+            <div class="action-list">
+                {% for app in my_applications|slice:":4" %}
+                <div class="action-card">
+                    <div class="action-card__head">
+                        <div class="action-card__copy">
+                            <strong>{{ app.job.title }}</strong>
+                            <span>{{ app.get_status_display }} | {{ app.job.location }}</span>
+                        </div>
+                        <span class="status-pill {% if app.status == 'OFFER_GENERATED' or app.status == 'HIRED' %}status-pill--success{% elif app.status == 'REJECTED' or app.status == 'REJECTED_TIMEOUT' %}status-pill--danger{% else %}status-pill--warning{% endif %}">
+                            {{ app.get_status_display }}
+                        </span>
+                    </div>
+                    <p class="table-meta">
+                        {% if app.status == 'RESUME_SELECTED' %}
+                            Your online test is ready.
+                        {% elif app.status == 'ROUND_1_PASSED' %}
+                            Start your coding test now.
+                        {% elif app.status == 'ROUND_2_PASSED' or app.status == 'ROUND_3_PASSED' %}
+                            Pick a time and book your interview.
+                        {% elif app.status == 'OFFER_GENERATED' %}
+                            Review your job offer and decide.
+                        {% elif app.status == 'HIRED' %}
+                            You finished the process successfully!
+                        {% elif app.status == 'REJECTED' or app.status == 'REJECTED_TIMEOUT' %}
+                            Process closed. Check feedback for tips.
+                        {% else %}
+                            Waiting for recruiter to review.
+                        {% endif %}
+                    </p>
+
+                    <div id="booking-container-{{ app.id }}" class="action-card__cta">
+                        {% if app.status == 'RESUME_SELECTED' %}
+                        <a href="{% url 'take_assessment' app.id 'APTITUDE' %}" class="btn thunder-btn thunder-btn--primary">
+                            <i class="fa-solid fa-play me-2"></i>Start Test
+                        </a>
+                        {% elif app.status == 'ROUND_1_PASSED' %}
+                        <a href="{% url 'take_assessment' app.id 'PRACTICAL' %}" class="btn thunder-btn thunder-btn--primary">
+                            <i class="fa-solid fa-code me-2"></i>Start Coding Test
+                        </a>
+                        {% elif app.status == 'ROUND_2_PASSED' or app.status == 'ROUND_3_PASSED' %}
+                        <button type="button" class="btn thunder-btn thunder-btn--primary" onclick="loadRecruiterSlots({{ app.job.recruiter.id }}, {{ app.id }}, '{{ csrf_token }}', this)">
+                            <i class="fa-solid fa-calendar-plus me-2"></i>Find Slots
+                        </button>
+                        <a href="{% url 'candidate_applications' %}" class="btn thunder-btn thunder-btn--ghost">Review Timeline</a>
+                        <div id="slots-ui-{{ app.id }}" class="slot-picker">
+                            <p class="table-meta mb-0">Select a recruiter slot to confirm the next conversation.</p>
+                            <div id="slot-list-{{ app.id }}" class="slot-picker__list"></div>
+                        </div>
+                        <div id="slot-feedback-{{ app.id }}" class="slot-feedback"></div>
+                        {% elif app.status == 'OFFER_GENERATED' %}
+                        <a href="{% url 'view_offer' app.id %}" class="btn thunder-btn thunder-btn--primary">
+                            <i class="fa-solid fa-file-signature me-2"></i>Review Offer
+                        </a>
+                        {% else %}
+                        <a href="{% url 'candidate_applications' %}" class="btn thunder-btn thunder-btn--ghost">
+                            <i class="fa-solid fa-arrow-right me-2"></i>Track Application
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+                {% empty %}
+                <div class="empty-state">
+                    <i class="fa-solid fa-bolt"></i>
+                    <strong>No tasks yet</strong>
+                    <span>Your tasks will appear here when your applications move forward.</span>
+                </div>
+                {% endfor %}
+            </div>
+        </article>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const schedulerUrls = {
+        slots: "{% url 'api_get_recruiter_slots' 0 %}",
+        book: "{% url 'api_book_interview_slot' %}",
+        reschedule: "{% url 'api_request_reschedule' %}",
+    };
+
+    function setSlotFeedback(targetId, message, type) {
+        const node = document.getElementById(targetId);
+        if (!node) {
+            return;
+        }
+
+        node.textContent = message;
+        node.className = "slot-feedback" + (type ? " is-" + type : "");
+    }
+
+    function loadRecruiterSlots(recruiterId, applicationId, csrfToken, triggerButton) {
+        const slotUi = document.getElementById("slots-ui-" + applicationId);
+        const slotList = document.getElementById("slot-list-" + applicationId);
+        const feedbackId = "slot-feedback-" + applicationId;
+        const slotsUrl = schedulerUrls.slots.replace("/0/", "/" + recruiterId + "/");
+
+        if (!slotUi || !slotList) {
+            return;
+        }
+
+        if (triggerButton) {
+            triggerButton.disabled = true;
+            triggerButton.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i>Loading slots';
+        }
+
+        slotUi.classList.add("is-visible");
+        slotList.innerHTML = '<span class="slot-feedback is-muted">Scanning recruiter availability...</span>';
+        setSlotFeedback(feedbackId, "", "");
+
+        fetch(slotsUrl, {
+            headers: {
+                "X-CSRFToken": csrfToken,
+            },
+        })
+        .then(function (response) {
+            if (!response.ok) {
+                throw new Error("Unable to load recruiter availability.");
+            }
+            return response.json();
+        })
+        .then(function (data) {
+            slotList.innerHTML = "";
+
+            if (!data.slots || !data.slots.length) {
+                slotList.innerHTML = '<span class="slot-feedback is-muted">No open slots right now. Check back later.</span>';
+                return;
+            }
+
+            data.slots.forEach(function (slot) {
+                const button = document.createElement("button");
+                button.type = "button";
+                button.className = "slot-button";
+                button.innerHTML = '<i class="fa-regular fa-clock me-2"></i>' + slot.date + ' | ' + slot.start_time + ' - ' + slot.end_time;
+                button.addEventListener("click", function () {
+                    bookSlot(slot.id, applicationId, csrfToken, button);
+                });
+                slotList.appendChild(button);
+            });
+        })
+        .catch(function (error) {
+            slotList.innerHTML = '<span class="slot-feedback is-error">' + error.message + '</span>';
+        })
+        .finally(function () {
+            if (triggerButton) {
+                triggerButton.disabled = false;
+                triggerButton.innerHTML = '<i class="fa-solid fa-calendar-plus me-2"></i>Find Slots';
+            }
+        });
+    }
+
+    function bookSlot(slotId, applicationId, csrfToken, buttonNode) {
+        const container = document.getElementById("booking-container-" + applicationId);
+        const feedbackId = "slot-feedback-" + applicationId;
+
+        if (!container) {
+            return;
+        }
+
+        Array.from(container.querySelectorAll(".slot-button")).forEach(function (node) {
+            node.disabled = true;
+        });
+
+        if (buttonNode) {
+            buttonNode.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i>Booking';
+        }
+
+        fetch(schedulerUrls.book, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": csrfToken,
+            },
+            body: JSON.stringify({
+                slot_id: slotId,
+                application_id: applicationId,
+            }),
+        })
+        .then(function (response) {
+            return response.json().then(function (data) {
+                if (!response.ok || data.status !== "success") {
+                    throw new Error(data.message || "Unable to book the selected slot.");
+                }
+                return data;
+            });
+        })
+        .then(function () {
+            container.innerHTML = [
+                '<div class="slot-feedback is-success">Interview slot confirmed and calendar sync dispatched.</div>',
+                '<button type="button" class="btn thunder-btn thunder-btn--ghost thunder-btn--small" onclick="requestReschedule(' + applicationId + ', \'' + csrfToken + '\', \'' + feedbackId + '\')">Need to reschedule?</button>'
+            ].join("");
+            setSlotFeedback(feedbackId, "", "");
+        })
+        .catch(function (error) {
+            setSlotFeedback(feedbackId, error.message, "error");
+            Array.from(container.querySelectorAll(".slot-button")).forEach(function (node) {
+                node.disabled = false;
+            });
+
+            if (buttonNode) {
+                buttonNode.innerHTML = '<i class="fa-regular fa-clock me-2"></i>Retry slot';
+            }
+        });
+    }
+
+    function requestReschedule(applicationId, csrfToken, targetId) {
+        setSlotFeedback(targetId, "Dispatching reschedule request...", "muted");
+
+        fetch(schedulerUrls.reschedule, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": csrfToken,
+            },
+            body: JSON.stringify({
+                application_id: applicationId,
+            }),
+        })
+        .then(function (response) {
+            return response.json().then(function (data) {
+                if (!response.ok || data.status !== "success") {
+                    throw new Error(data.message || "Unable to send reschedule request.");
+                }
+                return data;
+            });
+        })
+        .then(function (data) {
+            setSlotFeedback(targetId, data.message || "Reschedule request sent to recruiter.", "success");
+        })
+        .catch(function (error) {
+            setSlotFeedback(targetId, error.message, "error");
+        });
+    }
+</script>
+{% endblock %}

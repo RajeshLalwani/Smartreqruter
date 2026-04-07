@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Simulation Outcome | {{ application.job.title }}{% endblock %}
+
+{% block content %}
+<style>
+    /* Z-INDEX SAFEGUARDS */
+    .modal { z-index: 2000 !important; }
+    .modal-backdrop { z-index: 1050 !important; }
+    .tracking-widest { letter-spacing: 0.2em; }
+    .x-small { font-size: 0.75rem; }
+    .xx-small { font-size: 0.65rem; }
+
+    .bg-gradient-primary { background: linear-gradient(90deg, #00d2ff, #3a7bd5); }
+    .progress { background: rgba(255,255,255,0.05) !important; }
+</style>
+
+<div class="container py-5 fade-up">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+
+            <!-- Success Banner -->
+            <div class="glass-panel p-5 shadow-lg border-success border-opacity-20 text-center mb-5 rounded-4" data-aos="fade-up">
+                <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto mb-4" style="width: 80px; height: 80px; background: rgba(0,200,83,0.1); border: 1px solid rgba(0,200,83,0.3); filter: drop-shadow(0 0 20px rgba(0,200,83,0.2));">
+                    <i class="fas fa-check-circle text-success fa-2x"></i>
+                </div>
+                <h2 class="fw-bold text-white mb-2" style="font-family: 'Space Grotesk', sans-serif;">Simulation <span style="background: linear-gradient(90deg, #00C853, #00B8D4); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">Harmonized</span></h2>
+                <p class="text-secondary mb-0">We've mapped your behavioral DNA to our workplace culture.</p>
+            </div>
+
+            <div class="row g-4 mb-5">
+                <!-- Trait Scoreboard -->
+                <div class="col-lg-6" data-aos="fade-right">
+                    <div class="glass-panel p-4 h-100 shadow rounded-4 border-secondary border-opacity-25">
+                        <h6 class="xx-small text-secondary tracking-widest text-uppercase fw-bold mb-4 border-bottom border-light border-opacity-10 pb-3">Behavioral Trait Profile</h6>
+                        {% for trait, score in vibe_score.items %}
+                        <div class="mb-4">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="fw-bold text-white x-small">{{ trait }}</span>
+                                <span class="text-primary fw-bold x-small" style="font-family: 'Space Grotesk', sans-serif;">{{ score }}%</span>
+                            </div>
+                            <div class="progress" style="height: 6px; border-radius: 4px;">
+                                <div class="progress-bar bg-gradient-primary" style="width: {{ score }}%; border-radius: 4px;"></div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- AI Outcome Analysis -->
+                <div class="col-lg-6" data-aos="fade-left">
+                    <div class="glass-panel p-4 h-100 shadow rounded-4 border-info border-opacity-20">
+                        <h6 class="xx-small text-secondary tracking-widest text-uppercase fw-bold mb-4 border-bottom border-light border-opacity-10 pb-3">Organizational Alignment</h6>
+
+                        <div class="p-3 rounded-4 mb-4" style="background: rgba(0,176,255,0.06); border: 1px solid rgba(0,176,255,0.18);">
+                            <h6 class="fw-bold text-info x-small mb-2"><i class="fas fa-brain me-2"></i>Synaptic Match Analysis</h6>
+                            <p class="x-small text-secondary mb-0 fst-italic">"Based on your decisions regarding technical debt and team dynamics, you display a high level of <strong class="text-white">Pragmatic Leadership</strong>. You tend to prioritize transparency and long-term quality over short-term hacks, which aligns with our Core Pillar: Excellence."</p>
+                        </div>
+
+                        <div class="p-3 rounded-4" style="background: rgba(255,255,255,0.025); border: 1px solid rgba(255,255,255,0.06);">
+                            <div class="d-flex align-items-center gap-3">
+                                <i class="fas fa-rocket text-warning fa-2x flex-shrink-0" style="filter: drop-shadow(0 0 8px rgba(255,193,7,0.4));"></i>
+                                <div>
+                                    <h6 class="fw-bold text-white mb-1 x-small">Growth Forecast</h6>
+                                    <p class="xx-small text-secondary mb-0">High compatibility for Lead-Track roles within 12 months.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center">
+                <a href="{% url 'dashboard' %}" class="btn btn-primary rounded-pill px-5 py-3 fw-bold shadow-lg hover-scale">Return to Mission Control</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

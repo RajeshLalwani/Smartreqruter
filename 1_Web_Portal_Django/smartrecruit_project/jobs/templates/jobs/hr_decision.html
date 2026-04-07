@@ -1,0 +1,393 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}The War Room: Final Decision | SmartRecruit{% endblock %}
+
+{% block extra_head %}
+<!-- Include SweetAlert2 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<style>
+    :root {
+        --neon-green: #10b981;
+        --neon-red: #ef4444;
+        --neon-cyan: #00f2ff;
+        --glass-bg: rgba(255, 255, 255, 0.05);
+        --glass-border: rgba(255, 255, 255, 0.1);
+    }
+    
+    body {
+        background-color: #0a0b10;
+        color: #f8f9fa;
+        font-family: 'Inter', sans-serif;
+    }
+
+    .glass-card {
+        background: var(--glass-bg);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid var(--glass-border);
+        border-radius: 20px;
+        padding: 30px;
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.6);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .glass-card::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, var(--neon-cyan), #bc13fe);
+    }
+
+    .metric-box {
+        background: rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 12px;
+        padding: 20px;
+        text-align: center;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .metric-box:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 242, 255, 0.15);
+        border-color: rgba(0, 242, 255, 0.3);
+    }
+
+    .metric-title {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        color: rgba(255,255,255,0.5);
+        margin-bottom: 10px;
+        font-weight: 700;
+    }
+
+    .metric-value {
+        font-size: 28px;
+        font-weight: 800;
+        background: linear-gradient(135deg, #fff, #a5b4fc);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .btn-decision {
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        padding: 16px 30px;
+        border-radius: 50px;
+        border: none;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        width: 100%;
+        color: #000;
+        cursor: pointer;
+    }
+
+    .btn-hire {
+        background: linear-gradient(135deg, #10b981, #34d399);
+        box-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
+    }
+
+    .btn-hire:hover {
+        box-shadow: 0 0 40px rgba(16, 185, 129, 0.6);
+        transform: scale(1.02);
+    }
+
+    .btn-reject {
+        background: linear-gradient(135deg, #ef4444, #f87171);
+        box-shadow: 0 0 20px rgba(239, 68, 68, 0.3);
+        color: #fff;
+    }
+
+    .btn-reject:hover {
+        box-shadow: 0 0 40px rgba(239, 68, 68, 0.6);
+        transform: scale(1.02);
+    }
+
+    /* Thunder Preloader Overlay */
+    #thunder-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 99999;
+        background: rgba(10, 11, 16, 0.95);
+        backdrop-filter: blur(10px);
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        color: #fff;
+    }
+
+    #thunder-overlay.active { display: flex; }
+
+    .thunder-bolt {
+        font-size: 80px;
+        animation: megastrike 0.5s infinite alternate;
+        margin-bottom: 20px;
+    }
+
+    @keyframes megastrike {
+        from { transform: scale(0.9) rotate(-5deg); filter: drop-shadow(0 0 20px #00f2ff); }
+        to { transform: scale(1.2) rotate(5deg); filter: drop-shadow(0 0 60px #bc13fe); }
+    }
+
+    .status-badge {
+        display: inline-block;
+        padding: 6px 16px;
+        border-radius: 50px;
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- Thunder Preloader Overlay -->
+<div id="thunder-overlay">
+    <div class="thunder-bolt">⚡</div>
+    <h3 class="fw-bold mb-0 tracking-widest text-uppercase" style="letter-spacing: 4px; color: var(--neon-cyan);" id="preloader-text">Compiling Offer Letter...</h3>
+    <p class="text-white-50 mt-2 small">Engaging SMTP relays. Please wait.</p>
+</div>
+
+<div class="container py-5" data-aos="fade-up">
+
+    <!-- Header Section -->
+    <div class="d-flex justify-content-between align-items-center mb-5">
+        <div>
+            <div class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-3 py-2 rounded-pill mb-2 tracking-widest text-uppercase" style="font-size:0.75rem; font-weight:800;">
+                <i class="fas fa-chess-king me-2"></i> Round 4: The War Room
+            </div>
+            <h1 class="fw-bold text-white mb-0" style="font-size: 2.5rem; letter-spacing: -1px;">
+                Final <span style="background: linear-gradient(90deg, #00f2ff, #bc13fe); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Decision Matrix</span>
+            </h1>
+        </div>
+        <a href="{% url 'kanban_board' %}" class="btn btn-outline-secondary rounded-pill px-4 fw-bold">
+            <i class="fas fa-arrow-left me-2"></i> Back to Kanban
+        </a>
+    </div>
+
+    <!-- Main Summary Card -->
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="glass-card">
+                
+                <!-- Candidate Header -->
+                <div class="row align-items-center mb-5 border-bottom border-secondary border-opacity-25 pb-4">
+                    <div class="col-md-8">
+                        <h2 class="fw-bold text-white mb-1">{{ application.candidate.full_name }}</h2>
+                        <p class="text-white-50 mb-0 d-flex align-items-center gap-3">
+                            <span><i class="fas fa-briefcase me-2 text-primary"></i>{{ application.job.title }}</span>
+                            <span><i class="fas fa-envelope me-2 text-info"></i>{{ application.candidate.user.email }}</span>
+                        </p>
+                    </div>
+                    <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                        <span class="status-badge bg-primary bg-opacity-20 text-primary border border-primary border-opacity-50">
+                            {{ application.get_status_display }}
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Metrics Grid -->
+                <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+                
+                <div class="row g-4 mb-5">
+                    <!-- Radar Chart Column -->
+                    <div class="col-md-6">
+                        <div class="glass-card p-4 h-100 border-0 shadow-none" style="background: rgba(0,0,0,0.2);">
+                            <h6 class="text-uppercase tracking-widest text-white-50 mb-4 fw-bold x-small"><i class="fas fa-microchip me-2"></i> Competency Matrix</h6>
+                            <canvas id="competencyChart" style="max-height: 300px;"></canvas>
+                        </div>
+                    </div>
+                    
+                    <!-- Quick Info Column -->
+                    <div class="col-md-6">
+                        <div class="glass-card p-4 h-100 border-0 shadow-none" style="background: rgba(0,0,0,0.2);">
+                            <h6 class="text-uppercase tracking-widest text-white-50 mb-4 fw-bold x-small"><i class="fas fa-bolt me-2"></i> Round-by-Round Breakdown</h6>
+                            <div class="row g-3">
+                                <div class="col-6">
+                                    <div class="metric-box py-3">
+                                        <div class="metric-title x-small">R1: Resume</div>
+                                        <div class="metric-value fs-4">{{ round1_score|floatformat:0 }}%</div>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="metric-box py-3">
+                                        <div class="metric-title x-small">R2: Technical</div>
+                                        <div class="metric-value fs-4">{{ round2_score|floatformat:0 }}%</div>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="metric-box py-3">
+                                        <div class="metric-title x-small">R3: Sentiment</div>
+                                        <div class="metric-value fs-6 text-truncate" style="background:none; -webkit-text-fill-color: #a5b4fc;">{{ round3_sentiment }}</div>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="metric-box py-3" style="border-color: {% if tab_switches > 0 %}rgba(239, 68, 68, 0.4){% else %}rgba(16, 185, 129, 0.4){% endif %};">
+                                        <div class="metric-title x-small">Integrity</div>
+                                        <div class="metric-value fs-4" style="color: {% if tab_switches > 0 %}#f87171{% else %}#34d399{% endif %}; -webkit-text-fill-color: initial;">{{ tab_switches }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Decision Actions -->
+                <div class="p-4 rounded-4 mt-5" style="background: rgba(0,0,0,0.4); border: 1px dashed rgba(255,255,255,0.1);">
+                    <h6 class="text-center text-uppercase tracking-widest mb-4 fw-bold" style="color:var(--neon-cyan); letter-spacing:3px;">Execute Final Directive</h6>
+                    
+                    <div class="row g-4 justify-content-center">
+                         <!-- Hire Button -->
+                        <div class="col-md-5">
+                            <button class="btn-decision btn-hire" onclick="executeDecision('hire')" {% if application.status in 'HIRED,REJECTED' %}disabled style="opacity:0.5; cursor:not-allowed;"{% endif %}>
+                                <i class="fas fa-check-circle fs-4"></i> Confirm Selection
+                            </button>
+                            <div class="text-center mt-2 small text-white-50">Generates and sends 'Winner's Bolt' Offer Letter</div>
+                        </div>
+                        
+                        <!-- Reject Button -->
+                        <div class="col-md-5">
+                            <button class="btn-decision btn-reject" onclick="executeDecision('reject')" {% if application.status in 'HIRED,REJECTED' %}disabled style="opacity:0.5; cursor:not-allowed;"{% endif %}>
+                                <i class="fas fa-times-circle fs-4"></i> Polite Rejection
+                            </button>
+                            <div class="text-center mt-2 small text-white-50">Generates and sends 'Growth Spark' Rejection</div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function getCsrf() {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.startsWith('csrftoken=')) {
+                return cookie.substring('csrftoken='.length, cookie.length);
+            }
+        }
+        return '';
+    }
+
+    // Competency Radar Chart Initialization
+    const competencyData = JSON.parse('{{ competencies|safe }}');
+    const ctx = document.getElementById('competencyChart').getContext('2d');
+    
+    new Chart(ctx, {
+        type: 'radar',
+        data: {
+            labels: ['Technical', 'Communication', 'Cultural Fit', 'Innovation', 'Job Alignment'],
+            datasets: [{
+                label: 'Candidate Competency',
+                data: [
+                    competencyData.technical,
+                    competencyData.communication,
+                    competencyData.cultural,
+                    competencyData.innovation,
+                    competencyData.alignment
+                ],
+                backgroundColor: 'rgba(0, 242, 255, 0.2)',
+                borderColor: '#00f2ff',
+                pointBackgroundColor: '#00f2ff',
+                pointBorderColor: '#fff',
+                pointHoverBackgroundColor: '#fff',
+                pointHoverBorderColor: '#00f2ff'
+            }]
+        },
+        options: {
+            scales: {
+                r: {
+                    angleLines: { color: 'rgba(255,255,255,0.1)' },
+                    grid: { color: 'rgba(255,255,255,0.1)' },
+                    pointLabels: { color: 'rgba(255,255,255,0.7)', font: { size: 10 } },
+                    ticks: { display: false, stepSize: 20 },
+                    suggestedMin: 0,
+                    suggestedMax: 100
+                }
+            },
+            plugins: {
+                legend: { display: false }
+            }
+        }
+    });
+
+    async function executeDecision(decisionType) {
+        const isHire = decisionType === 'hire';
+        const actionText = isHire ? 'hire this candidate' : 'reject this candidate';
+        const confirmColor = isHire ? '#10b981' : '#ef4444';
+
+        // 1. Confirm Dialog
+        const result = await Swal.fire({
+            title: `Confirm Decision`,
+            html: `Are you sure you want to <strong>${actionText}</strong>?<br>An automated email will be dispatched immediately.`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: confirmColor,
+            cancelButtonColor: 'rgba(255,255,255,0.1)',
+            confirmButtonText: isHire ? 'Yes, Send Offer' : 'Yes, Send Rejection',
+            background: 'rgba(10,11,16,0.95)',
+            color: '#fff',
+        });
+
+        if (result.isConfirmed) {
+            // 2. Show Thunder Preloader
+            const overlay = document.getElementById('thunder-overlay');
+            const preloaderText = document.getElementById('preloader-text');
+            preloaderText.innerText = isHire ? "Compiling Offer Letter..." : "Formatting Polite Rejection...";
+            preloaderText.style.color = isHire ? "var(--neon-green)" : "var(--neon-red)";
+            overlay.classList.add('active');
+
+            try {
+                // 3. API Call
+                const response = await fetch("{% url 'hr_decision' application.id %}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCsrf()
+                    },
+                    body: JSON.stringify({ decision: decisionType })
+                });
+
+                const data = await response.json();
+                
+                // Hide Preloader
+                overlay.classList.remove('active');
+
+                if (response.ok && data.status === 'success') {
+                    // 4. Success Toast
+                    Swal.fire({
+                        icon: 'success',
+                        title: isHire ? '⚡ Offer Delivered!' : 'Feedback Sent',
+                        text: data.message,
+                        background: 'rgba(10,11,16,0.95)',
+                        color: '#fff',
+                        confirmButtonColor: '#00f2ff'
+                    }).then(() => {
+                        window.location.reload(); // Reload to update status badge & disable buttons
+                    });
+                } else {
+                    Swal.fire('Error', data.message || 'Transmission failed.', 'error');
+                }
+
+            } catch (error) {
+                overlay.classList.remove('active');
+                Swal.fire('System Error', 'Network or backend failure.', 'error');
+            }
+        }
+    }
+</script>
+{% endblock %}

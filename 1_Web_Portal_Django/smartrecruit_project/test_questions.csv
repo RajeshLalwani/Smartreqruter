@@ -1,0 +1,5 @@
+round,category,question_text,options,correct_answer,explanation,difficulty,is_coding
+ROUND_1_TECHNICAL,PYTHON,What is the result of 2**3 in Python?,"[2, 6, 8, 9]",8,2 to the power of 3 is 8.,easy,false
+ROUND_1_LOGICAL,APTPITUTE,If a doctor gives you 3 pills and tells you to take one every half hour, how long will they last?,"["30 mins", "60 mins", "90 mins", "120 mins"]",60 mins,You take the first at 0 mins, second at 30 mins, third at 60 mins.,medium,false
+ROUND_2_TECHNICAL,DJANGO,Which command is used to create a new Django app?,["startapp", "newapp", "createapp", "initapp"],startapp,python manage.py startapp <name>,easy,false
+ROUND_2_TECHNICAL,SYSTEM_DESIGN,What does ACID stand for in databases?,"["Atomicity Consistency Isolation Durability", "Accuracy Consistency Integrity Durability", "Atomicity Control Isolation Data", "Access Control Integrity Data"]",Atomicity Consistency Isolation Durability,Standard DB transaction properties.,medium,false

@@ -1,0 +1,177 @@
+{% extends 'auth_base.html' %}
+{% load socialaccount %}
+
+{% block title %}Create Account | SmartRecruit{% endblock %}
+
+{% block auth_content %}
+<div class="mb-5" data-entrance="fade-up">
+    <div class="d-flex align-items-center gap-2 mb-3">
+        <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-3 py-1 rounded-pill small fw-bold">SECURE SIGNUP</span>
+    </div>
+    <h2 class="fw-bold mb-2 text-theme" style="font-family: 'Manrope', sans-serif; letter-spacing: -0.02em;">Create Your Account</h2>
+    <p class="text-theme-secondary mb-0 small">Join SmartRecruit to track your job applications and careers.</p>
+</div>
+
+{% if form.errors %}
+<div class="alert alert-danger border-0 bg-danger bg-opacity-10 text-theme small mb-4" role="alert">
+    {% for field in form %}
+        {% for error in field.errors %}
+        <div class="d-flex align-items-center gap-2"><i class="fa-solid fa-circle-exclamation shadow-sm"></i> {{ field.label }}: {{ error }}</div>
+        {% endfor %}
+    {% endfor %}
+    {% for error in form.non_field_errors %}
+    <div class="d-flex align-items-center gap-2"><i class="fa-solid fa-triangle-exclamation shadow-sm"></i> {{ error }}</div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<form method="post" class="d-grid gap-3">
+    {% csrf_token %}
+    <input type="hidden" name="next" value="{{ request.GET.next }}">
+    
+    <div class="row g-3">
+        <div class="col-md-6">
+            <div class="form-floating">
+                {{ form.username }}
+                <label for="{{ form.username.id_for_label }}">Username</label>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="form-floating">
+                {{ form.full_name }}
+                <label for="{{ form.full_name.id_for_label }}">Full name</label>
+            </div>
+        </div>
+    </div>
+
+    <div class="form-floating">
+        {{ form.email }}
+        <label for="{{ form.email.id_for_label }}">Email address</label>
+    </div>
+
+    <div class="row g-3 mt-1">
+        <div class="col-md-6">
+            <div class="form-floating position-relative">
+                {{ form.password1 }}
+                <label for="{{ form.password1.id_for_label }}">Password</label>
+                <div class="progress mt-2" style="height: 4px; background: rgba(255,255,255,0.05);">
+                    <div id="pw-strength-bar" class="progress-bar bg-danger" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+                <div id="pw-strength-text" class="x-small text-end mt-1 text-secondary" style="font-size: 0.65rem;">Strength: Weak</div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="form-floating">
+                {{ form.password2 }}
+                <label for="{{ form.password2.id_for_label }}">Verify password</label>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function initPasswordStrength() {
+            const pwInput = document.querySelector('input[name="password1"]');
+            const pw2Input = document.querySelector('input[name="password2"]');
+            const submitBtn = document.querySelector('button[type="submit"]');
+            const bar = document.getElementById('pw-strength-bar');
+            const text = document.getElementById('pw-strength-text');
+            
+            if(!pwInput) return;
+
+            function checkStrength(value) {
+                let s = 0;
+                if(value.length > 7) s += 25;
+                if(/[A-Z]/.test(value)) s += 25;
+                if(/[0-9]/.test(value)) s += 25;
+                if(/[^A-Za-z0-9]/.test(value)) s += 25;
+                return s;
+            }
+
+            pwInput.addEventListener('input', (e) => {
+                const s = checkStrength(e.target.value);
+                bar.style.width = s + '%';
+                if(s < 50) {
+                    bar.className = 'progress-bar bg-danger';
+                    text.textContent = 'Strength: Weak';
+                    text.classList.remove('text-success', 'text-warning');
+                    text.classList.add('text-danger');
+                } else if(s < 75) {
+                    bar.className = 'progress-bar bg-warning';
+                    text.textContent = 'Strength: Moderate';
+                    text.classList.remove('text-success', 'text-danger');
+                    text.classList.add('text-warning');
+                } else {
+                    bar.className = 'progress-bar bg-success';
+                    text.textContent = 'Strength: Strong';
+                    text.classList.remove('text-warning', 'text-danger');
+                    text.classList.add('text-success');
+                }
+            });
+
+            // Form validation hook
+            const form = pwInput.closest('form');
+            if(form) {
+                form.addEventListener('submit', (e) => {
+                    if (pwInput.value !== pw2Input.value) {
+                        e.preventDefault();
+                        if(window.showThunderToast) window.showThunderToast('Passwords do not match.', 'danger');
+                    }
+                });
+            }
+        }
+        document.addEventListener('DOMContentLoaded', initPasswordStrength);
+        // Fallback for smooth transition
+        setTimeout(initPasswordStrength, 100);
+    </script>
+
+    <div class="glass-card p-4 rounded-4 mt-3 border-primary border-opacity-10 position-relative overflow-hidden" data-entrance="fade-right">
+        <div class="position-absolute top-0 end-0 p-3 opacity-10">
+            <i class="fa-solid fa-dna fa-3x text-primary"></i>
+        </div>
+        <div class="fw-bold text-theme mb-2 small d-flex align-items-center gap-2">
+            <i class="fa-solid fa-sparkles text-info"></i> Candidate Dashboard
+        </div>
+        <div class="text-theme-secondary small pe-5" style="font-size: 0.75rem;">
+            Track applications, prepare for AI interviews, and find jobs that match your skills.
+        </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary btn-lg rounded-pill btn-ripple fw-bold py-3 mt-2 shadow-glow" style="letter-spacing: 0.05em;">
+        CREATE ACCOUNT <i class="fa-solid fa-user-plus ms-2 scale-90"></i>
+    </button>
+
+</form>
+
+<style>
+    .btn-glass-sso {
+        background: rgba(255, 255, 255, 0.02);
+        color: var(--theme-secondary);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .hover-glow-azure:hover {
+        background: rgba(0, 210, 255, 0.1);
+        border-color: #00d2ff !important;
+        box-shadow: 0 0 15px rgba(0, 210, 255, 0.3);
+        color: #00d2ff !important;
+        transform: translateY(-2px);
+    }
+    .hover-glow-okta:hover {
+        background: rgba(59, 130, 246, 0.1);
+        border-color: #3b82f6 !important;
+        box-shadow: 0 0 15px rgba(59, 130, 246, 0.3);
+        color: #3b82f6 !important;
+        transform: translateY(-2px);
+    }
+</style>
+
+<div class="pt-5 mt-4 border-top border-theme border-opacity-5">
+    <div class="d-flex align-items-center justify-content-center gap-2">
+        <span class="text-theme-secondary small">Already registered?</span>
+        <a href="{% url 'login' %}" class="fw-bold text-primary text-decoration-none small hover-scale">Sign In</a>
+    </div>
+</div>
+{% endblock %}

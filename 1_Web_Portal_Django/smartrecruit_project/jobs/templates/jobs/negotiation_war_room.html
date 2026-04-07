@@ -1,0 +1,278 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Negotiation War Room | AI Sparring | SmartRecruit{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row g-4">
+        <!-- Sidebar: Candidate Intelligence -->
+        <div class="col-lg-3">
+            <div class="glass-panel p-4 h-100 d-flex flex-column gap-4">
+                <div class="text-center">
+                    <div
+                        class="avatar-xl mx-auto rounded-circle mb-3 bg-warning bg-opacity-10 d-flex align-items-center justify-content-center text-warning fw-bold fs-1 shadow-sm border border-warning border-opacity-20">
+                        {{ application.candidate.full_name|first }}
+                    </div>
+                    <h4 class="fw-bold text-theme mb-1">{{ application.candidate.full_name }}</h4>
+                    <span
+                        class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-20 rounded-pill px-3">Aggressive
+                        Negotiator</span>
+                </div>
+
+                <div class="p-3 rounded-4 bg-dark bg-opacity-20 border border-secondary border-opacity-10">
+                    <h6 class="xx-small text-muted uppercase fw-bold mb-3 tracking-widest">Psychometric Profile</h6>
+                    <div class="d-flex flex-column gap-2">
+                        <div class="d-flex justify-content-between x-small">
+                            <span class="text-muted">Persistence</span>
+                            <span class="text-theme fw-bold">92%</span>
+                        </div>
+                        <div class="progress" style="height: 4px;">
+                            <div class="progress-bar bg-warning" style="width: 92%"></div>
+                        </div>
+                        <div class="d-flex justify-content-between x-small mt-2">
+                            <span class="text-muted">Empathy</span>
+                            <span class="text-theme fw-bold">45%</span>
+                        </div>
+                        <div class="progress" style="height: 4px;">
+                            <div class="progress-bar bg-info" style="width: 45%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-auto">
+                    <div class="p-3 rounded-4 bg-primary bg-opacity-5 border border-primary border-opacity-10">
+                        <h6 class="xx-small text-primary uppercase fw-bold mb-2">Strategy Coach</h6>
+                        <p class="x-small text-muted mb-0 italic">"Focus on the long-term career growth rather than
+                            immediate base increase to soften their stance."</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Workspace: The Negotiation Table -->
+        <div class="col-lg-6">
+            <div class="glass-panel p-0 h-100 d-flex flex-column overflow-hidden shadow-2v">
+                <!-- Header -->
+                <div
+                    class="p-4 border-bottom border-light border-opacity-10 d-flex justify-content-between align-items-center bg-black-50">
+                    <div>
+                        <h5 class="fw-bold text-theme mb-0"><i class="fas fa-handshake text-primary me-2"></i>Live
+                            Sparring Round</h5>
+                        <p class="xx-small text-muted mb-0 uppercase mt-1">Status: <span class="text-success blink">In
+                                Progress</span> | Objective: Close at < ₹25LPA</p>
+                    </div>
+                    <div class="text-end">
+                        <div class="h3 fw-bold text-primary mb-0">₹24.5L</div>
+                        <div class="xx-small text-muted uppercase">Current Best Offer</div>
+                    </div>
+                </div>
+
+                <!-- Chat Feed -->
+                <div id="negotiationFeed" class="flex-grow-1 p-4 overflow-auto d-flex flex-column gap-3"
+                    style="min-height: 450px;">
+                    <div class="message-ai d-flex gap-3 align-items-start">
+                        <div
+                            class="avatar-sm bg-warning bg-opacity-20 rounded-circle flex-shrink-0 d-flex align-items-center justify-content-center text-warning fw-bold">
+                            AI</div>
+                        <div class="glass-card p-3 rounded-4 shadow-sm" style="max-width: 80%;">
+                            <p class="small text-theme mb-0">"Thank you for the offer. However, given my 8 years of
+                                specialized experience in Cloud Architecture, I was expecting a base closer to ₹28LPA.
+                                Can we bridge this gap?"</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Input Area -->
+                <div class="p-4 bg-dark bg-opacity-20 border-top border-light border-opacity-10">
+                    <form id="sparringForm" class="d-flex gap-3 align-items-center">
+                        <div class="flex-grow-1 position-relative">
+                            <input type="text" id="userInput"
+                                class="form-control bg-dark border-0 rounded-pill px-4 text-white"
+                                placeholder="Type your counter-offer or reasoning..."
+                                style="height: 50px; background: rgba(255,255,255,0.05) !important;">
+                            <div class="position-absolute top-50 end-0 translate-middle-y me-3">
+                                <i class="fas fa-microphone text-muted cursor-pointer hover-text-primary"></i>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary rounded-circle shadow-primary"
+                            style="width: 50px; height: 50px;">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Side: Real-time Analytics -->
+        <div class="col-lg-3">
+            <div class="glass-panel p-4 h-100 d-flex flex-column gap-4">
+                <h6 class="fw-bold text-theme mb-0"><i class="fas fa-chart-line text-info me-2"></i>Negotiation Dynamics
+                </h6>
+
+                <!-- Persuasion Gauge -->
+                <div class="text-center my-4">
+                    <div class="position-relative d-inline-flex align-items-center justify-content-center">
+                        <svg width="150" height="150" viewBox="0 0 150 150">
+                            <circle cx="75" cy="75" r="65" fill="none" stroke="rgba(255,255,255,0.05)"
+                                stroke-width="12" />
+                            <circle id="persuasionRing" cx="75" cy="75" r="65" fill="none" stroke="var(--bs-primary)"
+                                stroke-width="12" stroke-dasharray="0 408" stroke-linecap="round"
+                                transform="rotate(-90 75 75)" style="transition: stroke-dashoffset 1s ease;" />
+                        </svg>
+                        <div class="position-absolute text-center">
+                            <div id="persuasionValue" class="display-6 fw-bold text-primary">0%</div>
+                            <div class="xx-small text-muted uppercase">Persuasion</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="list-group list-group-flush bg-transparent gap-3">
+                    <div class="list-group-item bg-transparent border-0 px-0">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="small text-muted">Agreement Likelihood</span>
+                            <span id="likelihood" class="small fw-bold text-success">Low</span>
+                        </div>
+                        <div class="progress" style="height: 6px;">
+                            <div id="likelihoodBar" class="progress-bar bg-success" style="width: 20%"></div>
+                        </div>
+                    </div>
+
+                    <div class="list-group-item bg-transparent border-0 px-0">
+                        <div class="small text-muted mb-2">Candidate Sentiment</div>
+                        <div id="sentimentBadge"
+                            class="badge rounded-pill bg-warning bg-opacity-10 text-warning border border-warning border-opacity-20 px-3">
+                            Skeptical</div>
+                    </div>
+                </div>
+
+                <div class="mt-auto">
+                    <div class="p-3 rounded-4 border border-info border-opacity-10 bg-info bg-opacity-5">
+                        <div class="xx-small text-info uppercase fw-bold mb-2">Sparring Insight</div>
+                        <p id="insightText" class="x-small text-muted mb-0">Candidate reacted negatively to the
+                            "Standard Package" mention. Use "Market Premium" terminology instead.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .message-user .glass-card {
+        background: rgba(var(--bs-primary-rgb), 0.15) !important;
+        border: 1px solid rgba(var(--bs-primary-rgb), 0.3) !important;
+    }
+
+    .shadow-primary {
+        box-shadow: 0 0 20px rgba(var(--bs-primary-rgb), 0.4);
+    }
+
+    .shadow-2v {
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    }
+
+    .blink {
+        animation: blinker 1.5s linear infinite;
+    }
+
+    @keyframes blinker {
+        50% {
+            opacity: 0.3;
+        }
+    }
+
+    .avatar-xl {
+        width: 100px;
+        height: 100px;
+    }
+
+    .italic {
+        font-style: italic;
+    }
+
+    .uppercase {
+        text-transform: uppercase;
+    }
+
+    .tracking-widest {
+        letter-spacing: 0.1em;
+    }
+
+    .xx-small {
+        font-size: 0.65rem;
+    }
+
+    .x-small {
+        font-size: 0.75rem;
+    }
+</style>
+
+<script>
+    const form = document.getElementById('sparringForm');
+    const input = document.getElementById('userInput');
+    const feed = document.getElementById('negotiationFeed');
+    const persuasionRing = document.getElementById('persuasionRing');
+    const persuasionValue = document.getElementById('persuasionValue');
+    const likelihoodBar = document.getElementById('likelihoodBar');
+    const likelihoodText = document.getElementById('likelihood');
+
+    let currentPersuasion = 0;
+
+    form.onsubmit = async (e) => {
+        e.preventDefault();
+        const text = input.value.trim();
+        if (!text) return;
+
+        appendMessage('user', text);
+        input.value = '';
+
+        try {
+            const res = await fetch(`/singularity/negotiate/sparring-api/{{ application.id }}/`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+                body: JSON.stringify({ message: text })
+            });
+            const data = await res.json();
+
+            appendMessage('ai', data.candidate_response);
+            updateStats(data.persuasion_increase);
+
+            document.getElementById('sentimentBadge').innerText = data.sentiment;
+            document.getElementById('insightText').innerText = data.insight;
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    function appendMessage(type, text) {
+        const div = document.createElement('div');
+        div.className = `message-${type} d-flex gap-3 align-items-start ${type === 'user' ? 'justify-content-end' : ''}`;
+
+        const content = `
+            ${type === 'ai' ? '<div class="avatar-sm bg-warning bg-opacity-20 rounded-circle flex-shrink-0 d-flex align-items-center justify-content-center text-warning fw-bold">AI</div>' : ''}
+            <div class="glass-card p-3 rounded-4 shadow-sm" style="max-width: 80%;">
+                <p class="small text-theme mb-0">${text}</p>
+            </div>
+            ${type === 'user' ? '<div class="avatar-sm bg-primary bg-opacity-20 rounded-circle flex-shrink-0 d-flex align-items-center justify-content-center text-primary fw-bold">U</div>' : ''}
+        `;
+
+        div.innerHTML = content;
+        feed.appendChild(div);
+        feed.scrollTop = feed.scrollHeight;
+    }
+
+    function updateStats(inc) {
+        currentPersuasion = Math.min(100, currentPersuasion + inc);
+        persuasionValue.innerText = currentPersuasion + "%";
+
+        const circum = 2 * Math.PI * 65;
+        const offset = circum - (currentPersuasion / 100 * circum);
+        persuasionRing.style.strokeDasharray = `${circum} ${circum}`;
+        persuasionRing.style.strokeDashoffset = offset;
+
+        likelihoodBar.style.width = currentPersuasion + "%";
+        if (currentPersuasion > 70) likelihoodText.innerText = "High";
+        else if (currentPersuasion > 40) likelihoodText.innerText = "Medium";
+    }
+</script>
+{% endblock %}

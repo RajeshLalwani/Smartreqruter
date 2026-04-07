@@ -1,0 +1,228 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}AI Engine & Configuration Hub | SmartRecruit Admin{% endblock %}
+
+{% block extra_head %}
+<!-- Chart.js for Telemetry Dashboard -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+  .ai-hub-textarea {
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #fff;
+    border-radius: 8px;
+    padding: 15px;
+    font-family: 'Inter', monospace;
+    font-size: 0.95rem;
+    resize: vertical;
+    width: 100%;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  }
+  .ai-hub-textarea:focus {
+    outline: none;
+    border-color: #00d2ff;
+    box-shadow: 0 0 10px rgba(0, 210, 255, 0.3);
+  }
+  .llm-select {
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #fff;
+    border-radius: 8px;
+    padding: 10px 15px;
+    appearance: none;
+    width: 100%;
+    cursor: pointer;
+    font-weight: 600;
+  }
+  .llm-select:focus {
+    outline: none;
+    border-color: #00d2ff;
+  }
+  .btn-deploy {
+    background: linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%);
+    border: none;
+    color: #fff;
+    padding: 12px 30px;
+    border-radius: 8px;
+    font-weight: 700;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0, 210, 255, 0.3);
+  }
+  .btn-deploy:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 210, 255, 0.5);
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex" style="min-height:calc(100vh - 72px)">
+  {% include 'core/_admin_sidebar.html' %}
+  <main class="flex-grow-1 p-4 p-lg-5" style="overflow-y: auto;">
+    
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+      <div>
+        <h1 class="glow-text mb-1" style="font-size:2rem;"><i class="fa-solid fa-microchip me-2" style="color:#00d2ff;"></i>AI Engine Hub</h1>
+        <p class="text-theme-secondary mb-0">Dynamic Central Nervous System • Zero-Downtime Configuration</p>
+      </div>
+    </div>
+
+    <!-- Telemetry Dashboard -->
+    <div class="row g-4 mb-5">
+      <div class="col-12 col-xl-8">
+        <div class="glass-card p-4 h-100">
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <h5 class="fw-bold text-white m-0"><i class="fa-solid fa-chart-line me-2 text-warning"></i>API Telemetry (Last 7 Days)</h5>
+            <span class="badge bg-success bg-opacity-20 text-success border border-success px-2 py-1"><i class="fa-solid fa-circle text-success me-1" style="font-size:0.5rem;"></i>Live</span>
+          </div>
+          <div style="position: relative; height:250px; width:100%">
+            <canvas id="apiUsageChart"></canvas>
+          </div>
+        </div>
+      </div>
+      <div class="col-12 col-xl-4">
+        <div class="row g-4 mb-4">
+          <div class="col-6 col-md-6 col-xl-12">
+            <div class="glass-card p-4 text-center">
+              <div class="text-info fw-bold" style="font-size:2.2rem; text-shadow: 0 0 10px rgba(0,210,255,0.4);">4.2M</div>
+              <div class="text-theme-secondary small text-uppercase letter-spacing-1">Tokens Processed</div>
+            </div>
+          </div>
+          <div class="col-6 col-md-6 col-xl-12">
+            <div class="glass-card p-4 text-center">
+              <div class="text-danger fw-bold" style="font-size:2.2rem; text-shadow: 0 0 10px rgba(220,53,69,0.4);">$142.50</div>
+              <div class="text-theme-secondary small text-uppercase letter-spacing-1">Est. Cost Forecast</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Configuration Core -->
+    <form method="POST" action="{% url 'admin_ai_hub' %}">
+      {% csrf_token %}
+      <div class="row g-4">
+        
+        <!-- LLM Switcher -->
+        <div class="col-12 col-lg-4">
+          <div class="glass-card p-4 h-100">
+            <h5 class="fw-bold text-white mb-3"><i class="fa-solid fa-server me-2 text-primary"></i>Active LLM Provider</h5>
+            <p class="text-theme-secondary small mb-4">Select the primary engine for candidate evaluation and interviews.</p>
+            
+            <div class="position-relative">
+              <select name="active_llm" class="llm-select mb-3">
+                <option value="gemini-2.0-flash" {% if active_llm == 'gemini-2.0-flash' %}selected{% endif %}>Gemini 2.0 Flash (Fast & Efficient)</option>
+                <option value="groq-llama3" {% if active_llm == 'groq-llama3' %}selected{% endif %}>Groq Llama 3 8B (Ultra-Low Latency)</option>
+                <option value="openai-gpt4" {% if active_llm == 'openai-gpt4' %}selected{% endif %}>OpenAI GPT-4o (Deep Reasoning)</option>
+              </select>
+              <i class="fa-solid fa-chevron-down text-theme-secondary position-absolute" style="right: 15px; top: 12px; pointer-events: none;"></i>
+            </div>
+            
+            <div class="mt-auto d-flex flex-column gap-2 p-3 rounded" style="background: rgba(255,255,255,0.03); border: 1px dashed rgba(255,255,255,0.1);">
+              <span class="small text-muted"><i class="fa-solid fa-shield-halved me-1 text-success"></i>Graceful Degradation Active</span>
+              <span class="small text-muted"><i class="fa-solid fa-bolt me-1 text-warning"></i>Zero-Downtime Pipeline Enabled</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Prompt Engine -->
+        <div class="col-12 col-lg-8">
+          <div class="glass-card p-4">
+            <h5 class="fw-bold text-white mb-1"><i class="fa-solid fa-terminal me-2 text-info"></i>Master Prompt Overrides</h5>
+            <p class="text-theme-secondary small mb-4">Edit the systemic personas without deploying new code. Variables will be injected automatically.</p>
+            
+            <!-- Raj Prompt -->
+            <div class="mb-4">
+              <label class="form-label text-warning fw-semibold small text-uppercase letter-spacing-1 mb-2">
+                <i class="fa-solid fa-robot me-1"></i> Raj (Technical AI Interviewer)
+              </label>
+              <textarea name="prompt_raj" class="ai-hub-textarea" rows="4">{{ prompt_raj }}</textarea>
+              <div class="text-end mt-1"><small class="text-muted">Used in Job Screening & Practical Assessment</small></div>
+            </div>
+
+            <!-- Botanist Prompt -->
+            <div class="mb-4">
+              <label class="form-label text-success fw-semibold small text-uppercase letter-spacing-1 mb-2">
+                <i class="fa-solid fa-leaf me-1"></i> The Botanist (Behavioral AI)
+              </label>
+              <textarea name="prompt_botanist" class="ai-hub-textarea" rows="4">{{ prompt_botanist }}</textarea>
+              <div class="text-end mt-1"><small class="text-muted">Used in Voice Pre-Screening & Sentiment Mapping</small></div>
+            </div>
+
+            <div class="text-end mt-4">
+              <button type="submit" class="btn-deploy">
+                <i class="fa-solid fa-upload me-2"></i>Deploy AI Configuration
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </form>
+
+  </main>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('apiUsageChart').getContext('2d');
+    
+    // Abstracting a gorgeous dark-theme matching line chart
+    const gradientFill = ctx.createLinearGradient(0, 0, 0, 300);
+    gradientFill.addColorStop(0, 'rgba(0, 210, 255, 0.5)');
+    gradientFill.addColorStop(1, 'rgba(0, 210, 255, 0.0)');
+    
+    new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'],
+        datasets: [{
+          label: 'Tokens / Day (x10k)',
+          data: [120, 190, 140, 220, 290, 180, 250],
+          borderColor: '#00d2ff',
+          backgroundColor: gradientFill,
+          borderWidth: 2,
+          pointBackgroundColor: '#fff',
+          pointBorderColor: '#00d2ff',
+          pointRadius: 4,
+          pointHoverRadius: 6,
+          fill: true,
+          tension: 0.4 // Smooth curves
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: 'rgba(0,0,0,0.8)',
+            titleColor: '#00d2ff',
+            bodyColor: '#fff',
+            borderColor: 'rgba(255,255,255,0.1)',
+            borderWidth: 1,
+            padding: 10
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            grid: { color: 'rgba(255,255,255,0.05)', drawBorder: false },
+            ticks: { color: 'rgba(255,255,255,0.5)' }
+          },
+          x: {
+            grid: { display: false, drawBorder: false },
+            ticks: { color: 'rgba(255,255,255,0.5)' }
+          }
+        }
+      }
+    });
+
+    // Handle form submission toast (optional overlay UI logic)
+    const select = document.querySelector('.llm-select');
+    select.addEventListener('change', function() {
+        const option = this.options[this.selectedIndex].text;
+        console.log("Selected LLM: ", option);
+    });
+  });
+</script>
+{% endblock %}

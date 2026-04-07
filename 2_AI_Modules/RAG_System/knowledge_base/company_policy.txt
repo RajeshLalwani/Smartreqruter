@@ -1,0 +1,7 @@
+COMPANY ENGINEERING POLICY
+--------------------------
+1. Tech Stack: We primarily use Python, Django, React, and PostgreSQL. We do NOT use MongoDB or PHP.
+2. Architecture: All services must be stateless and deployed via Docker containers.
+3. Code Reviews: Every pull request requires at least 2 approvals before merging to the main branch.
+4. Remote Work: Employees may work completely remotely but must attend the daily standup at 10 AM EST.
+5. Interview Standard: We expect candidates to know the difference between optimistic and pessimistic database locking. We value clean code and unit testing over pure algorithmic speed.

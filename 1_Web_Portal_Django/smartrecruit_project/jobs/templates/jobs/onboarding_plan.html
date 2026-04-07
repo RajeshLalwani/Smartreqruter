@@ -1,0 +1,80 @@
+{% extends 'base.html' %}{% load static %}
+{% block title %}Onboarding Plan | SmartRecruit{% endblock %}
+{% block content %}
+<div class="container-fluid px-4 mt-4">
+    <div class="glass-panel p-4 mb-4"
+        style="background:linear-gradient(135deg,rgba(0,200,83,0.08),rgba(41,121,255,0.08));border:1px solid rgba(0,200,83,0.25);">
+        <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+            <div>
+                <h2 class="fw-bold text-theme mb-1"><i class="fas fa-door-open text-success me-2"></i>90-Day Onboarding
+                    Plan</h2>
+                <p class="text-muted mb-0">AI-generated onboarding roadmap for <strong class="text-primary">{{                         candidate.full_name }}</strong> — {{ job_title }}</p>
+            </div>
+            <div class="d-flex gap-2">
+                <button onclick="window.print()" class="btn btn-outline-success btn-sm rounded-pill"><i
+                        class="fas fa-print me-1"></i>Print Plan</button>
+                <a href="{% url 'application_details' application.id %}"
+                    class="btn btn-outline-secondary btn-sm rounded-pill"><i class="fas fa-arrow-left me-1"></i>Back</a>
+            </div>
+        </div>
+    </div>
+    {% if plan.buddy_program %}
+    <div class="glass-panel p-3 mb-4 d-flex gap-3 align-items-center"
+        style="border:1px solid rgba(255,152,0,0.2);background:rgba(255,152,0,0.05);">
+        <i class="fas fa-user-friends text-warning fa-lg flex-shrink-0"></i>
+        <div><span class="fw-bold text-warning small">Buddy Program Recommended</span> — Assign a mentor from the
+            existing team to accelerate onboarding.</div>
+    </div>
+    {% endif %}
+    {% if plan.key_stakeholders %}
+    <div class="glass-panel p-3 mb-4 d-flex gap-3 align-items-center flex-wrap">
+        <div class="small fw-bold text-muted">KEY STAKEHOLDERS:</div>
+        {% for s in plan.key_stakeholders %}<span class="badge rounded-pill px-3 py-2"
+            style="background:rgba(41,121,255,0.1);color:#82b1ff;">{{ s }}</span>{% endfor %}
+    </div>
+    {% endif %}
+    <div class="row g-4 mb-4">
+        {% for phase_item in onboarding_phases %}
+        <div class="col-md-4">
+            <div class="glass-panel p-4 h-100" style="border-top:3px solid {{ phase_item.color }};">
+                <div class="d-flex align-items-center gap-2 mb-3">
+                    <span style="font-size:1.5rem;">{{ phase_item.emoji }}</span>
+                    <div>
+                        <div class="fw-bold text-theme">{{ phase_item.label }}</div>
+                        {% if phase_item.data.theme %}<div class="small" style="color:{{ phase_item.color }};">{{                             phase_item.data.theme }}</div>{% endif %}
+                    </div>
+                </div>
+                {% if phase_item.data.goals %}
+                <div class="small fw-bold text-muted mb-2">GOALS</div>
+                {% for g in phase_item.data.goals %}<div class="d-flex gap-2 mb-2"><i
+                        class="fas fa-flag flex-shrink-0 mt-1"
+                        style="color:{{ phase_item.color }};font-size:0.75rem;"></i><span class="small text-theme">{{ g                         }}</span></div>{% endfor %}
+                {% endif %}
+                {% if phase_item.data.activities %}
+                <div class="small fw-bold text-muted mb-2 mt-3">ACTIVITIES</div>
+                {% for a in phase_item.data.activities %}<div class="d-flex gap-2 mb-1"><i
+                        class="fas fa-tasks flex-shrink-0 mt-1"
+                        style="color:{{ phase_item.color }};font-size:0.7rem;opacity:0.7;"></i><span
+                        class="small text-theme">{{ a }}</span></div>{% endfor %}
+                {% endif %}
+                {% if phase_item.data.success_metrics %}
+                <div class="mt-3 p-2 rounded-2"
+                    style="background:rgba(255,255,255,0.04);border-left:3px solid {{ phase_item.color }}88;">
+                    <div class="small fw-bold mb-1" style="color:{{ phase_item.color }};">SUCCESS METRICS</div>
+                    {% for m in phase_item.data.success_metrics %}<div class="small text-theme mb-1">&#10003; {{ m }}
+                    </div>{% endfor %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% if plan.tools_to_learn %}
+    <div class="glass-panel p-4">
+        <h6 class="fw-bold text-theme mb-3"><i class="fas fa-tools text-info me-2"></i>Tools &amp; Systems to Learn</h6>
+        {% for tool in plan.tools_to_learn %}<span class="badge rounded-pill px-3 py-2 me-2 mb-2"
+            style="background:rgba(0,176,255,0.1);color:#80d8ff;font-size:0.8rem;"><i class="fas fa-cog me-1"></i>{{             tool }}</span>{% endfor %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

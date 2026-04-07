@@ -1,0 +1,305 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}DeepVision™ Biometric HUD | Advanced Interview Analytics{% endblock %}
+
+{% block content %}
+<div class="hud-container">
+    <!-- Main Video Feed (Simulated Background) -->
+    <div class="video-feed-overlay">
+        <video id="interviewFeed" autoplay muted loop class="w-100 h-100 object-fit-cover opacity-50">
+            <source src="https://assets.mixkit.co/videos/preview/mixkit-man-working-on-his-laptop-308-large.mp4"
+                type="video/mp4">
+        </video>
+    </div>
+
+    <!-- Iron Man Style HUD Overlays -->
+    <div class="hud-ui p-4">
+        <!-- Top HUD Bar -->
+        <div class="d-flex justify-content-between align-items-start mb-5">
+            <div class="glass-panel px-4 py-2 border-primary border-opacity-30">
+                <h4 class="fw-bold mb-0 text-gradient">DeepVision™ HUD v4.0</h4>
+                <div class="xx-small text-muted tracking-widest uppercase mb-1">Target: {{ application.candidate.full_name }}</div>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="pulse-red"></span>
+                    <span class="xx-small text-danger fw-bold uppercase">Live Biometric Feed</span>
+                </div>
+            </div>
+
+            <div class="d-flex gap-3">
+                <div class="glass-btn px-4 py-2 rounded-pill x-small" onclick="toggleOverlay('eye-tracking')">
+                    <i class="fas fa-eye me-2"></i>Eye Tracking: <span class="text-success">ON</span>
+                </div>
+                <div class="glass-btn px-4 py-2 rounded-pill x-small" onclick="toggleOverlay('micro-expressions')">
+                    <i class="fas fa-smile me-2"></i>Facial Mapping: <span class="text-success">ON</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Center Aiming Reticle -->
+        <div class="position-absolute top-50 start-50 translate-middle">
+            <div class="reticle-box">
+                <svg width="300" height="300" viewBox="0 0 300 300">
+                    <circle cx="150" cy="150" r="140" fill="none" stroke="rgba(0, 210, 255, 0.1)" stroke-width="1" />
+                    <path d="M150 10 L150 40 M290 150 L260 150 M150 290 L150 260 M10 150 L40 150"
+                        stroke="var(--bs-primary)" stroke-width="2" />
+                    <rect x="145" y="145" width="10" height="10" fill="var(--bs-primary)" class="animate-pulse" />
+                </svg>
+            </div>
+        </div>
+
+        <!-- Left HUD Stats: Physiological -->
+        <div class="position-absolute bottom-0 start-0 m-5" style="width: 300px;">
+            <div class="glass-panel p-4 border-info border-opacity-20 translate-left-in">
+                <h6 class="xx-small text-info uppercase fw-bold mb-4 tracking-widest">Physiological Data</h6>
+
+                <div class="mb-4">
+                    <div class="d-flex justify-content-between x-small mb-2">
+                        <span class="text-muted">Pulse (BPM)</span>
+                        <span id="bpmValue" class="text-white fw-bold">72</span>
+                    </div>
+                    <canvas id="bpmWave" style="height: 40px; width: 100%;"></canvas>
+                </div>
+
+                <div class="mb-4">
+                    <div class="d-flex justify-content-between x-small mb-1">
+                        <span class="text-muted">Stress Index</span>
+                        <span id="stressValue" class="text-warning">Moderate</span>
+                    </div>
+                    <div class="progress" style="height: 4px; background: rgba(255,255,255,0.05);">
+                        <div id="stressBar" class="progress-bar bg-warning shadow-warning" style="width: 45%;"></div>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between x-small">
+                    <span class="text-muted">GSR / Sweat</span>
+                    <span class="text-success">Stable</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right HUD Stats: Linguistic/Cognitive -->
+        <div class="position-absolute bottom-0 end-0 m-5" style="width: 300px;">
+            <div class="glass-panel p-4 border-warning border-opacity-20 translate-right-in">
+                <h6 class="xx-small text-warning uppercase fw-bold mb-4 tracking-widest">Cognitive Load</h6>
+
+                <div class="cognitive-grid d-flex flex-column gap-3">
+                    <div class="p-2 rounded bg-white bg-opacity-5">
+                        <div class="xx-small text-muted uppercase">Voice Tonality</div>
+                        <div class="small fw-bold text-white">Confident / Articulate</div>
+                    </div>
+                    <div class="p-2 rounded bg-white bg-opacity-5">
+                        <div class="xx-small text-muted uppercase">Pupil Dilation</div>
+                        <div class="small fw-bold text-white">2.4mm (Focused)</div>
+                    </div>
+                    <div class="p-2 rounded bg-white bg-opacity-5 border border-danger border-opacity-20">
+                        <div class="xx-small text-danger uppercase">Micro-Flinch Detection</div>
+                        <div class="small fw-bold text-danger">FLAG: Inconsistency at 12:04</div>
+                    </div>
+                </div>
+
+                <button class="btn btn-outline-warning w-100 rounded-pill x-small fw-bold mt-4 border-opacity-25">
+                    GENERATE AI PROBE
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Z-INDEX SAFEGUARDS — .hud-container already at z-index:1000 so modal must be higher */
+    .modal { z-index: 2100 !important; }
+    .modal-backdrop { z-index: 2050 !important; }
+
+    .hud-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: #000;
+        z-index: 1000;
+        overflow: hidden;
+    }
+
+    .video-feed-overlay {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        z-index: 1001;
+    }
+
+    .hud-ui {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 1010;
+        pointer-events: none;
+    }
+
+    .hud-ui * {
+        pointer-events: auto;
+    }
+
+    .pulse-red {
+        width: 8px;
+        height: 8px;
+        background: #ff4b2b;
+        border-radius: 50%;
+        animation: pulse-red 1s infinite;
+    }
+
+    @keyframes pulse-red {
+        0% {
+            transform: scale(0.95);
+            box-shadow: 0 0 0 0 rgba(255, 75, 43, 0.7);
+        }
+
+        70% {
+            transform: scale(1);
+            box-shadow: 0 0 0 10px rgba(255, 75, 43, 0);
+        }
+
+        100% {
+            transform: scale(0.95);
+            box-shadow: 0 0 0 0 rgba(255, 75, 43, 0);
+        }
+    }
+
+    .glass-btn {
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: rgba(255, 255, 255, 0.8);
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .glass-btn:hover {
+        background: rgba(var(--bs-primary-rgb), 0.1);
+        border-color: var(--bs-primary);
+        color: white;
+    }
+
+    .text-gradient {
+        background: linear-gradient(90deg, #00d2ff 0%, #3a7bd5 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .xx-small {
+        font-size: 0.6rem;
+    }
+
+    .x-small {
+        font-size: 0.7rem;
+    }
+
+    .tracking-widest {
+        letter-spacing: 0.2rem;
+    }
+
+    .uppercase {
+        text-transform: uppercase;
+    }
+
+    .reticle-box {
+        animation: rotate-slow 20s linear infinite;
+    }
+
+    @keyframes rotate-slow {
+        from {
+            transform: rotate(0deg);
+        }
+
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    .translate-left-in {
+        animation: slide-left 0.8s cubic-bezier(0.19, 1, 0.22, 1);
+    }
+
+    .translate-right-in {
+        animation: slide-right 0.8s cubic-bezier(0.19, 1, 0.22, 1);
+    }
+
+    @keyframes slide-left {
+        from {
+            transform: translateX(-100px);
+            opacity: 0;
+        }
+
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+
+    @keyframes slide-right {
+        from {
+            transform: translateX(100px);
+            opacity: 0;
+        }
+
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+
+    .shadow-warning {
+        box-shadow: 0 0 10px rgba(var(--bs-warning-rgb), 0.5);
+    }
+</style>
+
+<script>
+    // BPM Waveform simulation
+    const canvas = document.getElementById('bpmWave');
+    const ctx = canvas.getContext('2d');
+    let offset = 0;
+
+    function drawWave() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.beginPath();
+        ctx.strokeStyle = '#00d2ff';
+        ctx.lineWidth = 2;
+
+        for (let x = 0; x < canvas.width; x++) {
+            const y = (canvas.height / 2) + Math.sin((x + offset) * 0.1) * 10;
+            // Add a "beat" spike
+            const spike = Math.sin((x + offset) * 0.05) > 0.95 ? 20 : 0;
+            if (x === 0) ctx.moveTo(x, y - spike);
+            else ctx.lineTo(x, y - spike);
+        }
+
+        ctx.stroke();
+        offset += 2;
+        requestAnimationFrame(drawWave);
+    }
+
+    // Dynamic Stress Meter
+    function updateBios() {
+        const bpm = 70 + Math.floor(Math.random() * 10);
+        document.getElementById('bpmValue').innerText = bpm;
+
+        const stress = 40 + Math.floor(Math.random() * 20);
+        document.getElementById('stressBar').style.width = stress + "%";
+
+        if (stress > 70) {
+            document.getElementById('stressValue').innerText = "HIGH";
+            document.getElementById('stressValue').className = "text-danger fw-bold";
+            document.getElementById('stressBar').className = "progress-bar bg-danger shadow-danger";
+        } else {
+            document.getElementById('stressValue').innerText = "MODERATE";
+            document.getElementById('stressValue').className = "text-warning";
+            document.getElementById('stressBar').className = "progress-bar bg-warning shadow-warning";
+        }
+    }
+
+    setInterval(updateBios, 2000);
+    window.onload = drawWave;
+</script>
+{% endblock %}

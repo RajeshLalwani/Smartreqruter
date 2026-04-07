@@ -1,0 +1,97 @@
+{% load static %}
+<div class="glass-sidebar d-flex flex-column h-100 p-3" style="border-right: 1px solid rgba(255,255,255,0.05); background: rgba(10,11,16,0.5); backdrop-filter: blur(15px);">
+  <div class="sidebar-header mb-4 px-2">
+    <div class="d-flex align-items-center gap-2">
+      <div class="rounded-circle bg-primary p-2 d-flex align-items-center justify-content-center shadow-glow" style="width:40px; height:40px;">
+        <i class="fa-solid fa-user-astronaut text-white"></i>
+      </div>
+      <div>
+        <h6 class="mb-0 text-white fw-bold x-small tracking-widest text-uppercase">My Dashboard</h6>
+        <small class="text-theme-secondary xx-small">CANDIDATE AREA</small>
+      </div>
+    </div>
+  </div>
+
+  <nav class="nav flex-column gap-2 flex-grow-1">
+    <a href="{% url 'candidate_profile' %}" class="nav-link rounded-3 p-3 {% if request.resolver_match.url_name == 'candidate_profile' %}bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 shadow-sm{% else %}text-theme-secondary hover-bg-glass{% endif %}">
+      <div class="d-flex align-items-center gap-3">
+        <i class="fa-solid fa-rocket fs-5"></i>
+        <span class="fw-semibold small">Dashboard</span>
+      </div>
+    </a>
+
+    <a href="{% url 'job_list' %}" class="nav-link rounded-3 p-3 text-theme-secondary hover-bg-glass">
+      <div class="d-flex align-items-center gap-3">
+        <i class="fa-solid fa-search fs-5"></i>
+        <span class="fw-semibold small">Find Jobs</span>
+      </div>
+    </a>
+
+    <a href="{% url 'candidate_applications' %}" class="nav-link rounded-3 p-3 {% if request.resolver_match.url_name == 'candidate_applications' %}bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 shadow-sm{% else %}text-theme-secondary hover-bg-glass{% endif %}">
+      <div class="d-flex align-items-center gap-3">
+        <i class="fa-solid fa-layer-group fs-5"></i>
+        <span class="fw-semibold small">My Applications</span>
+      </div>
+    </a>
+
+    <div class="px-3 mt-3 mb-2">
+      <small class="text-muted xx-small tracking-widest text-uppercase fw-bold">Training & Growth</small>
+    </div>
+
+    <a href="{% url 'coding_arena' %}" class="nav-link rounded-3 p-3 {% if 'arena' in request.path %}bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 shadow-sm{% else %}text-theme-secondary hover-bg-glass{% endif %}">
+      <div class="d-flex align-items-center gap-3">
+        <i class="fa-solid fa-terminal fs-5 text-success"></i>
+        <span class="fw-semibold small">Coding Lab</span>
+      </div>
+    </a>
+
+    <a href="{% url 'interview_prep' %}" class="nav-link rounded-3 p-3 {% if 'prepare' in request.path %}bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 shadow-sm{% else %}text-theme-secondary hover-bg-glass{% endif %}">
+      <div class="d-flex align-items-center gap-3">
+        <i class="fa-solid fa-brain fs-5 text-warning"></i>
+        <span class="fw-semibold small">Interview Prep</span>
+      </div>
+    </a>
+
+    <a href="{% url 'candidate_analytics' %}" class="nav-link rounded-3 p-3 {% if request.resolver_match.url_name == 'candidate_analytics' %}bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 shadow-sm{% else %}text-theme-secondary hover-bg-glass{% endif %}">
+      <div class="d-flex align-items-center gap-3">
+        <i class="fa-solid fa-chart-line fs-5 text-info"></i>
+        <span class="fw-semibold small">My Progress</span>
+      </div>
+    </a>
+  </nav>
+
+  <div class="sidebar-footer mt-auto pt-4">
+    <div class="p-3 rounded-4 glass-card border border-white border-opacity-10 text-center">
+      <div class="circular-progress-mini mb-2" style="width: 40px; height: 40px; margin: 0 auto; background: conic-gradient(#6366f1 {{ profile.completeness }}%, transparent 0);">
+         <div class="inner-circle"></div>
+      </div>
+      <small class="d-block text-white fw-bold xx-small mb-1">PROFILE {{ profile.completeness }}%</small>
+      <a href="{% url 'candidate_profile' %}" class="btn btn-primary btn-sm rounded-pill w-100 py-1 xx-small fw-bold">COMPLETE PROFILE</a>
+    </div>
+  </div>
+</div>
+
+<style>
+.hover-bg-glass:hover {
+  background: rgba(255,255,255,0.03);
+  color: white !important;
+  transform: translateX(4px);
+  transition: all 0.3s ease;
+}
+.shadow-glow {
+  box-shadow: 0 0 15px rgba(99,102,241,0.4);
+}
+.circular-progress-mini {
+  border-radius: 50%;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.circular-progress-mini .inner-circle {
+  width: 30px;
+  height: 30px;
+  background: #111;
+  border-radius: 50%;
+}
+</style>

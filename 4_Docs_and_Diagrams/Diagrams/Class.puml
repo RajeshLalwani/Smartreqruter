@@ -1,0 +1,30 @@
+@startuml
+skinparam backgroundColor white
+skinparam class {
+    BackgroundColor white
+    BorderColor black
+}
+class Candidate {
+  +resumeUrl : String
+  +skills : List
+  +applyForJob(jobId)
+}
+class Recruiter {
+  +company : String
+  +postJob(details)
+}
+class User {
+  +id : Integer
+  +email : String
+  +login()
+}
+class Job {
+  +title : String
+  +analyzeMatch()
+}
+
+User <|-- Candidate
+User <|-- Recruiter
+Recruiter "1" *-- "*" Job : creates
+Candidate "*" -- "*" Job : applies
+@enduml

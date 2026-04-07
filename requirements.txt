@@ -1,0 +1,13 @@
+Django>=4.2,<5.3
+djangorestframework
+pillow
+spacy
+pypdf
+scikit-learn
+requests
+numpy
+psycopg2-binary
+vosk
+sounddevice
+google-genai
+python-dotenv

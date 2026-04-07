@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="glass-panel glass-panel-3d fade-up">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h3 class="fw-bold mb-0 text-theme">
+                    <i class="fas fa-users me-2 text-gradient"></i> Candidate Pool
+                </h3>
+                <p class="opacity-75 mb-0 text-muted">Manage and review incoming applications.</p>
+            </div>
+            <button class="btn btn-outline-light btn-sm rounded-pill px-3 glass-input">
+                <i class="fas fa-filter me-1"></i> Filter
+            </button>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table align-middle text-theme">
+                <thead>
+                    <tr class="text-uppercase small text-muted border-bottom border-light border-opacity-10">
+                        <th>Candidate Name</th>
+                        <th>Applied Date</th>
+                        <th>Experience</th>
+                        <th>AI Score (Beta)</th>
+                        <th>Resume</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for candidate in candidates %}
+                    <tr class="border-bottom border-light border-opacity-10 hover-bg-glass transition-base">
+                        <td class="py-3">
+                            <div class="d-flex align-items-center">
+                                <div class="rounded-circle d-flex justify-content-center align-items-center me-3"
+                                    style="width: 40px; height: 40px; background: rgba(99, 102, 241, 0.1); color: var(--accent-primary); font-weight: bold;">
+                                    {{ candidate.full_name|slice:":1" }}
+                                </div>
+                                <div>
+                                    <div class="fw-bold">{{ candidate.full_name }}</div>
+                                    <small class="opacity-50">{{ candidate.email }}</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>{{ candidate.applied_at|date:"M d, Y" }}</td>
+                        <td>{{ candidate.experience_years }} Years</td>
+
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="progress"
+                                    style="height: 6px; width: 100px; background: rgba(255,255,255,0.1); border-radius: 10px;">
+                                    <div class="progress-bar 
+                                        {% if candidate.ai_score >= 70 %}bg-success
+                                        {% elif candidate.ai_score >= 40 %}bg-warning
+                                        {% else %}bg-danger{% endif %}" role="progressbar"
+                                        style="width: {{ candidate.ai_score }}%; border-radius: 10px;">
+                                    </div>
+                                </div>
+                                <small class="fw-bold 
+                                    {% if candidate.ai_score >= 70 %}text-success
+                                    {% elif candidate.ai_score >= 40 %}text-warning
+                                    {% else %}text-danger{% endif %}">
+                                    {{ candidate.ai_score }}%
+                                </small>
+                            </div>
+                        </td>
+
+                        <td>
+                            {% if candidate.resume_file %}
+                            <a href="{{ candidate.resume_file.url }}" target="_blank"
+                                class="btn btn-sm btn-light rounded-pill px-3 font-monospace"
+                                style="font-size: 0.8rem;">
+                                <i class="fas fa-file-pdf text-danger me-1"></i> PDF
+                            </a>
+                            {% else %}
+                            <span class="opacity-50">No File</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <button class="btn btn-sm btn-primary rounded-circle" title="Shortlist"><i
+                                    class="fas fa-check"></i></button>
+                            <button class="btn btn-sm btn-outline-danger rounded-circle ms-1" title="Reject"><i
+                                    class="fas fa-times"></i></button>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-5 opacity-50">
+                            <i class="fas fa-folder-open fa-3x mb-3"></i>
+                            <p>No candidates have applied yet.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

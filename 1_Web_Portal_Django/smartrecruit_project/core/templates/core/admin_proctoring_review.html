@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Evidence Review | SmartRecruit Admin{% endblock %}
+
+{% block content %}
+<div class="d-flex" style="min-height:calc(100vh - 72px)">
+  {% include 'core/_admin_sidebar.html' %}
+  
+  <main class="flex-grow-1 p-4 p-lg-5" style="background: radial-gradient(circle at top right, rgba(239, 68, 68, 0.05), transparent 400px);">
+    
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-start mb-5">
+      <div>
+        <h1 class="glow-text mb-1" style="font-size:1.8rem;">
+          <i class="fa-solid fa-user-shield me-2 text-danger"></i>Evidence Review Master List
+        </h1>
+        <p class="text-theme-secondary mb-0">Review flagged sessions for proctoring violations and integrity risks</p>
+      </div>
+      <div class="d-flex gap-2">
+        <div class="btn-group">
+          <a href="?status=PENDING" class="btn btn-sm {% if status_filter == 'PENDING' %}btn-danger{% else %}btn-outline-secondary{% endif %}">Pending Review</a>
+          <a href="?status=VERIFIED" class="btn btn-sm {% if status_filter == 'VERIFIED' %}btn-danger{% else %}btn-outline-secondary{% endif %}">Verified</a>
+          <a href="?status=FALSE_POSITIVE" class="btn btn-sm {% if status_filter == 'FALSE_POSITIVE' %}btn-danger{% else %}btn-outline-secondary{% endif %}">False Positives</a>
+          <a href="?status=ALL" class="btn btn-sm {% if status_filter == 'ALL' %}btn-danger{% else %}btn-outline-secondary{% endif %}">All Flagged</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Master Table -->
+    <div class="glass-card p-0 overflow-hidden">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0" style="background:transparent;">
+          <thead style="background: rgba(255,255,255,0.03); border-bottom: 1px solid rgba(255,255,255,0.1);">
+            <tr>
+              <th class="px-4 py-3 text-theme-secondary fw-normal">Candidate & Session</th>
+              <th class="py-3 text-theme-secondary fw-normal">Violation Count</th>
+              <th class="py-3 text-theme-secondary fw-normal">Decision Status</th>
+              <th class="py-3 text-theme-secondary fw-normal">Latest Incident</th>
+              <th class="px-4 py-3 text-end text-theme-secondary fw-normal">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for interview in interviews %}
+            <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+              <td class="px-4 py-3">
+                <div class="d-flex align-items-center gap-3">
+                  <div class="rounded-circle d-flex align-items-center justify-content-center fw-bold" 
+                       style="width:40px;height:40px;background:linear-gradient(135deg,#ef4444,#7f1d1d); font-size: 0.85rem;">
+                    {{ interview.application.candidate.full_name|slice:":1"|upper }}
+                  </div>
+                  <div>
+                    <div class="fw-semibold text-white">{{ interview.application.candidate.full_name }}</div>
+                    <small class="text-theme-secondary">{{ interview.get_interview_type_display }} · {{ interview.application.job.title }}</small>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 px-3 py-2" style="font-size: 0.85rem;">
+                  <i class="fa-solid fa-triangle-exclamation me-1"></i> {{ interview.flag_count }} violations
+                </span>
+              </td>
+              <td>
+                {% if interview.proctoring_status == 'PENDING' %}
+                <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25">PENDING REVIEW</span>
+                {% elif interview.proctoring_status == 'VERIFIED' %}
+                <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25">VERIFIED VIOLATION</span>
+                {% elif interview.proctoring_status == 'FALSE_POSITIVE' %}
+                <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25">FALSE POSITIVE</span>
+                {% else %}
+                <span class="badge bg-secondary bg-opacity-10 text-theme-secondary border border-secondary border-opacity-25">CLEAN</span>
+                {% endif %}
+              </td>
+              <td>
+                <small class="text-theme-secondary">{{ interview.created_at|date:"M d, Y" }}</small><br>
+                <small class="opacity-50" style="font-size: 0.75rem;">{{ interview.created_at|time:"H:i" }} IST</small>
+              </td>
+              <td class="px-4 text-end">
+                <a href="{% url 'admin_proctoring_detail' interview.id %}" class="btn btn-sm btn-outline-danger">
+                  <i class="fa-solid fa-magnifying-glass-chart me-1"></i> Inspect Evidence
+                </a>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="5" class="text-center py-5">
+                <div class="mb-3"><i class="fa-solid fa-shield-check text-success display-4 opacity-25"></i></div>
+                <h6 class="text-white">Neural Integrity Intact</h6>
+                <p class="text-theme-secondary small mb-0">No flagged sessions matching current filter</p>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+</div>
+{% endblock %}

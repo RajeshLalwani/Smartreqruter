@@ -1,0 +1,88 @@
+<div class="glass-panel p-4 mb-4 achievement-container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h5 class="mb-0 fw-bold">
+            <i class="fas fa-trophy me-2 text-warning"></i> TROPHY CASE
+        </h5>
+        <span class="badge rounded-pill bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-3">
+            {{ candidate.earned_badges.count }} ACHIEVEMENTS
+        </span>
+    </div>
+
+    <div class="row g-3">
+        {% for badge in candidate.earned_badges.all %}
+        <div class="col-4 col-md-3 text-center">
+            <div class="badge-item p-2 rounded-4 hover-lift" 
+                 data-bs-toggle="tooltip" 
+                 data-bs-placement="top" 
+                 title="{{ badge.description }}">
+                <div class="badge-icon-wrapper mb-2 mx-auto" style="background: {{ badge.color }}20; border: 2px solid {{ badge.color }};">
+                    <i class="{{ badge.icon }} badge-icon" style="color: {{ badge.color }};"></i>
+                    {% if badge.rarity == 'LEGENDARY' %}
+                    <div class="rarity-glow"></div>
+                    {% endif %}
+                </div>
+                <div class="small fw-bold text-nowrap overflow-hidden text-truncate">{{ badge.name }}</div>
+                <div class="rarity-tag" style="color: {{ badge.color }}; font-size: 0.6rem;">{{ badge.rarity }}</div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12 py-5 text-center text-muted">
+            <i class="fas fa-medal fa-3x mb-3 opacity-20"></i>
+            <p class="small mb-0">No badges earned yet.<br>Complete assessments to unlock!</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<style>
+    .badge-icon-wrapper {
+        width: 60px;
+        height: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        font-size: 1.5rem;
+        position: relative;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        cursor: help;
+    }
+
+    .badge-item:hover .badge-icon-wrapper {
+        transform: scale(1.15) rotate(12deg);
+        box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+    }
+
+    .badge-icon {
+        filter: drop-shadow(0 0 5px currentColor);
+    }
+
+    .rarity-tag {
+        font-family: 'JetBrains Mono', monospace;
+        letter-spacing: 1px;
+        font-weight: 800;
+        text-transform: uppercase;
+    }
+
+    .rarity-glow {
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        border-radius: 50%;
+        background: radial-gradient(circle, transparent 50%, currentColor 100%);
+        opacity: 0.4;
+        animation: pulseGlow 2s infinite;
+    }
+
+    @keyframes pulseGlow {
+        0% { transform: scale(1); opacity: 0.4; }
+        50% { transform: scale(1.2); opacity: 0.2; }
+        100% { transform: scale(1); opacity: 0.4; }
+    }
+
+    .hover-lift {
+        transition: transform 0.2s ease;
+    }
+    .hover-lift:hover {
+        transform: translateY(-5px);
+    }
+</style>

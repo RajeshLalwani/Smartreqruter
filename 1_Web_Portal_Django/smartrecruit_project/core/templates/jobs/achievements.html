@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid py-5 bg-midnight min-vh-100">
+    <!-- Header Section -->
+    <div class="row justify-content-center mb-5">
+        <div class="col-lg-10 text-center">
+            <h1 class="display-4 fw-bold text-gradient-neon mb-2">Career Multiverse: Achievements</h1>
+            <p class="text-theme-secondary lead">Your professional milestones, verified and gamified.</p>
+            
+            <div class="d-flex justify-content-center gap-4 mt-4">
+                <div class="glass-pill px-4 py-2">
+                    <span class="text-theme-secondary small text-uppercase tracking-widest">Total Badges</span>
+                    <h3 class="mb-0 fw-bold text-theme">{{ earned_count }}/{{ total_badges }}</h3>
+                </div>
+                <div class="glass-pill px-4 py-2 border-neon-blue">
+                    <span class="text-theme-secondary small text-uppercase tracking-widest">Identity</span>
+                    <h3 class="mb-0 fw-bold text-theme">{{ candidate.pseudonym|default:"CyberRunner" }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Trophy Case -->
+    <div class="row justify-content-center">
+        <div class="col-lg-11">
+            {% for rarity, badges in badges_by_rarity.items %}
+                <div class="mb-5">
+                    <h4 class="text-uppercase tracking-widest mb-4 d-flex align-items-center">
+                        <span class="badge-dot big me-3 
+                            {% if rarity == 'LEGENDARY' %}bg-warning
+                            {% elif rarity == 'EPIC' %}bg-danger
+                            {% elif rarity == 'RARE' %}bg-info
+                            {% else %}bg-secondary{% endif %}"></span>
+                        {{ rarity }} MILESTONES
+                    </h4>
+                    
+                    <div class="row g-4">
+                        {% for badge in badges %}
+                        <div class="col-md-4 col-xl-3">
+                            <div class="card glass-card h-100 achievement-card glow-card-{{ badge.rarity|lower }}">
+                                <div class="card-body text-center p-4">
+                                    <div class="achievement-icon-wrapper mb-3">
+                                        <i class="{{ badge.icon_class }} fa-3x badge-icon-{{ badge.rarity|lower }}"></i>
+                                    </div>
+                                    <h5 class="fw-bold text-theme mb-2">{{ badge.name }}</h5>
+                                    <p class="small text-theme-secondary mb-0">{{ badge.description }}</p>
+                                </div>
+                                <div class="card-footer bg-transparent border-0 pb-3 text-center">
+                                    <span class="badge rounded-pill bg-dark border-{{ badge.rarity|lower }} text-{{ badge.rarity|lower }} small">
+                                        {{ badge.rarity }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="col-12">
+                            <div class="glass-card p-4 text-center">
+                                <p class="text-theme-secondary mb-0">No {{ rarity|lower }} badges unlocked yet. Keep competing!</p>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<style>
+.text-gradient-neon {
+    background: linear-gradient(90deg, #ff00ff, #00d2ff);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+.glass-pill {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 50px;
+    backdrop-filter: blur(10px);
+}
+.border-neon-blue { border-color: #00d2ff33; }
+.achievement-card {
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    background: rgba(20, 20, 25, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+.achievement-card:hover {
+    transform: translateY(-10px) scale(1.02);
+    box-shadow: 0 15px 35px rgba(0,0,0,0.4);
+}
+.achievement-icon-wrapper {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.03);
+}
+
+/* Rarity Specific Glows */
+.glow-card-legendary:hover { border-color: #ffaa00; box-shadow: 0 0 20px rgba(255, 170, 0, 0.2); }
+.glow-card-epic:hover { border-color: #ff0055; box-shadow: 0 0 20px rgba(255, 0, 85, 0.2); }
+.glow-card-rare:hover { border-color: #00d2ff; box-shadow: 0 0 20px rgba(0, 210, 255, 0.2); }
+.glow-card-common:hover { border-color: #ffffff33; }
+
+.badge-icon-legendary { color: #ffaa00; filter: drop-shadow(0 0 5px #ffaa00); }
+.badge-icon-epic { color: #ff0055; filter: drop-shadow(0 0 5px #ff0055); }
+.badge-icon-rare { color: #00d2ff; filter: drop-shadow(0 0 5px #00d2ff); }
+.badge-icon-common { color: #888; }
+</style>
+{% endblock %}

@@ -1,0 +1,55 @@
+<div id="ai-insights-panel" class="glass-panel">
+    <div class="panel-header d-flex justify-content-between align-items-center mb-4">
+        <h5 class="fw-bold m-0 gradient-text"><i class="fas fa-brain me-2"></i>AI Insights</h5>
+        <button class="btn-close btn-close-white" onclick="toggleInsightsPanel()"></button>
+    </div>
+
+    <!-- KPI Cards -->
+    <div class="insight-card mb-3">
+        <div class="d-flex justify-content-between">
+            <span class="text-secondary text-sm">Avg. Time to Hire</span>
+            <i class="fas fa-clock text-primary"></i>
+        </div>
+        <h3 class="fw-bold mt-2 mb-0">12 Days</h3>
+        <small class="text-success"><i class="fas fa-arrow-down me-1"></i>15% vs last month</small>
+    </div>
+
+    <div class="insight-card mb-3">
+        <div class="d-flex justify-content-between">
+            <span class="text-secondary text-sm">Top Source</span>
+            <i class="fas fa-globe text-info"></i>
+        </div>
+        <h3 class="fw-bold mt-2 mb-0">LinkedIn</h3>
+        <small class="text-secondary">45% of hires</small>
+    </div>
+
+    <!-- Active Pipeline -->
+    <h6 class="text-uppercase text-secondary text-xs fw-bold mt-4 mb-3">Active Pipeline Health</h6>
+    <div class="pipeline-item mb-3">
+        <div class="d-flex justify-content-between mb-1">
+            <small>Engineering (Sd)</small>
+            <small class="text-success">Strong</small>
+        </div>
+        <div class="progress" style="height: 6px;">
+            <div class="progress-bar bg-success" style="width: 85%"></div>
+        </div>
+    </div>
+
+    <div class="pipeline-item mb-3">
+        <div class="d-flex justify-content-between mb-1">
+            <small>Sales (Exec)</small>
+            <small class="text-warning">At Risk</small>
+        </div>
+        <div class="progress" style="height: 6px;">
+            <div class="progress-bar bg-warning" style="width: 45%"></div>
+        </div>
+    </div>
+
+    <!-- Suggestion -->
+    <div class="ai-suggestion mt-4 p-3 rounded-3"
+        style="background: rgba(99, 102, 241, 0.1); border: 1px dashed var(--accent-primary);">
+        <i class="fas fa-lightbulb text-warning mb-2"></i>
+        <p class="text-sm m-0"><strong>Recommendation:</strong> Source more candidates for the Sales Executive role.
+            Currently below target.</p>
+    </div>
+</div>

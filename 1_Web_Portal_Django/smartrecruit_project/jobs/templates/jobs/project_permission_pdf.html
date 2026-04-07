@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>Permission for Project - IR Info Tech</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 1.5cm;
+        }
+
+        body {
+            font-family: 'Helvetica', sans-serif;
+            font-size: 10pt;
+            line-height: 1.4;
+            color: #000;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .company-logo img {
+            width: 220px;
+            height: auto;
+        }
+
+        .ref-date {
+            margin-bottom: 20px;
+            overflow: hidden;
+            font-weight: bold;
+            font-size: 9pt;
+        }
+
+        .ref-no {
+            float: left;
+        }
+
+        .date {
+            float: right;
+        }
+
+        .recipient {
+            margin-bottom: 20px;
+            font-size: 10pt;
+        }
+
+        .subject {
+            text-align: center;
+            font-weight: bold;
+            text-decoration: underline;
+            margin: 20px 0;
+            font-size: 11pt;
+            font-style: italic;
+        }
+
+        .content p {
+            margin-bottom: 10px;
+            text-align: justify;
+        }
+
+        .content ul {
+            margin-top: 8px;
+            padding-left: 20px;
+            margin-bottom: 12px;
+        }
+
+        .content li {
+            margin-bottom: 5px;
+            text-align: justify;
+        }
+
+        .signature-block {
+            margin-top: 30px;
+            page-break-inside: avoid;
+        }
+
+        .signature-img {
+            width: 140px;
+            height: auto;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .cc-text {
+            margin-top: 5px;
+            font-size: 9pt;
+            color: #000;
+        }
+
+        .footer {
+            text-align: center;
+            font-size: 7.5pt;
+            color: #000;
+            border-top: 2px solid #ddd;
+            padding-top: 8px;
+            line-height: 1.3;
+            margin-top: 50px;
+        }
+
+        .footer-company {
+            font-weight: bold;
+            font-size: 9pt;
+            text-transform: uppercase;
+            margin-bottom: 3px;
+        }
+
+        .footer-red {
+            color: #d9534f;
+            font-weight: bold;
+            margin-top: 5px;
+            font-size: 7.5pt;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Header -->
+    <div class="header">
+        <div class="company-logo">
+            <img src="{{ logo_url }}" alt="IR Info Tech">
+        </div>
+    </div>
+
+    <!-- Ref & Date -->
+    <div class="ref-date">
+        <div class="ref-no">HR/TEPL/{{ application.id|stringformat:"03d" }}</div>
+        <div class="date">{{ permission_date|date:"d.m.Y" }}</div>
+    </div>
+
+    <!-- Recipient -->
+    <div class="recipient">
+        To,<br>
+        {{ candidate_name }}<br>
+        Post Graduate Department of Computer Science and Technology,<br>
+        V V Nagar.
+    </div>
+
+    <!-- Subject -->
+    <div class="subject">Permission for Project</div>
+
+    <!-- Body Content -->
+    <div class="content">
+        <p>Dear {{ candidate_name }},</p>
+
+        <p>With reference to your letter dated {{ reference_date|date:"d.m.Y" }}, we are pleased to grant permission to
+            <strong>{{ student_names }}</strong> student of <strong>{{ institution }}</strong> for
+            <strong>Project</strong> in our organization from <strong>{{ start_date|date:"d.m.Y" }}</strong> to
+            <strong>{{ end_date|date:"d.m.Y" }}</strong>.
+        </p>
+
+        <p><em>The following points are to be adhered by the student.</em></p>
+        <ul>
+            <li>Laptops, Pen-Drives & other hard drives are not permitted inside the company premises without prior
+                permission.</li>
+            <li>Appropriate formal dressing & grooming will be appreciated. Jeans & T-Shirts are not allowed.</li>
+            <li>Female students have to wear dress and Kurtis only.</li>
+            <li>Photography & Videography is strictly prohibited in the premises.</li>
+            <li>Trainee/s has to strictly comply with the Company's timings & schedule.</li>
+            <li>In case of any casualty the Company will not be held responsible.</li>
+            <li>On Completion of training the trainee/s has to submit a copy of Training Report duly signed by concern
+                guide to obtain the Training Certificate.</li>
+            <li>In case of any ambiguity / difficulty, the trainee is required to approach HR Department. The detailed
+                guideline are attached overleaf.</li>
+        </ul>
+
+        <!-- Signature Block -->
+        <div class="signature-block">
+            <p>For, IR Info Tech Pvt Ltd</p>
+            <img src="{{ signature_url }}" class="signature-img" alt="Signature">
+            <p><strong>Nirali Trivedi</strong><br>
+                Group HR Head</p>
+            <p class="cc-text">Cc. Satyam Raval</p>
+        </div>
+
+        <!-- Footer (Page 1 Only) -->
+        <div class="footer">
+            <div class="footer-company">IR INFO TECH PVT. LTD.</div>
+            <div style="font-size: 7.5pt; line-height: 1.4;">
+                Anand Sojitra Road, Vallabh Vidyanagar - 388 120, Gujarat, India | Email: inquiry@irinfotech.com |
+                Web:
+                www.irinfotech.com<br>
+                Phone: +91 2692 227292/91. CIN: U72900GJ2012PTC070532
+            </div>
+            <div class="footer-red" style="margin-top: 5px;">
+                <strong>Branch Office:</strong> Vadodara: SF/19-21, Panorama Complex, R. C. Dutt Road, Alkapuri,
+                Vadodara - 390007. Mobile: +91 90990 36045 E-mail: inquiry@irinfotech.com<br>
+                Kolkata: 68, Sarat Bose Road, Kolkata - 700025. Ph. No: 033 24761861 / 24760904
+            </div>
+        </div>
+    </div>
+
+</body>
+
+</html>

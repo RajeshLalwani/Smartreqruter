@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Broadcast Notifications | SmartRecruit Admin{% endblock %}
+{% block content %}
+<div class="d-flex" style="min-height:calc(100vh - 72px)">
+  {% include 'core/_admin_sidebar.html' %}
+  <main class="flex-grow-1 p-4 p-lg-5">
+
+    <div class="mb-5">
+      <h1 class="glow-text mb-1" style="font-size:1.8rem;"><i class="fa-solid fa-bullhorn me-2 text-danger"></i>Broadcast Notifications</h1>
+      <p class="text-theme-secondary mb-0">Send system-wide in-app alerts to all or filtered user groups</p>
+    </div>
+
+    {% for message in messages %}
+    <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}success{% endif %} alert-dismissible fade show mb-4">
+      {{ message }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endfor %}
+
+    <div class="row g-4">
+      <!-- Compose -->
+      <div class="col-lg-7">
+        <div class="glass-card p-4">
+          <h6 class="fw-semibold text-theme mb-4"><i class="fa-solid fa-pen-to-square me-2 text-primary"></i>Compose Broadcast</h6>
+          <form method="post">
+            {% csrf_token %}
+            <div class="mb-3">
+              <label class="form-label text-theme-secondary">Notification Title *</label>
+              <input type="text" name="title" class="form-control glass-input" required maxlength="255"
+                placeholder="e.g. Platform Maintenance Scheduled">
+            </div>
+            <div class="mb-3">
+              <label class="form-label text-theme-secondary">Message Body *</label>
+              <textarea name="body" class="form-control glass-input" rows="4" required
+                placeholder="Write your message here…"></textarea>
+            </div>
+            <div class="row g-3 mb-4">
+              <div class="col-md-6">
+                <label class="form-label text-theme-secondary">Target Audience</label>
+                <select name="audience" class="form-select glass-input">
+                  <option value="all">🌐 Everyone ({{ total_count }} users)</option>
+                  <option value="candidates">🎓 Candidates only</option>
+                  <option value="recruiters">💼 Recruiters only</option>
+                </select>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label text-theme-secondary">Notification Type</label>
+                <select name="type" class="form-select glass-input">
+                  <option value="INFO">ℹ️ Info</option>
+                  <option value="SUCCESS">✅ Success</option>
+                  <option value="WARNING">⚠️ Warning</option>
+                  <option value="ERROR">🚨 Urgent</option>
+                </select>
+              </div>
+            </div>
+            <button type="submit" class="btn btn-primary thunder-btn w-100 py-3"
+              onclick="return confirm('Are you sure you want to broadcast this notification?');">
+              <i class="fa-solid fa-paper-plane me-2"></i>Send Broadcast
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Recent History -->
+      <div class="col-lg-5">
+        <div class="glass-card p-4 h-100">
+          <h6 class="fw-semibold text-theme mb-4"><i class="fa-solid fa-clock-rotate-left me-2 text-secondary"></i>Your Recent Broadcasts</h6>
+          {% for notif in recent_broadcasts %}
+          <div class="d-flex gap-3 py-3" style="border-bottom:1px solid rgba(255,255,255,.05);">
+            <div class="mt-1">
+              {% if notif.type == 'SUCCESS' %}<span class="badge bg-success rounded-circle p-2"><i class="fa-solid fa-check"></i></span>
+              {% elif notif.type == 'WARNING' %}<span class="badge bg-warning rounded-circle p-2"><i class="fa-solid fa-triangle-exclamation"></i></span>
+              {% elif notif.type == 'ERROR' %}<span class="badge bg-danger rounded-circle p-2"><i class="fa-solid fa-bell"></i></span>
+              {% else %}<span class="badge bg-primary rounded-circle p-2"><i class="fa-solid fa-info"></i></span>{% endif %}
+            </div>
+            <div class="flex-grow-1">
+              <div class="fw-semibold text-theme" style="font-size:.88rem;">{{ notif.title }}</div>
+              <small class="text-theme-secondary">{{ notif.message|truncatechars:60 }}</small>
+              <div class="mt-1"><small class="text-theme-secondary opacity-50">{{ notif.created_at|date:"M d, Y H:i" }}</small></div>
+            </div>
+          </div>
+          {% empty %}
+          <div class="text-center py-4">
+            <i class="fa-solid fa-bullhorn opacity-25 fs-1 d-block mb-3"></i>
+            <small class="text-theme-secondary">No broadcasts sent yet.</small>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Tips -->
+    <div class="glass-card p-4 mt-4" style="border-color:rgba(245,158,11,.2);">
+      <h6 class="text-warning fw-semibold mb-2"><i class="fa-solid fa-lightbulb me-2"></i>Tips</h6>
+      <ul class="text-theme-secondary mb-0 small">
+        <li>Notifications appear instantly in users' bell icon on the top navbar.</li>
+        <li>Use the <strong class="text-warning">Urgent</strong> type sparingly — it triggers a red badge on the bell.</li>
+        <li>Broadcasts are delivered in bulk and cannot be recalled once sent.</li>
+      </ul>
+    </div>
+  </main>
+</div>
+
+{% comment %}Inject user counts for the dropdown {% endcomment %}
+{% with total_count=0 %}{% endwith %}
+{% endblock %}

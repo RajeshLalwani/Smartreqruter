@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Platform Settings | SmartRecruit Admin{% endblock %}
+{% block content %}
+<div class="d-flex" style="min-height:calc(100vh - 72px)">
+  {% include 'core/_admin_sidebar.html' %}
+  <main class="flex-grow-1 p-4 p-lg-5">
+
+    <div class="mb-5">
+      <h1 class="glow-text mb-1" style="font-size:1.8rem;"><i class="fa-solid fa-sliders me-2 text-danger"></i>Platform Settings</h1>
+      <p class="text-theme-secondary mb-0">Global configuration for the SmartRecruit platform — changes apply system-wide</p>
+    </div>
+
+    {% for message in messages %}
+    <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}success{% endif %} alert-dismissible fade show mb-4">
+      {{ message }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endfor %}
+
+    <form method="post">
+      {% csrf_token %}
+
+      <!-- Assessments Group -->
+      <div class="glass-card p-4 mb-4">
+        <h6 class="text-warning fw-semibold mb-4">
+          <i class="fa-solid fa-clipboard-check me-2"></i>Assessment Configuration
+        </h6>
+        <div class="row g-4">
+          {% for d in defaults %}
+          {% if d.group == 'assessments' %}
+          <div class="col-md-6">
+            <label class="form-label text-theme-secondary">{{ d.label }}</label>
+            <div class="input-group">
+              <input type="number" name="{{ d.key }}" class="form-control glass-input"
+                value="{{ settings_all|dictsort:'key' }}" 
+                id="input_{{ d.key }}" min="0" max="100" placeholder="{{ d.value }}">
+            </div>
+          </div>
+          {% endif %}
+          {% endfor %}
+        </div>
+        <script>
+        // Inject actual saved values from Django
+        {% for s in settings_all %}
+        (function(){
+          var el=document.getElementById('input_{{ s.key }}');
+          if(el) el.value='{{ s.value }}';
+        })();
+        {% endfor %}
+        </script>
+      </div>
+
+      <!-- Hiring Group -->
+      <div class="glass-card p-4 mb-4">
+        <h6 class="text-info fw-semibold mb-4">
+          <i class="fa-solid fa-eye-slash me-2"></i>Hiring Policy
+        </h6>
+        <div class="row g-4">
+          {% for d in defaults %}
+          {% if d.group == 'hiring' %}
+          <div class="col-md-6">
+            <label class="form-label text-theme-secondary">{{ d.label }}</label>
+            <select name="{{ d.key }}" class="form-select glass-input" id="sel_{{ d.key }}">
+              <option value="true">Enabled</option>
+              <option value="false">Disabled</option>
+            </select>
+          </div>
+          {% endif %}
+          {% endfor %}
+        </div>
+        <script>
+        {% for s in settings_all %}
+        {% if s.group == 'hiring' %}
+        (function(){
+          var el=document.getElementById('sel_{{ s.key }}');
+          if(el) el.value='{{ s.value }}';
+        })();
+        {% endif %}
+        {% endfor %}
+        </script>
+      </div>
+
+      <!-- Platform Group -->
+      <div class="glass-card p-4 mb-4">
+        <h6 class="text-success fw-semibold mb-4">
+          <i class="fa-solid fa-server me-2"></i>Platform Configuration
+        </h6>
+        <div class="row g-3">
+          {% for d in defaults %}
+          {% if d.group == 'platform' %}
+          <div class="col-12">
+            <label class="form-label text-theme-secondary">{{ d.label }}</label>
+            {% if d.key == 'maintenance_notice' %}
+            <textarea name="{{ d.key }}" class="form-control glass-input" rows="2" placeholder="Leave blank to hide notice banner…" id="inp_{{ d.key }}"></textarea>
+            {% elif d.key == 'allow_self_register' %}
+            <select name="{{ d.key }}" class="form-select glass-input" id="inp_{{ d.key }}">
+              <option value="true">Allowed (Public Registration Open)</option>
+              <option value="false">Disabled (Invite-only)</option>
+            </select>
+            {% else %}
+            <input type="number" name="{{ d.key }}" class="form-control glass-input" min="1" max="100" id="inp_{{ d.key }}">
+            {% endif %}
+          </div>
+          {% endif %}
+          {% endfor %}
+        </div>
+        <script>
+        {% for s in settings_all %}
+        {% if s.group == 'platform' %}
+        (function(){
+          var el=document.getElementById('inp_{{ s.key }}');
+          if(el) el.value='{{ s.value }}';
+        })();
+        {% endif %}
+        {% endfor %}
+        </script>
+      </div>
+
+      <div class="d-flex gap-3 justify-content-end">
+        <a href="{% url 'admin_platform_settings' %}" class="btn btn-outline-secondary px-4">Reset</a>
+        <button type="submit" class="btn btn-primary thunder-btn px-5">
+          <i class="fa-solid fa-floppy-disk me-2"></i>Save All Settings
+        </button>
+      </div>
+    </form>
+  </main>
+</div>
+{% endblock %}

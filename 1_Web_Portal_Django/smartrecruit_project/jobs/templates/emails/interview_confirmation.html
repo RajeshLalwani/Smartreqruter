@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interview Confirmation - SmartRecruit</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #f0f4f8;
+            color: #333;
+        }
+
+        .wrapper {
+            max-width: 600px;
+            margin: 30px auto;
+            background: #ffffff;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .header {
+            background: linear-gradient(135deg, #0d6efd 0%, #6610f2 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 26px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .header p {
+            font-size: 14px;
+            opacity: 0.85;
+            margin-top: 6px;
+        }
+
+        .badge {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-top: 12px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .body {
+            padding: 35px 30px;
+        }
+
+        .greeting {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #555;
+            line-height: 1.6;
+            margin-bottom: 25px;
+        }
+
+        .details-card {
+            background: #f8f9ff;
+            border: 1px solid #e0e6ff;
+            border-radius: 10px;
+            padding: 20px 25px;
+            margin-bottom: 25px;
+        }
+
+        .details-card h3 {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #6c757d;
+            margin-bottom: 14px;
+        }
+
+        .detail-row {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 12px;
+            gap: 12px;
+        }
+
+        .detail-icon {
+            font-size: 18px;
+            min-width: 26px;
+            text-align: center;
+        }
+
+        .detail-label {
+            font-size: 11px;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 2px;
+        }
+
+        .detail-value {
+            font-size: 15px;
+            font-weight: 600;
+            color: #1a1a2e;
+        }
+
+        .detail-value a {
+            color: #0d6efd;
+            text-decoration: none;
+        }
+
+        .ics-notice {
+            background: #e8f4fd;
+            border-left: 4px solid #0d6efd;
+            border-radius: 0 8px 8px 0;
+            padding: 14px 18px;
+            margin-bottom: 25px;
+            font-size: 13px;
+            color: #0a4d8c;
+        }
+
+        .ics-notice strong {
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .cta-btn {
+            display: block;
+            width: fit-content;
+            margin: 0 auto 25px auto;
+            background: linear-gradient(135deg, #0d6efd 0%, #6610f2 100%);
+            color: white !important;
+            text-decoration: none;
+            padding: 14px 35px;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 15px;
+            text-align: center;
+        }
+
+        .tips {
+            background: #fffbf0;
+            border: 1px solid #ffeaa7;
+            border-radius: 10px;
+            padding: 18px 22px;
+            margin-bottom: 25px;
+        }
+
+        .tips h4 {
+            font-size: 13px;
+            color: #d4a017;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+
+        .tips ul {
+            padding-left: 18px;
+            font-size: 13px;
+            color: #666;
+            line-height: 2;
+        }
+
+        .footer {
+            background: #f8f9fa;
+            padding: 20px 30px;
+            text-align: center;
+            border-top: 1px solid #eee;
+        }
+
+        .footer p {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .footer .brand {
+            font-weight: 700;
+            color: #0d6efd;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="wrapper">
+        <!-- Header -->
+        <div class="header">
+            <div style="font-size: 40px; margin-bottom: 10px;">📅</div>
+            <h1>Interview Confirmed!</h1>
+            <p>Your scheduled session with SmartRecruit</p>
+            <span class="badge">⚡ AI-Scheduled</span>
+        </div>
+
+        <!-- Body -->
+        <div class="body">
+            <p class="greeting">Hello, {{ candidate_name }} 👋</p>
+            <p class="subtitle">
+                Great news! Your interview for the position of <strong>{{ job_title }}</strong> has been
+                officially confirmed. We look forward to meeting you.
+            </p>
+
+            <!-- Interview Details Card -->
+            <div class="details-card">
+                <h3>📋 Interview Details</h3>
+                <div class="detail-row">
+                    <div class="detail-icon">🎯</div>
+                    <div>
+                        <div class="detail-label">Round</div>
+                        <div class="detail-value">{{ round_name }}</div>
+                    </div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-icon">🕐</div>
+                    <div>
+                        <div class="detail-label">Date & Time</div>
+                        <div class="detail-value">{{ scheduled_time }}</div>
+                    </div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-icon">🎥</div>
+                    <div>
+                        <div class="detail-label">Meeting Link</div>
+                        <div class="detail-value"><a href="{{ meeting_link }}">Join Interview →</a></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ICS Notice -->
+            <div class="ics-notice">
+                <strong>📎 Calendar Invite Attached</strong>
+                A <strong>.ics</strong> calendar invite is attached to this email.
+                Open it to automatically add this event to Google Calendar, Outlook, or Apple Calendar.
+            </div>
+
+            <!-- CTA -->
+            <a href="{{ meeting_link }}" class="cta-btn">🚀 Join Meeting Room</a>
+
+            <!-- Tips -->
+            <div class="tips">
+                <h4>💡 Pro Tips for Success</h4>
+                <ul>
+                    <li>Join 5 minutes early to test your audio/video.</li>
+                    <li>Keep your resume handy for reference.</li>
+                    <li>Prepare 2-3 questions to ask the interviewer.</li>
+                    <li>Ensure a quiet, well-lit environment.</li>
+                </ul>
+            </div>
+
+            <p style="font-size:14px; color:#555;">
+                Good luck! The SmartRecruit team believes in you.
+                If you need to reschedule, please contact us at the earliest opportunity.
+            </p>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p>&copy; 2026 <span class="brand">SmartRecruit</span> by IR Info Tech Pvt Ltd &middot; All rights
+                reserved.</p>
+            <p style="margin-top:6px;">This email was automatically sent by the SmartRecruit AI Scheduling Agent.</p>
+        </div>
+    </div>
+</body>
+
+</html>

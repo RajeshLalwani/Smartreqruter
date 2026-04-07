@@ -1,0 +1,462 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Resume Intelligence - SmartRecruit{% endblock %}
+
+{% block content %}
+<style>
+    .neural-hud {
+        position: relative;
+        overflow: hidden;
+        border: 1px solid rgba(0, 200, 83, 0.3);
+        background: linear-gradient(135deg, rgba(0, 200, 83, 0.05), rgba(0, 176, 255, 0.05));
+    }
+
+    .scanline-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(to bottom, transparent 50%, rgba(0, 200, 83, 0.05) 50.5%);
+        background-size: 100% 4px;
+        pointer-events: none;
+        z-index: 2;
+        animation: scanline-scroll 20s linear infinite;
+    }
+
+    @keyframes scanline-scroll {
+        from {
+            background-position: 0 0;
+        }
+
+        to {
+            background-position: 0 100%;
+        }
+    }
+
+    .data-ping {
+        position: absolute;
+        width: 2px;
+        height: 20px;
+        background: #00C853;
+        box-shadow: 0 0 10px #00C853;
+        animation: ping-down 4s ease-in-out infinite;
+    }
+
+    @keyframes ping-down {
+        0% {
+            top: -20px;
+            opacity: 0;
+        }
+
+        50% {
+            opacity: 1;
+        }
+
+        100% {
+            top: 100%;
+            opacity: 0;
+        }
+    }
+
+    .ats-fusion-ring {
+        filter: drop-shadow(0 0 15px rgba(0, 200, 83, 0.4));
+    }
+</style>
+
+<div class="container-fluid mt-4">
+
+    <!-- Header -->
+    <div class="elite-glass p-4 mb-4 neural-hud" data-aos="fade-down">
+        <div class="scanline-overlay"></div>
+        <div class="data-ping" style="left: 10%;"></div>
+        <div class="data-ping" style="left: 90%; animation-delay: 2s;"></div>
+
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 position-relative z-3">
+            <div class="d-flex align-items-center gap-3">
+                <div class="rounded-circle bg-success bg-opacity-15 d-flex align-items-center justify-content-center text-success fw-bold pulse-glow"
+                    style="width: 56px; height: 56px; font-size: 1.4rem;">
+                    <i class="bi bi-cpu"></i>
+                </div>
+                <div>
+                    <h3 class="fw-bold mb-0 text-white">Neural Resume Intelligence</h3>
+                    <p class="text-white-50 mb-0">
+                        Semantic NLP Extraction Engine
+                        <span class="mx-2">/</span>
+                        <span class="fw-semibold text-success">{{ application.candidate.full_name }}</span>
+                    </p>
+                </div>
+            </div>
+            <a href="{% url 'application_details' application.id %}"
+                class="btn btn-outline-light rounded-pill px-4 blur-btn">
+                <i class="bi bi-arrow-left me-2"></i>Mission Control
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-4">
+
+        <!-- ACTION NEXUS (FULL WIDTH) -->
+        <div class="col-12 text-center" style="margin-top: -15px; margin-bottom: 5px; position: relative; z-index: 5;">
+            <div class="d-inline-flex gap-3 p-3 rounded-pill glass-panel shadow-lg"
+                style="border: 1px solid rgba(255,255,255,0.1); background: rgba(30,30,40,0.4); backdrop-filter: blur(20px);">
+                <a href="{% url 'update_status' application.id 'RESUME_SELECTED' %}"
+                    class="btn btn-success rounded-pill px-4 px-md-5 fw-bold dynamic-hover"
+                    style="box-shadow: 0 0 15px rgba(0,200,83,0.3);">
+                    <i class="bi bi-envelope-paper me-2"></i> Shortlist & Email Candidate
+                </a>
+                <a href="{% url 'update_status' application.id 'RESUME_REJECTED' %}"
+                    class="btn btn-outline-danger rounded-pill px-4 px-md-5 fw-bold dynamic-hover bg-dark bg-opacity-50">
+                    <i class="bi bi-x-octagon me-2"></i> Reject & Archive
+                </a>
+            </div>
+        </div>
+
+        <!-- LEFT COLUMN -->
+        <div class="col-lg-4">
+
+            <!-- ATS Readability Score -->
+            <div class="elite-glass p-4 mb-4 text-center position-relative overflow-hidden" data-aos="fade-right">
+                <div class="position-absolute top-0 start-0 w-100 h-100 opacity-10"
+                    style="background: radial-gradient(circle at 50% 0%, rgba(0,200,83,0.4), transparent 70%);"></div>
+                <h6 class="text-uppercase text-white-50 small fw-bold mb-4 position-relative">
+                    <i class="bi bi-robot me-2 text-success"></i>ATS Readability & RAG Fusion
+                </h6>
+                <!-- Ring -->
+                <div class="position-relative d-inline-flex align-items-center justify-content-center mb-3">
+                    <svg width="180" height="180" viewBox="0 0 150 150" class="ats-fusion-ring">
+                        <circle cx="75" cy="75" r="60" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="8" />
+                        <circle cx="75" cy="75" r="60" fill="none"
+                            stroke="{% if ats.rag_score >= 80 or ats.score >= 80 %}#00C853{% elif ats.rag_score >= 60 or ats.score >= 60 %}#FF9800{% else %}#FF5252{% endif %}"
+                            stroke-width="10" stroke-dasharray="{{ ats.rag_score|default:ats.score|floatformat:0 }} 100" id="atsRing"
+                            stroke-linecap="round" transform="rotate(-90 75 75)"
+                            style="transition: stroke-dashoffset 1.5s ease;" />
+                    </svg>
+                    <div class="position-absolute text-center">
+                        <div class="fw-bold text-white" style="font-size: 2.5rem; line-height: 1;">{{ ats.rag_score|default:ats.score }}</div>
+                        <div class="small text-white-50">/ 100 QUOTIENT</div>
+                    </div>
+                </div>
+                
+                {% if ats.rag_score %}
+                <div class="mt-2 mb-3">
+                    <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-3 py-1 rounded-pill small">
+                        <i class="bi bi-shield-check me-1"></i> Grounded RAG Score
+                    </span>
+                </div>
+                {% endif %}
+
+                <div class="mt-2">
+                    <span
+                        class="badge-elite px-4 py-2
+                        {% if ats.grade == 'A' %}text-success border-success{% elif ats.grade == 'B' %}text-info border-info{% elif ats.grade == 'C' %}text-warning border-warning{% else %}text-danger border-danger{% endif %}">
+                        RATING: GRADE {{ ats.grade }}
+                    </span>
+                </div>
+                <div class="row g-2 mt-4 text-start">
+                    <div class="col-6">
+                        <div class="p-3 rounded-4 text-center elite-glass" style="background: rgba(255,255,255,0.03);">
+                            <div class="fw-bold text-white fs-4">{{ report.word_count }}</div>
+                            <div class="small text-white-50">Tokens</div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="p-3 rounded-4 text-center elite-glass" style="background: rgba(255,255,255,0.03);">
+                            <div class="fw-bold text-white fs-4">{{ report.skills.total }}</div>
+                            <div class="small text-white-50">Dimensions</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RAG Contextual Reasoning -->
+            {% if ats.justification %}
+            <div class="glass-panel p-4 mb-4" data-aos="fade-up">
+                <h6 class="text-uppercase text-success small fw-bold mb-3">
+                    <i class="bi bi-lightning-charge-fill me-2"></i>AI Matchmaker Reasoning
+                </h6>
+                <div class="small text-white-75 mb-3" style="line-height: 1.6; font-style: italic;">
+                    "{{ ats.justification }}"
+                </div>
+                {% if ats.rag_reasoning %}
+                <div class="p-3 rounded-3 bg-dark bg-opacity-25 border border-white border-opacity-10 small text-white-50">
+                    <i class="bi bi-info-circle me-1"></i> {{ ats.rag_reasoning }}
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            <!-- Critical Gaps -->
+            {% if ats.critical_gaps %}
+            <div class="glass-panel p-4 mb-4 border-danger border-opacity-10" data-aos="fade-up">
+                <h6 class="text-uppercase text-danger small fw-bold mb-3">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>Critical Missing Signals
+                </h6>
+                <ul class="list-unstyled mb-0">
+                    {% for gap in ats.critical_gaps %}
+                    <li class="small text-white-50 mb-2 d-flex align-items-center gap-2">
+                        <i class="bi bi-dot text-danger fs-3"></i> {{ gap }}
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+
+            <!-- ATS Issues & Suggestions -->
+            {% if ats.issues or ats.suggestions %}
+            <div class="glass-panel p-4 mb-4">
+                <h6 class="fw-bold text-theme mb-3"><i class="fas fa-clipboard-check me-2 text-warning"></i>ATS Feedback
+                </h6>
+                {% for issue in ats.issues %}
+                <div class="d-flex align-items-start gap-2 mb-2 p-2 rounded-3"
+                    style="background: rgba(255,82,82,0.1); border-left: 3px solid #FF5252;">
+                    <i class="fas fa-times-circle text-danger mt-1 small"></i>
+                    <span class="small">{{ issue }}</span>
+                </div>
+                {% endfor %}
+                {% for sug in ats.suggestions %}
+                <div class="d-flex align-items-start gap-2 mb-2 p-2 rounded-3"
+                    style="background: rgba(255,193,7,0.1); border-left: 3px solid #ffc107;">
+                    <i class="fas fa-lightbulb text-warning mt-1 small"></i>
+                    <span class="small">{{ sug }}</span>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Contact Info -->
+            <div class="glass-panel p-4 mb-4">
+                <h6 class="fw-bold text-theme mb-3"><i class="fas fa-id-card me-2 text-info"></i>Extracted Contact Info
+                </h6>
+                <ul class="list-unstyled mb-0">
+                    <li class="mb-2 d-flex align-items-center gap-2">
+                        <i class="fas fa-envelope text-primary" style="width:18px;"></i>
+                        {% if report.contact.email %}
+                        <a href="mailto:{{ report.contact.email }}" class="text-theme text-decoration-none small">{{
+                            report.contact.email }}</a>
+                        {% else %}<span class="text-muted small fst-italic">Not found</span>{% endif %}
+                    </li>
+                    <li class="mb-2 d-flex align-items-center gap-2">
+                        <i class="fas fa-phone text-success" style="width:18px;"></i>
+                        {% if report.contact.phone %}<span class="small">{{ report.contact.phone }}</span>
+                        {% else %}<span class="text-muted small fst-italic">Not found</span>{% endif %}
+                    </li>
+                    <li class="mb-2 d-flex align-items-center gap-2">
+                        <i class="fab fa-linkedin text-info" style="width:18px;"></i>
+                        {% if report.contact.linkedin %}
+                        <a href="https://{{ report.contact.linkedin }}" target="_blank"
+                            class="text-info text-decoration-none small">{{ report.contact.linkedin }}</a>
+                        {% else %}<span class="text-muted small fst-italic">Not found</span>{% endif %}
+                    </li>
+                    <li class="d-flex align-items-center gap-2">
+                        <i class="fab fa-github text-secondary" style="width:18px;"></i>
+                        {% if report.contact.github %}
+                        <a href="https://{{ report.contact.github }}" target="_blank"
+                            class="text-secondary text-decoration-none small">{{ report.contact.github }}</a>
+                        {% else %}<span class="text-muted small fst-italic">Not found</span>{% endif %}
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Experience Summary -->
+            <div class="glass-panel p-4">
+                <h6 class="fw-bold text-theme mb-3"><i class="fas fa-briefcase me-2 text-warning"></i>Experience Summary
+                </h6>
+                {% if report.experience.total_years is not None %}
+                <div class="text-center mb-3">
+                    <div class="fw-bold text-theme" style="font-size: 2.5rem;">{{ report.experience.total_years }}</div>
+                    <div class="small text-muted">Years of Experience</div>
+                </div>
+                {% endif %}
+                {% if report.experience.year_range %}
+                <div class="text-center mb-3">
+                    <span class="badge bg-secondary px-3 py-2 rounded-pill">{{ report.experience.year_range }}</span>
+                </div>
+                {% endif %}
+                {% if report.experience.work_entries %}
+                <div class="mt-2">
+                    <div class="small text-muted fw-bold text-uppercase mb-2">Detected Roles</div>
+                    {% for entry in report.experience.work_entries %}
+                    <div class="small p-2 rounded-3 mb-1" style="background: rgba(255,255,255,0.05);">
+                        <i class="fas fa-circle-dot text-warning me-2" style="font-size: 0.5rem;"></i>{{ entry }}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+
+        </div>
+
+        <!-- RIGHT COLUMN -->
+        <div class="col-lg-8">
+
+            <!-- Summary / Objective -->
+            {% if report.summary %}
+            <div class="glass-panel p-4 mb-4" style="border-left: 4px solid #00B0FF;">
+                <h5 class="fw-bold text-theme mb-2"><i class="fas fa-quote-left me-2 text-info"></i>Profile Summary</h5>
+                <p class="text-secondary mb-0 small" style="line-height: 1.8;">{{ report.summary }}</p>
+            </div>
+            {% endif %}
+
+            <!-- Skills Visualization -->
+            <div class="glass-panel p-4 mb-4">
+                <h5 class="fw-bold text-theme mb-4"><i class="fas fa-chart-bar me-2 text-primary"></i>Skills Detected
+                </h5>
+                <div class="row g-4">
+                    <div class="col-md-7">
+                        <canvas id="skillsChart" height="200"></canvas>
+                    </div>
+                    <div class="col-md-5">
+                        <!-- Tech Skills Pills -->
+                        <div class="mb-3">
+                            <div class="small fw-bold text-muted text-uppercase mb-2">Technical Skills ({{
+                                report.skills.technical|length }})</div>
+                            <div class="d-flex flex-wrap gap-2">
+                                {% for skill in report.skills.technical %}
+                                <span class="badge rounded-pill px-3 py-1"
+                                    style="background: rgba(41,121,255,0.15); border: 1px solid rgba(41,121,255,0.4); color: #82b1ff; font-size: 0.75rem;">
+                                    {{ skill }}
+                                </span>
+                                {% empty %}
+                                <span class="text-muted small fst-italic">None detected</span>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <!-- Soft Skills Pills -->
+                        <div>
+                            <div class="small fw-bold text-muted text-uppercase mb-2">Soft Skills ({{
+                                report.skills.soft|length }})</div>
+                            <div class="d-flex flex-wrap gap-2">
+                                {% for skill in report.skills.soft %}
+                                <span class="badge rounded-pill px-3 py-1"
+                                    style="background: rgba(0,200,83,0.1); border: 1px solid rgba(0,200,83,0.3); color: #69f0ae; font-size: 0.75rem;">
+                                    {{ skill }}
+                                </span>
+                                {% empty %}
+                                <span class="text-muted small fst-italic">None detected</span>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Education -->
+            {% if report.education %}
+            <div class="glass-panel p-4 mb-4">
+                <h5 class="fw-bold text-theme mb-3"><i class="fas fa-graduation-cap me-2 text-warning"></i>Education
+                    Detected</h5>
+                {% for edu in report.education %}
+                <div class="d-flex align-items-start gap-3 p-3 rounded-3 mb-2"
+                    style="background: rgba(255,193,7,0.07); border-left: 3px solid rgba(255,193,7,0.5);">
+                    <i class="fas fa-university text-warning mt-1"></i>
+                    <div>
+                        <div class="fw-semibold small">{{ edu.raw }}</div>
+                        {% if edu.year %}
+                        <div class="text-muted" style="font-size: 0.75rem;"><i class="fas fa-calendar-alt me-1"></i>{{
+                            edu.year }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Certifications -->
+            {% if report.certifications %}
+            <div class="glass-panel p-4 mb-4">
+                <h5 class="fw-bold text-theme mb-3"><i class="fas fa-certificate me-2 text-success"></i>Certifications
+                    ({{ report.certifications|length }})</h5>
+                <div class="d-flex flex-column gap-2">
+                    {% for cert in report.certifications %}
+                    <div class="d-flex align-items-center gap-2 p-2 rounded-3"
+                        style="background: rgba(0,200,83,0.07); border: 1px solid rgba(0,200,83,0.2);">
+                        <i class="fas fa-award text-success"></i>
+                        <span class="small">{{ cert }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Projects -->
+            {% if report.projects %}
+            <div class="glass-panel p-4">
+                <h5 class="fw-bold text-theme mb-3"><i class="fas fa-code-branch me-2 text-primary"></i>Projects
+                    Detected ({{ report.projects|length }})</h5>
+                {% for proj in report.projects %}
+                <div class="p-3 rounded-3 mb-2 d-flex gap-2 align-items-start"
+                    style="background: rgba(41,121,255,0.07); border-left: 3px solid rgba(41,121,255,0.4);">
+                    <i class="fas fa-rocket text-primary mt-1"></i>
+                    <span class="small">{{ proj }}</span>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // 1. Animate ATS Ring
+        const ring = document.getElementById('atsRing');
+        if (ring) {
+            const score = {{ ats.rag_score|default:ats.score|default:0 }};
+            const circumference = 2 * Math.PI * 60;
+            ring.style.strokeDasharray = `${circumference}`;
+            ring.style.strokeDashoffset = circumference;
+            setTimeout(() => {
+                ring.style.transition = 'stroke-dashoffset 1.5s ease';
+                ring.style.strokeDashoffset = circumference - (score / 100 * circumference);
+            }, 300);
+        }
+
+        // 2. Skills Distribution Chart
+        const ctx = document.getElementById('skillsChart');
+        if (ctx) {
+            const stats = {
+                tech: {{ report.skills.technical|length|default:0 }},
+                soft: {{ report.skills.soft|length|default:0 }},
+                cert: {{ report.certifications|length|default:0 }},
+                proj: {{ report.projects|length|default:0 }},
+                edu:  {{ report.education|length|default:0 }}
+            };
+
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Technical', 'Soft Skills', 'Certifications', 'Projects', 'Education'],
+                    datasets: [{
+                        data: [stats.tech, stats.soft, stats.cert, stats.proj, stats.edu],
+                        backgroundColor: [
+                            'rgba(99, 102, 241, 0.8)',
+                            'rgba(236, 72, 153, 0.8)',
+                            'rgba(16, 185, 129, 0.8)',
+                            'rgba(245, 158, 11, 0.8)',
+                            'rgba(139, 92, 246, 0.8)'
+                        ],
+                        borderWidth: 0,
+                    }]
+                },
+                options: {
+                    cutout: '70%',
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                color: 'rgba(255,255,255,0.6)',
+                                usePointStyle: true,
+                                padding: 20
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #333;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            background-color: #ffffff;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .welcome-text {
+            font-size: 18px;
+            color: #4b5563;
+            margin-bottom: 25px;
+        }
+
+        .highlight-box {
+            background-color: #f3f4f6;
+            border-left: 4px solid #6366f1;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .checklist {
+            list-style: none;
+            padding: 0;
+            margin: 20px 0;
+        }
+
+        .checklist li {
+            padding: 10px 0;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            align-items: center;
+        }
+
+        .checklist li:before {
+            content: '✓';
+            color: #10b981;
+            font-weight: bold;
+            margin-right: 15px;
+            font-size: 18px;
+        }
+
+        .checklist li:last-child {
+            border-bottom: none;
+        }
+
+        .btn-action {
+            display: block;
+            width: 200px;
+            margin: 30px auto;
+            padding: 15px;
+            background-color: #6366f1;
+            color: white;
+            text-align: center;
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: 600;
+            box-shadow: 0 4px 6px rgba(99, 102, 241, 0.3);
+        }
+
+        .footer {
+            background-color: #f9fafb;
+            text-align: center;
+            padding: 20px;
+            font-size: 12px;
+            color: #9ca3af;
+            border-top: 1px solid #e5e7eb;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Welcome to the Team, {{ user.first_name }}!</h1>
+        </div>
+
+        <div class="content">
+            <p class="welcome-text">We are pleased to have you join <strong>IR Info Tech</strong> as our new
+                <strong>{{ job.title }}</strong>.
+            </p>
+
+            <p>You've cleared all rounds with flying colors, and we can't wait to see the impact you'll make. To ensure
+                a smooth start, we've outlined your immediate next steps below.</p>
+
+            <div class="highlight-box">
+                <h3 style="margin-top:0; color: #1f2937;">📝 Onboarding Checklist</h3>
+                <ul class="checklist">
+                    <li>Upload your <strong>Aadhar Card</strong> & <strong>PAN Card</strong> to the dashboard.</li>
+                    <li>Review and digitally sign the <strong>NDA</strong> (sent separately via DocuSign).</li>
+                    <li>Complete your <strong>Bank Details</strong> profile for payroll.</li>
+                    <li>Confirm your <strong>Start Date</strong> availability.</li>
+                </ul>
+            </div>
+
+            <p>Our HR team will be in touch shortly to schedule your orientation session.</p>
+
+            <a href="#" class="btn-action">Go to Dashboard</a>
+
+            <p style="text-align: center; margin-top: 30px;">
+                <em>"Great things in business are never done by one person. They're done by a team of people."</em>
+            </p>
+        </div>
+
+        <div class="footer">
+            <p>&copy; 2026 IR Info Tech Pvt Ltd • SmartRecruit Platform</p>
+            <p>This is an automated message. Please do not reply directly.</p>
+        </div>
+    </div>
+</body>
+
+</html>

@@ -1,0 +1,208 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}War Room | System Health{% endblock %}
+
+{% block extra_head %}
+<style>
+    .war-room-container {
+        padding: 40px;
+        min-height: calc(100vh - 80px);
+    }
+    .neon-indicator {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        display: inline-block;
+        transition: all 0.3s ease;
+    }
+    .status-processing {
+        background: #ffff00;
+        box-shadow: 0 0 15px #ffff00;
+        animation: pulse-yellow 1.5s infinite;
+    }
+    .status-ok {
+        background: #00ff00;
+        box-shadow: 0 0 15px #00ff00;
+    }
+    .status-error {
+        background: #ff0000;
+        box-shadow: 0 0 15px #ff0000;
+    }
+    
+    @keyframes pulse-yellow {
+        0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 255, 0, 0.7); }
+        70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(255, 255, 0, 0); }
+        100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 255, 0, 0); }
+    }
+
+    .health-card {
+        padding: 25px;
+        border-radius: 15px;
+        margin-bottom: 25px;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .health-card::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0; height: 3px;
+        background: linear-gradient(90deg, transparent, var(--neon-border), transparent);
+    }
+
+    .log-terminal {
+        background: rgba(0,0,0,0.8);
+        border-radius: 8px;
+        padding: 15px;
+        font-family: 'Courier New', Courier, monospace;
+        color: #00ffcc;
+        max-height: 150px;
+        overflow-y: auto;
+        font-size: 0.85rem;
+    }
+    
+    .log-terminal p { margin-bottom: 5px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="war-room-container">
+    <div class="d-flex justify-content-between align-items-center mb-5">
+        <h1 class="fw-bold text-theme m-0" style="text-shadow: 0 0 10px var(--neon-border);"><i class="fa-solid fa-satellite-dish text-info me-3"></i>THE WAR ROOM</h1>
+        <button class="btn thunder-btn" onclick="runDiagnostics()"><i class="fa-solid fa-rotate me-2"></i>Run Diagnostics</button>
+    </div>
+
+    <div class="row">
+        <!-- R1: Resume Parsing -->
+        <div class="col-md-6 col-lg-3">
+            <div class="glass-card health-card text-center" data-aos="fade-up" data-aos-delay="100">
+                <h5 class="text-theme fw-bold">R1: Resume Engine</h5>
+                <div class="my-4">
+                    <span id="ind-r1" class="neon-indicator status-processing"></span>
+                </div>
+                <p class="small text-theme-secondary m-0">Gemini API & PyPDF</p>
+            </div>
+        </div>
+
+        <!-- R2: Technical DB -->
+        <div class="col-md-6 col-lg-3">
+            <div class="glass-card health-card text-center" data-aos="fade-up" data-aos-delay="200">
+                <h5 class="text-theme fw-bold">R2: Technical DB</h5>
+                <div class="my-4">
+                    <span id="ind-r2" class="neon-indicator status-processing"></span>
+                </div>
+                <p class="small text-theme-secondary m-0">Assessment Core Logic</p>
+            </div>
+        </div>
+
+        <!-- R3: AI Interview -->
+        <div class="col-md-6 col-lg-3">
+            <div class="glass-card health-card text-center" data-aos="fade-up" data-aos-delay="300">
+                <h5 class="text-theme fw-bold">R3: Sentiment AI</h5>
+                <div class="my-4">
+                    <span id="ind-r3" class="neon-indicator status-processing"></span>
+                </div>
+                <p class="small text-theme-secondary m-0">FER Live Stream Bridge</p>
+            </div>
+        </div>
+
+        <!-- R4: Hiring Emails -->
+        <div class="col-md-6 col-lg-3">
+            <div class="glass-card health-card text-center" data-aos="fade-up" data-aos-delay="400">
+                <h5 class="text-theme fw-bold">R4: SMTP Core</h5>
+                <div class="my-4">
+                    <span id="ind-r4" class="neon-indicator status-processing"></span>
+                </div>
+                <p class="small text-theme-secondary m-0">Offer Dispatch Network</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <!-- Live Sentiment Feed Log -->
+        <div class="col-lg-6">
+            <div class="glass-card health-card h-100" data-aos="fade-right">
+                <h5 class="text-theme fw-bold mb-3"><i class="fa-solid fa-bolt text-warning me-2"></i>R3 Sentiment Telemetry</h5>
+                <div class="log-terminal" id="sentiment-logs">
+                    <p class="text-secondary">Awaiting telemetry data...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Global Fixes Monitor -->
+        <div class="col-lg-6">
+            <div class="glass-card health-card h-100" data-aos="fade-left">
+                <h5 class="text-theme fw-bold mb-3"><i class="fa-solid fa-wrench text-info me-2"></i>Global Fixes Monitor</h5>
+                
+                <div class="d-flex justify-content-between align-items-center border-bottom border-theme border-opacity-25 pb-3 mb-3">
+                    <span class="text-theme">Strict POST Logout Integrity</span>
+                    <form action="{% url 'logout' %}" method="post" class="m-0">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-outline-danger btn-sm"><i class="fa-solid fa-skull-crossbones me-2"></i>Test Safe Logout</button>
+                    </form>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center">
+                    <span class="text-theme">Theme Engine LocalStorage</span>
+                    <span id="theme-log-output" class="badge bg-info text-dark font-monospace">Scanning...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function updateIndicator(id, isOk) {
+        const el = document.getElementById(id);
+        el.className = 'neon-indicator ' + (isOk ? 'status-ok' : 'status-error');
+    }
+
+    function runDiagnostics() {
+        // Force preloader active
+        document.documentElement.classList.add("preloader-active");
+        
+        // Reset to processing yellow
+        ['ind-r1', 'ind-r2', 'ind-r3', 'ind-r4'].forEach(id => {
+            document.getElementById(id).className = 'neon-indicator status-processing';
+        });
+
+        // Check local storage for theme
+        setTimeout(() => {
+            const currentTheme = localStorage.getItem('smartrecruit-theme') || 'Not Set';
+            document.getElementById('theme-log-output').textContent = currentTheme.toUpperCase();
+        }, 500);
+
+        fetch('/system-health/api/')
+            .then(res => res.json())
+            .then(data => {
+                setTimeout(() => {
+                    updateIndicator('ind-r1', data.round1);
+                    updateIndicator('ind-r2', data.round2);
+                    updateIndicator('ind-r3', data.round3);
+                    updateIndicator('ind-r4', data.round4);
+
+                    const logContainer = document.getElementById('sentiment-logs');
+                    logContainer.innerHTML = '';
+                    if (data.sentiment_logs && data.sentiment_logs.length > 0) {
+                        data.sentiment_logs.forEach(log => {
+                            logContainer.innerHTML += `<p>[${log.time}] SYS_RECV: Emotion=<span class="text-white">${log.emotion}</span> Score=${log.score.toFixed(2)}%</p>`;
+                        });
+                    } else {
+                        logContainer.innerHTML = '<p class="text-warning">No live telemetry captured in database.</p>';
+                    }
+                    
+                    document.documentElement.classList.remove("preloader-active");
+                }, 1500); // Artificial delay to let Rajesh see the Thunder Preloader
+            })
+            .catch(err => {
+                console.error(err);
+                ['ind-r1', 'ind-r2', 'ind-r3', 'ind-r4'].forEach(id => updateIndicator(id, false));
+                document.documentElement.classList.remove("preloader-active");
+            });
+    }
+
+    // Auto-run on load
+    document.addEventListener('DOMContentLoaded', runDiagnostics);
+</script>
+{% endblock %}

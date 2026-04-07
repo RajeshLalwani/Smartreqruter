@@ -1,0 +1,197 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="row mb-4 fade-up">
+    <div class="col-md-8">
+        <h2 class="fw-bold text-theme" style="text-shadow: 0 0 15px rgba(255, 51, 102, 0.3);">
+            <i class="fas fa-database me-3 text-primary"></i>Question Bank
+        </h2>
+        <p class="text-muted opacity-75">Manage and organize your custom interview questions.</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <button class="btn btn-outline-info rounded-pill px-4 py-2 shadow-lg hover-scale me-2" data-bs-toggle="modal"
+            data-bs-target="#generateQuestionsModal">
+            <i class="fas fa-magic me-2"></i> Auto-Generate
+        </button>
+        <a href="{% url 'add_question' %}" class="btn btn-primary rounded-pill px-4 py-2 shadow-lg hover-scale">
+            <i class="fas fa-plus-circle me-2"></i> Add Question
+        </a>
+    </div>
+</div>
+
+<div class="glass-panel p-4 fade-up delay-1">
+    <div class="table-responsive">
+        <table class="table align-middle table-hover mb-0">
+            <thead class="text-secondary small text-uppercase" style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+                <tr>
+                    <th class="ps-3" style="width: 40%;">Question Text</th>
+                    <th>Category</th>
+                    <th>Difficulty</th>
+                    <th>Options</th>
+                    <th class="text-end pe-3">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for q in questions %}
+                <tr style="transition: all 0.2s;">
+                    <td class="ps-3 py-3">
+                        <div class="fw-bold text-theme text-truncate" style="max-width: 350px;" title="{{ q.text }}">
+                            <i class="fas fa-quote-left me-2 opacity-25"></i> {{ q.text }}
+                        </div>
+                    </td>
+                    <td>
+                        <span
+                            class="badge rounded-pill bg-info bg-opacity-10 text-info border border-info border-opacity-25 px-3">
+                            {{ q.get_category_display }}
+                        </span>
+                    </td>
+                    <td>
+                        {% if q.difficulty == 'easy' %}
+                        <span
+                            class="badge rounded-pill bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-3">Easy</span>
+                        {% elif q.difficulty == 'medium' %}
+                        <span
+                            class="badge rounded-pill bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 px-3">Medium</span>
+                        {% else %}
+                        <span
+                            class="badge rounded-pill bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 px-3">Hard</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if q.options %}
+                        <span class="text-muted small"><i class="fas fa-list-ul me-1"></i> {{ q.options|length }}
+                            Options</span>
+                        {% else %}
+                        <span class="text-muted small opacity-50">-</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-end pe-3">
+                        <a href="{% url 'edit_question' q.id %}"
+                            class="btn btn-sm btn-outline-warning rounded-circle shadow-sm me-1" title="Edit Question">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        <a href="{% url 'delete_question' q.id %}"
+                            class="btn btn-sm btn-outline-danger rounded-circle shadow-sm"
+                            onclick="return confirm('Are you sure you want to delete this question?');"
+                            title="Delete Question">
+                            <i class="fas fa-trash-alt"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="text-center py-5">
+                        <div class="text-muted opacity-50">
+                            <i class="fas fa-folder-open fa-4x mb-3"></i>
+                            <h5 class="fw-normal">No questions found</h5>
+                            <p class="small">Start building your bank by adding a new question.</p>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Auto Generate Modal -->
+<div class="modal fade" id="generateQuestionsModal" tabindex="-1" aria-labelledby="generateQuestionsModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content glass-panel text-theme border-0 shadow-lg">
+            <div class="modal-header border-secondary border-opacity-10">
+                <h5 class="modal-title fw-bold" id="generateQuestionsModalLabel"><i
+                        class="fas fa-magic text-info me-2"></i> AI Question Generator</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <form id="generateQuestionsForm">
+                    <div class="mb-3">
+                        <label class="form-label text-muted small fw-bold">Domain Filter</label>
+                        <select class="form-select bg-dark text-white border-secondary" id="genDomain" required>
+                            <option value="Python">Python</option>
+                            <option value="Java">Java</option>
+                            <option value="JavaScript">JavaScript</option>
+                            <option value="SQL">SQL</option>
+                            <option value="HR/Behavioral">HR/Behavioral</option>
+                            <option value="Aptitude">Aptitude</option>
+                            <option value="System Design">System Design</option>
+                            <option value="Machine Learning">Machine Learning</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-muted small fw-bold">Difficulty</label>
+                        <select class="form-select bg-dark text-white border-secondary" id="genDifficulty" required>
+                            <option value="easy">Easy</option>
+                            <option value="medium" selected>Medium</option>
+                            <option value="hard">Hard</option>
+                        </select>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label text-muted small fw-bold">Number of Questions</label>
+                        <input type="number" class="form-control bg-dark text-white border-secondary" id="genAmount"
+                            value="5" min="1" max="50" required>
+                        <small class="text-muted d-block mt-1">Generate up to 50 questions at a time.</small>
+                    </div>
+
+                    <button type="submit" class="btn btn-info w-100 py-2 fw-bold text-dark rounded-3" id="generateBtn">
+                        <i class="fas fa-bolt me-2"></i> Generate & Save Questions
+                    </button>
+                    <div id="genStatus" class="mt-3 text-center small fw-bold d-none">
+                        <i class="fas fa-circle-notch fa-spin text-info me-2"></i> Generating questions... this may take
+                        a moment.
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.getElementById('generateQuestionsForm').addEventListener('submit', async function (e) {
+        e.preventDefault();
+        const btn = document.getElementById('generateBtn');
+        const status = document.getElementById('genStatus');
+
+        btn.disabled = true;
+        status.classList.remove('d-none');
+
+        const payload = {
+            domain: document.getElementById('genDomain').value,
+            difficulty: document.getElementById('genDifficulty').value,
+            amount: parseInt(document.getElementById('genAmount').value)
+        };
+
+        try {
+            const response = await fetch("{% url 'generate_questions_api' %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify(payload)
+            });
+
+            const data = await response.json();
+            if (data.success) {
+                showToast(data.message, 'success');
+                setTimeout(() => location.reload(), 1500);
+            } else {
+                showToast(data.error || 'Failed to generate questions.', 'error');
+                btn.disabled = false;
+                status.classList.add('d-none');
+            }
+        } catch (err) {
+            console.error(err);
+            showToast('Network error occurred.', 'error');
+            btn.disabled = false;
+            status.classList.add('d-none');
+        }
+    });
+</script>
+{% endblock %}

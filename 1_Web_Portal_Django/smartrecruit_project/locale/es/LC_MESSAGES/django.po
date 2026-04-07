@@ -1,0 +1,46 @@
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+
+msgid "Command"
+msgstr "Comando"
+
+msgid "Requisitions"
+msgstr "Requisiciones"
+
+msgid "Interviews"
+msgstr "Entrevistas"
+
+msgid "System"
+msgstr "Sistema"
+
+msgid "Find Jobs"
+msgstr "Buscar Empleos"
+
+msgid "Applications"
+msgstr "Aplicaciones"
+
+msgid "My Interviews"
+msgstr "Mis Entrevistas"
+
+msgid "Neural Chat"
+msgstr "Chat Neuronal"
+
+msgid "Architecture Design"
+msgstr "Diseño de Arquitectura"
+
+msgid "Terminate Session"
+msgstr "Terminar Sesión"
+
+msgid "Send"
+msgstr "Enviar"
+
+msgid "Save"
+msgstr "Guardar"
+
+msgid "Submit Code"
+msgstr "Enviar Código"
+
+msgid "Start Voice Round"
+msgstr "Iniciar Ronda de Voz"
+

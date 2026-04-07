@@ -1,0 +1,80 @@
+{% extends 'emails/base_email.html' %}
+
+{% block title %}Neural Pipeline Activated | SmartRecruit{% endblock %}
+
+{% block content %}
+<style>
+    /* CSS Injection for web-readers supporting custom vars */
+    .smart-email-container {
+        background-color: var(--bg-color, #ffffff);
+        color: var(--text-theme, #333333);
+        border-top: 4px solid var(--accent-color, #00d2ff);
+        padding: 30px;
+        border-radius: 12px;
+        font-family: 'Inter', 'Outfit', sans-serif;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+    }
+    .status-badge {
+        background: rgba(0, 210, 255, 0.1);
+        color: var(--accent-color, #00d2ff);
+        padding: 8px 16px;
+        border-radius: 50px;
+        font-weight: 600;
+        display: inline-block;
+        margin-bottom: 20px;
+        letter-spacing: 1px;
+        font-size: 0.8rem;
+    }
+    .metrics-grid td { padding: 10px 15px; border-bottom: 1px solid rgba(0,0,0,0.05); }
+    .pulse-glow { animation: pulse 2s infinite alternate; }
+</style>
+
+<div class="smart-email-container" data-aos="fade-up" data-aos-duration="1000">
+    <div class="status-badge" data-aos="zoom-in" data-aos-delay="200">
+        <span class="pulse-glow">⚡ AI PIPELINE ACTIVATED</span>
+    </div>
+    
+    <h2 style="margin-top: 5px; color: var(--text-theme, #0a0b10); letter-spacing: -0.5px;" data-aos="fade-up" data-aos-delay="300">Data Vector Secured.</h2>
+
+    <p data-aos="fade-up" data-aos-delay="400" style="color: #555; font-size: 1.05rem;">
+        Candidate Identity: <strong>{{ candidate_name }}</strong>
+    </p>
+
+    <p data-aos="fade-up" data-aos-delay="500" style="line-height: 1.6; color: #555;">
+        Thank you for transmitting your profile for the <strong style="color: var(--accent-color, #00d2ff);">{{ job_title }}</strong> architecture level at SmartRecruit. Your neural CV has been successfully captured and mapped into our central ATS.
+    </p>
+
+    <div class="info-box" style="background: rgba(0, 210, 255, 0.03); border-left: 4px solid var(--accent-color, #00d2ff); padding: 5px 20px; border-radius: 0 12px 12px 0; margin: 25px 0;" data-aos="fade-left" data-aos-delay="600">
+        <h4 style="margin-top: 15px; margin-bottom: 15px; color: #333;">Telemetry Integrity:</h4>
+        <table class="metrics-grid" style="width: 100%; border-collapse: collapse; font-size: 0.95rem; color: #555;">
+            <tr>
+                <td><strong>Designation:</strong></td>
+                <td>{{ job_title }}</td>
+                <td><strong>Protocol UID:</strong></td>
+                <td>#{{ application_id }}</td>
+            </tr>
+            <tr>
+                <td><strong>Sync Time:</strong></td>
+                <td>{{ submitted_date }}</td>
+                <td><strong>AI Match Value:</strong></td>
+                <td><strong style="color: #00d2ff; font-size: 1.1rem;">{{ ai_score }}%</strong></td>
+            </tr>
+        </table>
+    </div>
+
+    <p data-aos="fade-up" data-aos-delay="700" style="line-height: 1.6; color: #555;">
+        Our proprietary Gemini/RAG LLM engine has initiated an automated benchmark across your technical syntax and strategic expertise. As per the candidate flowchart progression, our system will now execute Phase 1 mapping.
+    </p>
+
+    <h4 style="margin-top: 25px; margin-bottom: 15px; color: #333;" data-aos="fade-up" data-aos-delay="800">Next Stage Execution (Flow A)</h4>
+    <ul style="line-height: 1.8; color: #555; padding-left: 20px;" data-aos="fade-up" data-aos-delay="900">
+        <li>Your parsed skill-tree will be verified by our autonomous core.</li>
+        <li>If the threshold asserts a positive match, your unique Node Link for <strong>Round 1 (Aptitude/Technical)</strong> will deploy.</li>
+        <li>Bypass standard wait-times by entering the main staging bridge below.</li>
+    </ul>
+
+    <div style="text-align: center; margin-top: 40px; margin-bottom: 20px;" data-aos="zoom-in" data-aos-delay="1000">
+        <a href="{{ dashboard_url }}" style="background: linear-gradient(135deg, var(--accent-color, #00d2ff) 0%, #9d50bb 100%); color: #fff; padding: 16px 35px; border-radius: 50px; text-decoration: none; font-weight: bold; display: inline-block; box-shadow: 0 10px 25px rgba(0,210,255,0.4); border: 1px solid rgba(255,255,255,0.2);">Initialize Operations Board</a>
+    </div>
+</div>
+{% endblock %}

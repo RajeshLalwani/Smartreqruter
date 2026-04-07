@@ -1,0 +1,519 @@
+﻿{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+
+<div class="container-fluid">
+
+    <div class="d-flex justify-content-between align-items-center mb-5">
+        <div>
+            <h2 class="fw-bold mb-1">Recruiter Dashboard</h2>
+            <p class="text-secondary mb-0">
+                <i class="far fa-calendar-alt me-2"></i> {{ today_date|date:"l, F j, Y" }}
+            </p>
+        </div>
+        <div class="d-flex gap-3">
+            <a href="{% url 'question_list' %}" class="btn btn-secondary">
+                <i class="fas fa-database me-2"></i> Question Bank
+            </a>
+            <a href="{% url 'post_job' %}" class="btn btn-primary">
+                <i class="fas fa-plus me-2"></i> Post New Job
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-5">
+        <!-- Active Jobs -->
+        <div class="col-md-3">
+            <a href="{% url 'job_list' %}" class="text-decoration-none">
+                <div class="glass-panel p-4 h-100 hover-effect card-grad-primary">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div class="bg-primary bg-opacity-10 text-primary rounded-3 p-3">
+                            <i class="fas fa-briefcase fa-lg"></i>
+                        </div>
+                        <span class="glass-pill">
+                            <i class="fas fa-arrow-up me-1 text-success"></i> Active
+                        </span>
+                    </div>
+                    <div class="display-5 fw-bold mb-1">{{ total_jobs }}</div>
+                    <div class="text-secondary small fw-medium text-uppercase ls-1">Open Positions</div>
+                </div>
+            </a>
+        </div>
+
+        <!-- Total Candidates -->
+        <div class="col-md-3">
+            <a href="{% url 'candidate_list' %}" class="text-decoration-none">
+                <div class="glass-panel p-4 h-100 hover-effect card-grad-success">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div class="bg-success bg-opacity-10 text-success rounded-3 p-3">
+                            <i class="fas fa-users fa-lg"></i>
+                        </div>
+                        <span class="glass-pill">
+                            Total
+                        </span>
+                    </div>
+                    <div class="display-5 fw-bold mb-1">{{ total_candidates }}</div>
+                    <div class="text-secondary small fw-medium text-uppercase ls-1">Applicants</div>
+                </div>
+            </a>
+        </div>
+
+        <!-- Interviews -->
+        <div class="col-md-3">
+            <a href="{% url 'interview_list' %}" class="text-decoration-none">
+                <div class="glass-panel p-4 h-100 hover-effect card-grad-warning">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div class="bg-warning bg-opacity-10 text-warning rounded-3 p-3">
+                            <i class="fas fa-video fa-lg"></i>
+                        </div>
+                        <span class="glass-pill">
+                            Scheduled
+                        </span>
+                    </div>
+                    <div class="display-5 fw-bold mb-1">{{ total_interviews }}</div>
+                    <div class="text-secondary small fw-medium text-uppercase ls-1">Interviews</div>
+                </div>
+            </a>
+        </div>
+
+        <!-- Urgent Priority -->
+        <div class="col-md-3">
+            <div class="glass-panel p-4 h-100 hover-effect card-grad-danger">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div class="bg-danger bg-opacity-10 text-danger rounded-3 p-3">
+                        <i class="fas fa-exclamation-circle fa-lg"></i>
+                    </div>
+                    <span class="glass-pill">Priority</span>
+                </div>
+                {% if urgent_job %}
+                <div class="fw-bold text-truncate mb-1 fs-5 text-theme">{{ urgent_job.title }}</div>
+                <div class="text-danger small fw-bold"><i class="far fa-clock me-1"></i>Due: {{ urgent_job.deadline|date:"M d" }}</div>
+                {% else %}
+                <div class="text-secondary mt-2">All caught up!</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Job Table -->
+        <div class="col-lg-8">
+            <div class="glass-panel p-0 h-100 overflow-hidden">
+                <div
+                    class="p-4 border-bottom border-light border-opacity-10 d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0">Active Job Postings</h5>
+                    <a href="{% url 'job_list' %}" class="btn btn-sm btn-secondary">View All</a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0 table-hover">
+                        <thead class="bg-light bg-opacity-5">
+                            <tr>
+                                <th class="ps-4">Role</th>
+                                <th>Type</th>
+                                <th>Deadline</th>
+                                <th>Status</th>
+                                <th class="text-end pe-4">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for job in recent_jobs %}
+                            <tr>
+                                <td>
+                                    <div class="fw-bold text-theme mb-1 text-truncate" style="max-width: 250px;">{{ job.title }}</div>
+                                    <small class="text-secondary opacity-75">{{ job.location }}</small>
+                                </td>
+                                <td>
+                                    <span class="glass-pill text-xs">
+                                        {{ job.get_job_type_display }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="text-secondary small">{{ job.deadline|date:"M d, Y"|default:"--" }}</span>
+                                </td>
+                                <td>
+                                    {% if job.status == 'OPEN' %}
+                                    <span class="badge bg-success bg-opacity-10 text-success rounded-pill"
+                                        style="border: 1px solid rgba(16, 185, 129, 0.2);">Active</span>
+                                    {% else %}
+                                    <span
+                                        class="badge bg-secondary bg-opacity-10 text-secondary rounded-pill">Closed</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end pe-4">
+                                    <a href="{% url 'job_detail' job.id %}"
+                                        class="btn btn-sm btn-light border-0 bg-transparent hover-lift">
+                                        <i class="fas fa-arrow-right text-primary"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center py-5 text-muted">No Active Jobs Found</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar Widgets -->
+        <div class="col-lg-4">
+            <!-- Funnel Chart -->
+            <div class="glass-panel p-4 mb-4">
+                <h6 class="fw-bold mb-4 text-secondary text-uppercase small ls-1">Recruitment Funnel</h6>
+                <div style="height: 250px;">
+                    <canvas id="recruitmentFunnel"></canvas>
+                </div>
+            </div>
+
+            <!-- Activity Feed -->
+            <div class="glass-panel p-4 mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h6 class="fw-bold mb-0 text-secondary text-uppercase small ls-1">Recent Activity</h6>
+                    <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-2">Live</span>
+                </div>
+                <div class="activity-feed" style="max-height: 300px; overflow-y: auto;">
+                    {% for activity in recent_activities %}
+                    <div
+                        class="d-flex align-items-start mb-3 pb-3 border-bottom border-light border-opacity-10 last-no-border">
+                        <div class="me-3">
+                            <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center"
+                                style="width: 32px; height: 32px;">
+                                <i class="fas fa-bell small"></i>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="small fw-bold">{{ activity.action }}</div>
+                            <div class="text-secondary small my-1">{{ activity.details|truncatechars:40 }}</div>
+                            <small class="text-muted" style="font-size: 0.7rem;">{{ activity.timestamp|timesince }}
+                                ago</small>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="text-center text-muted small py-3">No recent activity.</div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Agentic AI Smart Assistant -->
+            <div class="glass-panel p-4 mb-4 position-relative overflow-hidden"
+                style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.05), rgba(139, 92, 246, 0.05)); border: 1px solid rgba(139, 92, 246, 0.3);">
+                <!-- Animated background glow -->
+                <div class="position-absolute rounded-circle"
+                    style="width: 150px; height: 150px; background: rgba(139, 92, 246, 0.2); filter: blur(40px); top: -50px; right: -50px;">
+                </div>
+
+                <div class="d-flex align-items-center mb-3">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center me-3"
+                        style="width: 40px; height: 40px; background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)); box-shadow: 0 0 15px var(--accent-glow);">
+                        <i class="fas fa-robot text-white"></i>
+                    </div>
+                    <div>
+                        <h6 class="fw-bold mb-0 text-theme">Smart Assistant</h6>
+                        <small class="text-success d-flex align-items-center gap-1"><span
+                                class="spinner-grow spinner-grow-sm" style="width: 0.5rem; height: 0.5rem;"></span>
+                            Agent Active</small>
+                    </div>
+                </div>
+
+                <div class="p-3 rounded-3 mb-3" style="background: rgba(0,0,0,0.2);">
+                    <p id="agentic-insight-text" class="small text-secondary mb-0" style="min-height: 60px;">
+                        <span class="text-muted"><i class="fas fa-circle-notch fa-spin me-2"></i>Analyzing candidate
+                            pool...</span>
+                    </p>
+                </div>
+
+                <div class="d-flex gap-2" id="agentic-actions" style="display: none !important;">
+                    <button class="btn btn-sm btn-primary flex-grow-1" onclick="generateEmails()"><i
+                            class="fas fa-envelope me-2"></i>Draft Emails</button>
+                    <button class="btn btn-sm btn-outline-secondary" onclick="refreshInsight()"><i
+                            class="fas fa-sync-alt"></i></button>
+                </div>
+            </div>
+
+            <!-- Live Proctoring Surveillance AI -->
+            <div class="glass-panel p-4 mb-4" id="proctoring-widget">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="fw-bold mb-0 text-secondary text-uppercase small ls-1">AI Proctoring Monitor</h6>
+                    <span class="badge bg-danger bg-opacity-10 text-danger rounded-pill pulse-red"
+                        id="proctoring-status">Live</span>
+                </div>
+                <div class="p-3 rounded-3 bg-dark bg-opacity-50 border border-secondary border-opacity-25 mb-3 overflow-hidden position-relative"
+                    style="height: 120px;">
+                    <!-- Simulated Vision Feed with Canvas -->
+                    <canvas id="proctoringCanvas" class="position-absolute top-0 start-0 w-100 h-100"
+                        style="opacity: 0.4;"></canvas>
+                    <div class="position-absolute top-0 start-0 w-100 h-100 d-flex flex-column align-items-center justify-content-center"
+                        style="z-index: 2;">
+                        <i class="fas fa-video-slash fa-2x text-primary opacity-50 mb-2" id="vision-icon"></i>
+                        <span class="small text-muted fw-bold" id="proctoring-feed-text"
+                            style="text-shadow: 0 2px 4px rgba(0,0,0,0.5);">Analyzing user attention...</span>
+                    </div>
+                    <div id="vision-scanline" class="position-absolute w-100 bg-primary bg-opacity-50"
+                        style="height: 2px; top: 0; left: 0; filter: blur(1px); z-index: 3; box-shadow: 0 0 10px var(--accent-primary);">
+                    </div>
+                </div>
+                <div class="d-flex justify-content-between align-items-center small">
+                    <span class="text-secondary">Attention Score</span>
+                    <span class="fw-bold text-success" id="attention-score">98%</span>
+                </div>
+                <div class="progress mt-1" style="height: 4px; background: rgba(255,255,255,0.05);">
+                    <div class="progress-bar bg-success" id="attention-progress" style="width: 98%;"></div>
+                </div>
+            </div>
+
+            <!-- Predictive Hiring Widget -->
+            <div class="glass-panel p-4 mb-4">
+                <h6 class="fw-bold mb-3 text-secondary text-uppercase small ls-1">Hiring Probability</h6>
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="small text-muted">Target Attainment</span>
+                    <span class="fw-bold text-success">84%</span>
+                </div>
+                <div class="progress mb-3" style="height: 8px; background: rgba(255,255,255,0.05);">
+                    <div class="progress-bar bg-success bg-gradient" style="width: 84%;"></div>
+                </div>
+                <div class="p-2 rounded bg-primary bg-opacity-10 border border-primary border-opacity-25">
+                    <small class="text-primary d-block">
+                        <i class="fas fa-chart-line me-1"></i> <strong>AI Prediction:</strong> High likelihood of
+                        closing 3 roles this month based on existing candidate velocity.
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Floating Action Menu -->
+<div class="floating-action-menu">
+    <a href="{% url 'post_job' %}" class="action-item" title="Post New Job">
+        <i class="fas fa-plus"></i>
+    </a>
+    <a href="{% url 'candidate_list' %}" class="action-item" title="View Applicants">
+        <i class="fas fa-users"></i>
+    </a>
+    <button class="action-item" title="Quick AI Insight" onclick="refreshInsight()">
+        <i class="fas fa-robot"></i>
+    </button>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        // Funnel Chart
+        const ctx = document.getElementById('recruitmentFunnel').getContext('2d');
+        if (ctx) {
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Screening', 'Assessment', 'Interview', 'Offered'],
+                    datasets: [{
+                        label: 'Candidates',
+                        data: [
+                            {{ pipeline_screening|default:"0" }},
+                            {{ pipeline_assessment|default:"0" }},
+        {{ pipeline_interview|default:"0" }},
+        {{ pipeline_offered|default:"0" }}
+                        ],
+        backgroundColor: [
+        'rgba(99, 102, 241, 0.7)',
+        'rgba(168, 85, 247, 0.7)',
+        'rgba(236, 72, 153, 0.7)',
+        'rgba(16, 185, 129, 0.7)'
+    ],
+        borderWidth: 0,
+        borderRadius: 10,
+        barPercentage: 0.5
+                    }]
+                },
+        options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: { display: false }
+        },
+        scales: {
+            x: {
+                grid: { color: 'rgba(255,255,255,0.05)' },
+                ticks: { color: '#94a3b8' }
+            },
+            y: {
+                grid: { display: false },
+                ticks: { color: '#ffffff', font: { family: 'Outfit', weight: 600 } }
+            }
+        }
+    }
+            });
+        }
+
+    // Initialize Proctoring Canvas Animation
+    initProctoringCanvas();
+
+    // Animated Counters
+    const counters = document.querySelectorAll('.display-5');
+    counters.forEach(counter => {
+        const targetVal = parseInt(counter.innerText);
+        if (isNaN(targetVal)) return;
+        let current = 0;
+        const duration = 1500;
+        const step = targetVal / (duration / 16);
+
+        const updateCount = () => {
+            current += step;
+            if (current < targetVal) {
+                counter.innerText = Math.ceil(current);
+                requestAnimationFrame(updateCount);
+            } else {
+                counter.innerText = targetVal;
+            }
+        };
+        if (targetVal > 0) updateCount();
+    });
+    });
+
+    function initProctoringCanvas() {
+        const canvas = document.getElementById('proctoringCanvas');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        let width, height;
+        const dots = [];
+
+        function resize() {
+            width = canvas.width = canvas.offsetWidth;
+            height = canvas.height = canvas.offsetHeight;
+        }
+
+        window.addEventListener('resize', resize);
+        resize();
+
+        for (let i = 0; i < 15; i++) {
+            dots.push({
+                x: Math.random() * width,
+                y: Math.random() * height,
+                vx: (Math.random() - 0.5) * 0.5,
+                vy: (Math.random() - 0.5) * 0.5
+            });
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, width, height);
+            ctx.strokeStyle = '#6366f1';
+            ctx.fillStyle = '#6366f1';
+            ctx.lineWidth = 0.5;
+
+            dots.forEach(dot => {
+                dot.x += dot.vx;
+                dot.y += dot.vy;
+                if (dot.x < 0 || dot.x > width) dot.vx *= -1;
+                if (dot.y < 0 || dot.y > height) dot.vy *= -1;
+
+                ctx.beginPath();
+                ctx.arc(dot.x, dot.y, 1.5, 0, Math.PI * 2);
+                ctx.fill();
+
+                dots.forEach(other => {
+                    const dx = dot.x - other.x;
+                    const dy = dot.y - other.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    if (dist < 60) {
+                        ctx.beginPath();
+                        ctx.moveTo(dot.x, dot.y);
+                        ctx.lineTo(other.x, other.y);
+                        ctx.stroke();
+                    }
+                });
+            });
+            requestAnimationFrame(animate);
+        }
+        animate();
+    }
+
+    function typeWriter(element, text, speed, callback) {
+        element.innerHTML = "";
+        let i = 0;
+        function type() {
+            if (i < text.length) {
+                element.innerHTML += text.charAt(i);
+                i++;
+                setTimeout(type, speed);
+            } else if (callback) {
+                callback();
+            }
+        }
+        type();
+    }
+
+    async function refreshInsight() {
+        const textElement = document.getElementById('agentic-insight-text');
+        const actionsBox = document.getElementById('agentic-actions');
+        if (!textElement) return;
+
+        if (actionsBox) actionsBox.style.setProperty('display', 'none', 'important');
+        textElement.innerHTML = '<span class="text-muted"><i class="fas fa-circle-notch fa-spin me-2"></i>RecruitAgent is analyzing pipeline...</span>';
+
+        try {
+            const response = await fetch('/jobs/api/agent-insights/');
+            const data = await response.json();
+            const insight = data.insights ? data.insights[0] : "I'm currently scanning for new top talent. Check back in a bit!";
+
+            typeWriter(textElement, insight, 20, () => {
+                if (actionsBox) actionsBox.style.setProperty('display', 'flex', 'important');
+            });
+        } catch (err) {
+            console.error("Agent Error:", err);
+            textElement.innerText = "Focus on processing your top matches in the candidate list.";
+        }
+    }
+
+    async function generateEmails() {
+        const btn = document.querySelector('#agentic-actions button.btn-primary');
+        if (!btn) return;
+        const originalHtml = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Drafting...';
+        btn.disabled = true;
+
+        setTimeout(() => {
+            btn.innerHTML = '<i class="fas fa-check me-2"></i>Drafts Ready!';
+            btn.classList.replace('btn-primary', 'btn-success');
+            setTimeout(() => {
+                btn.innerHTML = originalHtml;
+                btn.classList.replace('btn-success', 'btn-primary');
+                btn.disabled = false;
+            }, 3000);
+        }, 1500);
+    }
+
+    setTimeout(refreshInsight, 1500);
+
+    let prosStep = 0;
+    const proctoringTexts = ["Analyzing user attention...", "Gaze Tracking active...", "Face Mesh: Verified", "Object detection: Clear", "Environment: Stable"];
+    setInterval(() => {
+        const textEl = document.getElementById('proctoring-feed-text');
+        const scoreEl = document.getElementById('attention-score');
+        const progEl = document.getElementById('attention-progress');
+        const iconEl = document.getElementById('vision-icon');
+
+        if (!textEl) return;
+        const text = proctoringTexts[Math.floor(Math.random() * proctoringTexts.length)];
+        const score = Math.floor(Math.random() * 15) + 85;
+
+        textEl.innerText = text;
+        if (scoreEl) scoreEl.innerText = score + '%';
+        if (progEl) progEl.style.width = score + '%';
+
+        if (iconEl) {
+            iconEl.classList.toggle('text-primary');
+            iconEl.classList.toggle('text-info');
+            iconEl.classList.replace('fa-video-slash', 'fa-video');
+        }
+
+        const scan = document.getElementById('vision-scanline');
+        if (scan) {
+            scan.style.top = (prosStep % 100) + '%';
+            prosStep += 20;
+        }
+    }, 3000);
+</script>
+{% endblock %}

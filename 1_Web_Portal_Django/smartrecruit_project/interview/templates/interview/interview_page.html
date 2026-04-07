@@ -1,0 +1,564 @@
+{% block extra_head %}
+<!-- React and React Flow CDN (UMD) -->
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@xyflow/react@11.10.4/dist/react-flow.min.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/@xyflow/react@11.10.4/dist/style.css">
+{% endblock %}
+<style>
+    /* "Smart Glass" Engine Styles */
+    :root {
+        --chat-bg: rgba(22, 34, 55, 0.55);
+        --chat-panel-bg: rgba(40, 50, 70, 0.6);
+        --input-bg: rgba(10, 20, 35, 0.7);
+        --text-color: #e6e6e6;
+        --accent-glow: 0 0 10px rgba(0, 255, 255, 0.7);
+        --border-color: rgba(0, 180, 255, 0.3);
+    }
+
+    [data-theme="light"] {
+        --chat-bg: rgba(245, 248, 255, 0.6);
+        --chat-panel-bg: rgba(255, 255, 255, 0.7);
+        --input-bg: rgba(230, 235, 245, 0.8);
+        --text-color: #1a1a2e;
+        --accent-glow: 0 0 10px rgba(0, 110, 220, 0.5);
+        --border-color: rgba(0, 110, 220, 0.4);
+    }
+    
+    #chat-container {
+        max-width: 800px;
+        margin: 2rem auto;
+        border: 1px solid var(--border-color);
+        border-radius: 15px;
+        background: var(--chat-bg);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        display: flex;
+        flex-direction: column;
+        height: 80vh;
+        overflow: hidden;
+    }
+
+    #chat-messages {
+        flex-grow: 1;
+        padding: 20px;
+        overflow-y: auto;
+        color: var(--text-color);
+    }
+
+    /* Custom thin scrollbar */
+    #chat-messages::-webkit-scrollbar {
+        width: 6px;
+    }
+    #chat-messages::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    #chat-messages::-webkit-scrollbar-thumb {
+        background-color: var(--border-color);
+        border-radius: 20px;
+    }
+
+    .message {
+        margin-bottom: 15px;
+        padding: 10px 15px;
+        border-radius: 10px;
+        max-width: 85%;
+        line-height: 1.5;
+    }
+    .user-message {
+        background: var(--input-bg);
+        align-self: flex-end;
+        margin-left: auto;
+        border: 1px solid var(--border-color);
+    }
+    .bot-message {
+        background: var(--chat-panel-bg);
+        align-self: flex-start;
+        border: 1px solid transparent;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .bot-message .spinner {
+        border: 3px solid rgba(0, 180, 255, 0.3);
+        border-left-color: #00e5ff;
+        border-radius: 50%;
+        width: 20px;
+        height: 20px;
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+
+    #chat-input-bar {
+        padding: 15px;
+        border-top: 1px solid var(--border-color);
+        display: flex;
+        gap: 10px;
+    }
+
+    #chat-input {
+        flex-grow: 1;
+        background-color: var(--input-bg);
+        color: var(--text-color);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 10px 15px;
+    }
+    #chat-input:focus {
+        box-shadow: var(--accent-glow);
+        outline: none;
+    }
+    
+    #voice-btn {
+        background-color: transparent;
+        border: 1px solid var(--border-color);
+        color: var(--text-color);
+        padding: 0 15px;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s ease-in-out;
+    }
+    #voice-btn:hover {
+        background-color: var(--border-color);
+        box-shadow: var(--accent-glow);
+    }
+    #voice-btn.active {
+        background-color: #d9534f;
+        border-color: #d43f3a;
+        box-shadow: 0 0 10px rgba(217, 83, 79, 0.7);
+    }
+
+    #status {
+        text-align: center;
+        padding: 5px;
+        font-size: 0.9rem;
+        color: var(--text-color);
+        height: 25px;
+        transition: all 0.3s;
+    }
+    @keyframes pulse-proctor {
+        0%, 100% { opacity: 1; transform: scale(1); box-shadow: 0 0 0 0 rgba(0, 229, 255, 0.4); }
+        50% { opacity: 0.5; transform: scale(1.2); box-shadow: 0 0 10px 4px rgba(0, 229, 255, 0.2); }
+    }
+</style>
+
+<!-- TAB NAVIGATION -->
+<ul class="nav nav-pills nav-justified mb-3 glass-panel p-2 border-primary border-opacity-10" id="interviewTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active btn-glass text-cyan fw-bold" id="chat-tab" data-bs-toggle="pill" data-bs-target="#chat-pane" type="button" role="tab">
+            <i class="fas fa-comment-dots me-2"></i> Neural Chat
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link btn-glass text-cyan fw-bold" id="arch-tab" data-bs-toggle="pill" data-bs-target="#arch-pane" type="button" role="tab">
+            <i class="fas fa-project-diagram me-2"></i> Architecture Design
+        </button>
+    </li>
+</ul>
+
+<div class="tab-content" id="interviewTabContent">
+    <!-- ─── CHAT INTERFACE ─── -->
+    <div class="tab-pane fade show active" id="chat-pane" role="tabpanel">
+        <div id="chat-container" class="glass-panel position-relative" style="height: 70vh;">
+            <!-- AI VIDEO PROCTORING INTERFACE -->
+            <div id="proctoring-pip" class="position-absolute glass-panel p-1 shadow-lg border-primary border-opacity-25" style="top: 15px; right: 15px; width: 100px; height: 100px; border-radius: 15px; overflow: hidden; z-index: 10; background: #000;">
+                <video id="proctor-video" autoplay muted playsinline style="width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); border-radius: 12px;"></video>
+                <canvas id="proctor-canvas" class="d-none"></canvas>
+                <div id="proctor-pulse" class="position-absolute bottom-0 end-0 m-2" style="width: 8px; height: 8px; background: #00e5ff; border-radius: 50%; animation: pulse-proctor 2s infinite;"></div>
+            </div>
+
+            <!-- Session Termination Header -->
+            <div class="d-flex justify-content-between align-items-center px-4 py-3 border-bottom border-light">
+                <h5 class="mb-0 text-cyan d-flex align-items-center gap-2">
+                    <i class="fas fa-shield-halved text-primary small"></i>
+                    <span>Neural Link Active</span>
+                </h5>
+                <form action="{% url 'terminate_ai_session' application_id %}" method="POST" onsubmit="return confirm('WARNING: Are you sure you want to terminate this neural link? Progress may be lost.')">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-sm btn-outline-danger btn-glass">
+                        <i class="fas fa-power-off me-1"></i> Terminate Session
+                    </button>
+                </form>
+            </div>
+            <div id="chat-messages">
+                <!-- Messages will be appended here -->
+            </div>
+            <div id="status">Press the mic to start the interview</div>
+            <div id="chat-input-bar">
+                <input type="text" id="chat-input" class="glass-input" placeholder="Or type your answer here..." disabled>
+                <button id="send-btn" class="btn btn-primary btn-neon" disabled>Send</button>
+                <button id="voice-btn">
+                    <i class="fas fa-microphone"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ─── ARCHITECTURE DESIGN INTERFACE ─── -->
+    <div class="tab-pane fade" id="arch-pane" role="tabpanel">
+        <div id="architecture-container" class="glass-panel position-relative overflow-hidden d-flex" style="height: 70vh;">
+            <!-- Component Palette -->
+            <div id="arch-sidebar" class="p-3 border-end border-primary border-opacity-10 d-flex flex-column gap-3" style="width: 120px; background: rgba(0,0,0,0.2);">
+                <div class="text-center text-cyan small mb-2 fw-bold text-uppercase tracking-widest">Palette</div>
+                
+                <div class="dndnode icon-node neon-blue" data-type="ec2" draggable="true" title="EC2 Instance">
+                    <i class="fas fa-server fa-2x"></i>
+                    <div class="x-small mt-1">EC2</div>
+                </div>
+                
+                <div class="dndnode icon-node neon-gold" data-type="s3" draggable="true" title="S3 Bucket">
+                    <i class="fas fa-archive fa-2x"></i>
+                    <div class="x-small mt-1">S3</div>
+                </div>
+                
+                <div class="dndnode icon-node neon-green" data-type="lb" draggable="true" title="Load Balancer">
+                    <i class="fas fa-network-wired fa-2x"></i>
+                    <div class="x-small mt-1">LB</div>
+                </div>
+                
+                <div class="dndnode icon-node neon-purple" data-type="db" draggable="true" title="Database">
+                    <i class="fas fa-database fa-2x"></i>
+                    <div class="x-small mt-1">DB</div>
+                </div>
+                
+                <div class="dndnode icon-node neon-cyan" data-type="apig" draggable="true" title="API Gateway">
+                    <i class="fas fa-door-open fa-2x"></i>
+                    <div class="x-small mt-1">API-G</div>
+                </div>
+
+                <div class="mt-auto">
+                    <button id="save-arch-btn" class="btn btn-sm btn-outline-info w-100 btn-glass">
+                        <i class="fas fa-cloud-upload-alt mb-1 d-block"></i> Save
+                    </button>
+                </div>
+            </div>
+
+            <!-- React Flow Canvas -->
+            <div id="reactflow-wrapper" class="flex-grow-1 position-relative" style="background: radial-gradient(circle, rgba(0,255,255,0.02) 1px, transparent 1px); background-size: 20px 20px;">
+                <div id="reactflow-container" style="width: 100%; height: 100%;"></div>
+                
+                <!-- Helper Overlay -->
+                <div class="position-absolute bottom-0 start-0 m-3 glass-panel p-2 small text-cyan opacity-75">
+                    <i class="fas fa-info-circle me-1"></i> Drag components onto the grid to design your system.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Architecture Tool Styles */
+    .icon-node {
+        width: 80px;
+        height: 80px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        cursor: grab;
+        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .icon-node:hover {
+        transform: scale(1.1);
+        background: rgba(255, 255, 255, 0.08);
+        border-color: rgba(0, 255, 255, 0.4);
+        box-shadow: 0 0 15px rgba(0, 255, 255, 0.2);
+    }
+    
+    .neon-blue i { color: #00d2ff; text-shadow: 0 0 10px rgba(0, 210, 255, 0.5); }
+    .neon-gold i { color: #ffca28; text-shadow: 0 0 10px rgba(255, 202, 40, 0.5); }
+    .neon-green i { color: #00e676; text-shadow: 0 0 10px rgba(0, 230, 118, 0.5); }
+    .neon-purple i { color: #d500f9; text-shadow: 0 0 10px rgba(213, 0, 249, 0.5); }
+    .neon-cyan i { color: #00e5ff; text-shadow: 0 0 10px rgba(0, 229, 255, 0.5); }
+
+    .x-small { font-size: 0.65rem; font-weight: 700; }
+
+    /* React Flow Overrides */
+    .react-flow__node {
+        background: rgba(17, 25, 40, 0.9);
+        border: 1px solid rgba(0, 255, 255, 0.3);
+        border-radius: 10px;
+        padding: 5px;
+        color: #fff;
+        text-align: center;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+    }
+    .react-flow__handle {
+        width: 8px !important;
+        height: 8px !important;
+        background: #00e5ff !important;
+        border: 1px solid #fff !important;
+    }
+    .react-flow__edge-path {
+        stroke: #00e5ff !important;
+        stroke-width: 2 !important;
+    }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const chatMessages = document.getElementById('chat-messages');
+    const chatInput = document.getElementById('chat-input');
+    const sendBtn = document.getElementById('send-btn');
+    const voiceBtn = document.getElementById('voice-btn');
+    const statusDiv = document.getElementById('status');
+    const jobTitle = "{{ job_title }}";
+    const chatApiUrl = "{% url 'interview:chat_api' %}";
+    const csrfToken = "{{ csrf_token }}";
+
+    let conversationHistory = [];
+    let isListening = false;
+    let recognition;
+
+    // --- 1. SPEECH RECOGNITION (VOICE -> TEXT) SETUP ---
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SpeechRecognition) {
+        recognition = new SpeechRecognition();
+        recognition.continuous = false; // Process after a pause
+        recognition.lang = 'en-US';
+        recognition.interimResults = false;
+
+        recognition.onstart = () => {
+            isListening = true;
+            voiceBtn.classList.add('active');
+            voiceBtn.innerHTML = '<i class="fas fa-stop-circle"></i>';
+            statusDiv.textContent = 'Listening...';
+        };
+
+        recognition.onend = () => {
+            isListening = false;
+            voiceBtn.classList.remove('active');
+            voiceBtn.innerHTML = '<i class="fas fa-microphone"></i>';
+            statusDiv.textContent = 'Processing...';
+        };
+
+        recognition.onresult = (event) => {
+            const transcript = event.results[0][0].transcript;
+            chatInput.value = transcript;
+            displayMessage(transcript, 'user');
+            sendMessage(transcript);
+        };
+
+        recognition.onerror = (event) => {
+            console.error("Speech Recognition Error:", event.error);
+            statusDiv.textContent = 'Mic error. Please check permissions.';
+        }
+
+    } else {
+        voiceBtn.disabled = true;
+        statusDiv.textContent = 'Voice recognition not supported in this browser.';
+    }
+
+    // --- 2. TEXT-TO-SPEECH (TEXT -> VOICE) SETUP ---
+    function speak(text) {
+        // Disable input while bot is speaking
+        disableInputs(); 
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'en-US';
+        utterance.rate = 1.0;
+        
+        utterance.onstart = () => {
+            statusDiv.textContent = 'AI is speaking...';
+        };
+
+        utterance.onend = () => {
+            // Re-enable inputs after bot has finished speaking
+            enableInputs(); 
+            // If voice mode is active, automatically start listening for the next answer
+            if (SpeechRecognition) {
+                 setTimeout(() => {
+                    if (!isListening) recognition.start();
+                 }, 300); // Small delay
+            }
+        };
+
+        window.speechSynthesis.speak(utterance);
+    }
+    
+    // --- 3. UI & EVENT HANDLERS ---
+    function displayMessage(text, sender, isLoading = false) {
+        const messageDiv = document.createElement('div');
+        messageDiv.classList.add('message', sender === 'user' ? 'user-message' : 'bot-message');
+
+        if (isLoading) {
+            messageDiv.innerHTML = `<div class="spinner"></div><div class="text"></div>`;
+            messageDiv.dataset.id = 'loading-message';
+        } else {
+            messageDiv.textContent = text;
+        }
+
+        chatMessages.appendChild(messageDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight; // Auto-scroll
+        return messageDiv;
+    }
+    
+    function disableInputs() {
+        chatInput.disabled = true;
+        sendBtn.disabled = true;
+    }
+    
+    function enableInputs() {
+        chatInput.disabled = false;
+        sendBtn.disabled = false;
+    }
+
+    // Handle Mic Button Click
+    voiceBtn.addEventListener('click', () => {
+        // If an interview hasn't started, clicking the mic will start it.
+        if (conversationHistory.length === 0) {
+            sendMessage(null); // Send null message to trigger the first question
+            return;
+        }
+        
+        if (isListening) {
+            recognition.stop();
+        } else {
+            recognition.start();
+        }
+    });
+    
+    // Handle "Send" button click
+    sendBtn.addEventListener('click', () => {
+        const message = chatInput.value.trim();
+        if (message) {
+            displayMessage(message, 'user');
+            sendMessage(message);
+            chatInput.value = '';
+        }
+    });
+
+    // Handle "Enter" key press
+    chatInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            sendBtn.click();
+        }
+    });
+
+    // --- 4. API COMMUNICATION ---
+    async function sendMessage(message) {
+        // If this is not the first message, add it to history before sending
+        if(message) {
+            conversationHistory.push({ q: conversationHistory.length > 0 ? conversationHistory[conversationHistory.length - 1].bot_response : '', a: message });
+        }
+        
+        disableInputs();
+        const loadingIndicator = displayMessage('', 'bot', true);
+        statusDiv.textContent = 'AI is thinking...';
+
+        try {
+            const response = await fetch(chatApiUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                },
+                body: JSON.stringify({ 
+                    message: message,
+                    job_title: jobTitle,
+                    history: conversationHistory
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            const botResponse = data.response;
+
+            // Update loading indicator with the actual message
+            loadingIndicator.querySelector('.spinner').remove();
+            loadingIndicator.querySelector('.text').textContent = botResponse;
+            loadingIndicator.removeAttribute('data-id');
+
+
+            // Add bot's full response to history for context in next turn
+            conversationHistory.push({ bot_response: botResponse, a: '' });
+
+            speak(botResponse); // Read the response out loud
+            
+        } catch (error) {
+            console.error('Error sending message:', error);
+            const errorText = 'Sorry, I encountered an error. Could you please rephrase that?';
+            loadingIndicator.querySelector('.spinner').remove();
+            loadingIndicator.querySelector('.text').textContent = errorText;
+            speak(errorText); // Also speak the error
+        }
+    }
+    
+    // --- 5. AI VIDEO PROCTORING ENGINE (WebRTC) ---
+    const proctorVideo = document.getElementById('proctor-video');
+    const proctorCanvas = document.getElementById('proctor-canvas');
+    let isProctoringActive = false;
+    let proctorInterval = null;
+    let gazeDeviationCount = 0; 
+
+    async function initProctoring() {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return;
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ 
+                video: { width: 320, height: 240, facingMode: 'user' }, 
+                audio: false 
+            });
+            proctorVideo.srcObject = stream;
+            isProctoringActive = true;
+            proctorInterval = setInterval(syncProctoringFrame, 3000);
+        } catch (err) {
+            console.warn("[Proctoring] Oversight offline.");
+        }
+    }
+
+    async function syncProctoringFrame() {
+        if (!isProctoringActive || !proctorVideo.videoWidth) return;
+        proctorCanvas.width = proctorVideo.videoWidth;
+        proctorCanvas.height = proctorVideo.videoHeight;
+        const ctx = proctorCanvas.getContext('2d');
+        ctx.drawImage(proctorVideo, 0, 0);
+        const frame = proctorCanvas.toDataURL('image/jpeg', 0.5);
+        try {
+            await fetch('/api/save-sentiment/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
+                body: JSON.stringify({ frame, proctoring: true, interview_id: '{{ interview_id }}' })
+            });
+        } catch (e) {}
+    }
+    initProctoring();
+
+    // --- 6. ARCHITECTURE DESIGN TOOL (Modular Activation) ---
+    if (window.mountArchitectureCanvas) {
+        window.mountArchitectureCanvas("{{ application_id }}", "{{ csrf_token }}");
+    }
+
+    // Drag and Drop Palette Listeners
+    document.querySelectorAll('.dndnode').forEach(node => {
+        node.addEventListener('dragstart', (event) => {
+            event.dataTransfer.setData('application/reactflow', event.target.closest('.dndnode').dataset.type);
+            event.dataTransfer.effectAllowed = 'move';
+        });
+    });
+
+    document.getElementById('save-arch-btn').addEventListener('click', () => {
+        if (window.saveArchitecture) window.saveArchitecture();
+    });
+
+    // Initial welcome message
+    function startInterview() {
+        const welcomeText = `Greetings! I am NeutralSync. Welcome to your tech assessment. We have activated the Architecture Design tab for your system design round. Good luck!`;
+        displayMessage(welcomeText, 'bot');
+        speak(welcomeText);
+    }
+    // startInterview(); 
+});
+</script>
+<script src="https://unpkg.com/dagre@0.8.5/dist/dagre.min.js"></script>
+<script src="{% static 'interview/js/ArchitectureCanvas.js' %}"></script>
+{% endblock %}

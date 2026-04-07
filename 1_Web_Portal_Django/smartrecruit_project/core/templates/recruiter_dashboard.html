@@ -1,0 +1,491 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Recruiter Dashboard | SmartRecruit{% endblock %}
+
+{% block body_class %}has-sidebar{% endblock %}
+
+{% block sidebar %}
+    {% include 'jobs/_recruiter_sidebar.html' %}
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper">
+    <div class="main-content flex-grow-1 p-4">
+<section class="dashboard-hero glass-card" data-entrance id="overview">
+    <div class="hero-stage">
+        <div class="hero-stage__content">
+            <span class="hero-eyebrow"><i class="fa-solid fa-bolt"></i>Recruiter Dashboard</span>
+            <h1 class="hero-title">Run your hiring process with <span class="text-transparent bg-clip-text bg-gradient-primary">zero friction</span>.</h1>
+            <p class="hero-copy">
+                Review your jobs, hiring speed, AI insights, and candidate quality in one simple dashboard.
+            </p>
+            <div class="hero-stage__actions">
+                <a href="{% url 'post_job' %}" class="btn thunder-btn thunder-btn--primary">
+                    <i class="fa-solid fa-plus me-2"></i>Post New Job
+                </a>
+                <a href="{% url 'candidate_list' %}" class="btn thunder-btn thunder-btn--ghost">
+                    <i class="fa-solid fa-users-viewfinder me-2"></i>View Candidates
+                </a>
+                <a href="{% url 'ethics_dashboard' %}" class="btn thunder-btn thunder-btn--ghost">
+                    <i class="fa-solid fa-balance-scale me-2"></i>Fairness
+                </a>
+            </div>
+        </div>
+
+        <aside class="hero-stage__summary">
+            <span class="signal-pill"><i class="fa-solid fa-satellite-dish"></i>Status</span>
+            <div class="meta-stat-grid">
+                <div class="meta-stat">
+                    <span class="meta-stat__label">Offers Ready</span>
+                    <strong class="meta-stat__value">{{ total_offers|default:0 }}</strong>
+                </div>
+                <div class="meta-stat">
+                    <span class="meta-stat__label">Candidate Mood</span>
+                    <strong class="meta-stat__value">{{ avg_sentiment|default:0 }}%</strong>
+                </div>
+                <div class="meta-stat">
+                    <span class="meta-stat__label">Main Emotion</span>
+                    <strong class="meta-stat__value">{{ dominant_emotion|default:"Neutral" }}</strong>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <div class="signal-strip">
+        <div class="signal-item">
+            <strong>{% if urgent_job %}Urgent Role: {{ urgent_job.title }}{% else %}Timelines Stable{% endif %}</strong>
+            <span>
+                {% if urgent_job %}
+                    {{ urgent_job.location }}{% if urgent_job.deadline %} | Deadline {{ urgent_job.deadline|date:"M d, Y" }}{% endif %}
+                {% else %}
+                    All jobs are on track.
+                {% endif %}
+            </span>
+        </div>
+        <div class="signal-item">
+            <strong>Live Interviews</strong>
+            <span>{{ total_interviews|default:0 }} scheduled sessions under recruiter control.</span>
+        </div>
+        <div class="signal-item">
+            <strong>{% if last_sync %}System Active{% else %}System Idle{% endif %}</strong>
+            <span>
+                {% if last_sync %}
+                    Last sync {{ last_sync.timestamp|date:"M d, H:i" }} | {% if last_sync.is_success %}success{% else %}needs review{% endif %}
+                {% else %}
+                    No activity yet.
+                {% endif %}
+            </span>
+        </div>
+    </div>
+</section>
+
+<section class="metric-grid">
+    <article class="metric-card glass-card" data-entrance>
+        <div class="metric-card__top">
+            <div class="metric-card__icon"><i class="fa-solid fa-users"></i></div>
+            <span class="metric-card__delta">Global</span>
+        </div>
+        <span class="metric-card__label">Total Candidates</span>
+        <strong class="metric-card__value">{{ total_candidates }}</strong>
+        <span class="metric-card__subtext">Total number of candidates.</span>
+    </article>
+
+    <article class="metric-card glass-card" data-entrance>
+        <div class="metric-card__top">
+            <div class="metric-card__icon" style="color: var(--danger);"><i class="fa-solid fa-shield-virus"></i></div>
+            <span class="metric-card__delta" style="color: var(--danger);">Alerts</span>
+        </div>
+        <span class="metric-card__label">Alerts</span>
+        <strong class="metric-card__value text-danger">{{ flagged_sessions|default:0 }}</strong>
+        <span class="metric-card__subtext">Interviews with unusual activity.</span>
+    </article>
+
+    <article class="metric-card glass-card" data-entrance>
+        <div class="metric-card__top">
+            <div class="metric-card__icon" style="color: var(--info);"><i class="fa-solid fa-heartbeat"></i></div>
+            <span class="metric-card__delta" style="color: var(--info);">Pulse</span>
+        </div>
+        <span class="metric-card__label">Candidate Mood</span>
+        <strong class="metric-card__value text-info">{{ avg_sentiment|default:0 }}%</strong>
+        <span class="metric-card__subtext">Average candidate confidence level.</span>
+    </article>
+
+    <article class="metric-card glass-card" data-entrance>
+        <div class="metric-card__top">
+            <div class="metric-card__icon" style="color: var(--success);"><i class="fa-solid fa-filter"></i></div>
+            <span class="metric-card__delta" style="color: var(--success);">Deals</span>
+        </div>
+        <span class="metric-card__label">Reviewing</span>
+        <strong class="metric-card__value text-success">{{ pipeline_screening|default:0 }}</strong>
+        <span class="metric-card__subtext">Candidates being reviewed.</span>
+    </article>
+</section>
+
+<section class="dashboard-grid">
+    <!-- SaaS Talent Table -->
+    <article class="panel-card glass-card" data-entrance>
+        <div class="panel-card__header">
+            <div>
+                <span class="panel-eyebrow">Candidates</span>
+                <h2 class="panel-card__title">Candidate List</h2>
+            </div>
+            <a href="{% url 'candidate_list' %}" class="panel-card__link">View Full Pool</a>
+        </div>
+        <div class="table-shell">
+            <table class="table thunder-table align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Candidate</th>
+                        <th>Role</th>
+                        <th>AI Match %</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for app in recruiter_apps|slice:":5" %}
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                {% if app.candidate.user and app.candidate.user.profile_pic %}
+                                    <img src="{{ app.candidate.user.profile_pic.url }}" class="rounded-circle me-3 border border-secondary" width="36" height="36" style="object-fit: cover;">
+                                {% else %}
+                                    <div class="rounded-circle bg-primary bg-opacity-25 text-primary d-flex align-items-center justify-content-center me-3 fw-bold" style="width: 36px; height: 36px;">
+                                        {{ app.candidate.full_name|default:"?"|first|upper }}
+                                    </div>
+                                {% endif %}
+                                <div>
+                                    <span class="table-title">{{ app.candidate.full_name|default:"Unknown Candidate" }}</span>
+                                    <span class="table-meta">{{ app.candidate.email }}</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td>{{ app.job.title }}</td>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="fw-bold text-primary">{{ app.ai_score }}%</span>
+                            </div>
+                        </td>
+                        <td>
+                            {% if 'FLAGGED' in app.status or app.interview.is_flagged %}
+                                <span class="status-pill status-pill--danger">Flagged</span>
+                            {% elif app.status == 'APPLIED' %}
+                                <span class="status-pill status-pill--warning">Reviewing</span>
+                            {% else %}
+                                <span class="status-pill status-pill--success">Qualified</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'application_details' app.id %}" class="btn thunder-btn thunder-btn--ghost" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">Review</a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5">
+                            <div class="empty-panel">
+                                <i class="fa-solid fa-users"></i>
+                                <strong>No candidates yet</strong>
+                                <span>Candidates will appear here when they apply.</span>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </article>
+
+    <div class="panel-stack">
+        <!-- Funnel Distribution -->
+        <article class="panel-card glass-card" data-entrance>
+            <div class="panel-card__header">
+                <div>
+                    <span class="panel-eyebrow">Process</span>
+                    <h2 class="panel-card__title">Candidates by Stage</h2>
+                </div>
+            </div>
+            <div class="pipeline-list">
+                <div class="pipeline-item">
+                    <div class="pipeline-item__top">
+                        <span class="pipeline-item__label">Screening</span>
+                        <strong class="pipeline-item__value">{{ pipeline_screening|default:0 }}</strong>
+                    </div>
+                    <div class="pipeline-item__track">
+                        <span class="pipeline-item__bar" style="width: {% if total_candidates %}{% widthratio pipeline_screening total_candidates 100 %}{% else %}0{% endif %}%;"></span>
+                    </div>
+                </div>
+                <div class="pipeline-item">
+                    <div class="pipeline-item__top">
+                        <span class="pipeline-item__label">Assessment</span>
+                        <strong class="pipeline-item__value">{{ pipeline_assessment|default:0 }}</strong>
+                    </div>
+                    <div class="pipeline-item__track">
+                        <span class="pipeline-item__bar" style="width: {% if total_candidates %}{% widthratio pipeline_assessment total_candidates 100 %}{% else %}0{% endif %}%;"></span>
+                    </div>
+                </div>
+                <div class="pipeline-item">
+                    <div class="pipeline-item__top">
+                        <span class="pipeline-item__label">Interview</span>
+                        <strong class="pipeline-item__value">{{ pipeline_interview|default:0 }}</strong>
+                    </div>
+                    <div class="pipeline-item__track">
+                        <span class="pipeline-item__bar" style="width: {% if total_candidates %}{% widthratio pipeline_interview total_candidates 100 %}{% else %}0{% endif %}%;"></span>
+                    </div>
+                </div>
+                <div class="pipeline-item">
+                    <div class="pipeline-item__top">
+                        <span class="pipeline-item__label">Offered</span>
+                        <strong class="pipeline-item__value">{{ pipeline_offered|default:0 }}</strong>
+                    </div>
+                    <div class="pipeline-item__track">
+                        <span class="pipeline-item__bar" style="width: {% if total_candidates %}{% widthratio pipeline_offered total_candidates 100 %}{% else %}0{% endif %}%;"></span>
+                    </div>
+                </div>
+            </div>
+        </article>
+
+        <!-- Sourcing Channels -->
+        <article class="panel-card glass-card" data-entrance>
+            <div class="panel-card__header">
+                <div>
+                    <span class="panel-eyebrow">Sourcing</span>
+                    <h2 class="panel-card__title">How Candidates Found You</h2>
+                </div>
+            </div>
+            <div class="data-list">
+                {% for item in sourcing_mix|slice:":4" %}
+                <div class="data-list__item">
+                    <div class="data-list__head">
+                        <span class="data-list__title">{{ item.source_of_hire }}</span>
+                        <span class="data-list__value text-primary fs-5">{{ item.count }}</span>
+                    </div>
+                    <span class="table-meta">Candidates from this source</span>
+                </div>
+                {% empty %}
+                <div class="empty-state">
+                    <i class="fa-solid fa-chart-pie"></i>
+                    <strong>No sourcing data</strong>
+                    <span>Analytics will populate here.</span>
+                </div>
+                {% endfor %}
+            </div>
+        </article>
+    </div>
+</section>
+
+<section class="dashboard-grid">
+    <!-- Retention Predictor (Radar Chart) -->
+
+    <div class="panel-stack">
+        <!-- Live Vocal Confidence Meter -->
+        <article class="panel-card glass-card border-info" data-entrance>
+            <div class="panel-card__header mb-0 border-bottom border-info border-opacity-10 pb-3">
+                <div>
+                    <span class="panel-eyebrow text-info">Live Status</span>
+                    <h2 class="panel-card__title">Confidence</h2>
+                </div>
+            </div>
+            
+            <div class="d-flex align-items-center justify-content-center p-3 gap-4">
+                <div class="text-center d-flex flex-column justify-content-center">
+                    <div class="d-flex align-items-end gap-1" id="vocal-waveform" style="height: 40px;">
+                        <div class="bg-info" style="width: 5px; height: 10px; border-radius: 4px; box-shadow: 0 0 10px #00d2ff; animation: wave 1s infinite alternate 0s;"></div>
+                        <div class="bg-info" style="width: 5px; height: 30px; border-radius: 4px; box-shadow: 0 0 10px #00d2ff; animation: wave 1s infinite alternate 0.2s;"></div>
+                        <div class="bg-info" style="width: 5px; height: 40px; border-radius: 4px; box-shadow: 0 0 10px #00d2ff; animation: wave 1s infinite alternate 0.4s;"></div>
+                        <div class="bg-info" style="width: 5px; height: 20px; border-radius: 4px; box-shadow: 0 0 10px #00d2ff; animation: wave 1s infinite alternate 0.6s;"></div>
+                        <div class="bg-info" style="width: 5px; height: 35px; border-radius: 4px; box-shadow: 0 0 10px #00d2ff; animation: wave 1s infinite alternate 0.8s;"></div>
+                    </div>
+                    <span class="small mt-2 text-theme-secondary">Input Signal</span>
+                </div>
+                
+                <div class="flex-grow-1 text-center">
+                    <h2 class="display-6 fw-bold text-theme mb-0" id="confidence-score-txt">85%</h2>
+                    <div class="text-info small text-uppercase fw-bold" id="confidence-status-txt">Highly Confident</div>
+                    <div class="text-theme-secondary small mt-2">
+                        <span id="pitch-txt">Stable (Var: 450)</span> | <span id="stress-txt" class="text-success">Nominal Stress</span>
+                    </div>
+                </div>
+            </div>
+        </article>
+        
+        <!-- Live Proctoring -->
+        <article class="panel-card glass-card border-danger" data-entrance>
+            <div class="panel-card__header mb-3 border-bottom border-danger border-opacity-10 pb-3">
+                <div>
+                    <span class="panel-eyebrow text-danger">Monitoring</span>
+                    <h2 class="panel-card__title">Live Camera Feed</h2>
+                </div>
+                <div id="proctoring-status" class="badge bg-secondary bg-opacity-25 text-secondary">
+                    Standby
+                </div>
+            </div>
+            <div id="proctoring-feed" style="max-height: 180px; overflow-y: auto;">
+                <div class="empty-state">
+                    <i class="fa-solid fa-satellite-dish"></i>
+                    <span>Scanning for active signals...</span>
+                </div>
+            </div>
+        </article>
+    </div>
+</section>
+
+<!-- Bottom Dashboard Grid -->
+<section class="dashboard-grid dashboard-grid--equal mb-5">
+    <article class="panel-card glass-card" data-entrance>
+        <div class="panel-card__header">
+            <div>
+                <span class="panel-eyebrow">Updates</span>
+                <h2 class="panel-card__title">System Updates</h2>
+            </div>
+            <a href="{% url 'ats_sync_monitor' %}" class="panel-card__link">View Logs</a>
+        </div>
+        <div class="sync-list">
+            {% for sync in sync_logs %}
+            <div class="sync-entry">
+                <div class="sync-entry__copy">
+                    <strong>{{ sync.application.candidate.full_name }}</strong>
+                    <span>{{ sync.get_sync_type_display }} | Status {{ sync.status_code|default:"-" }}</span>
+                </div>
+                <span class="sync-entry__badge {% if sync.is_success %}sync-entry__badge--pass{% else %}sync-entry__badge--fail{% endif %}">
+                    {% if sync.is_success %}Pass{% else %}Fail{% endif %}
+                </span>
+            </div>
+            {% empty %}
+            <div class="empty-state">
+                <i class="fa-solid fa-arrows-rotate"></i>
+                <strong>No updates yet</strong>
+                <span>Updates will appear here when the system syncs data.</span>
+            </div>
+            {% endfor %}
+        </div>
+    </article>
+
+    <article class="panel-card glass-card" data-entrance>
+        <div class="panel-card__header">
+            <div>
+                <span class="panel-eyebrow">History</span>
+                <h2 class="panel-card__title">Recent Activity</h2>
+            </div>
+        </div>
+        <div class="activity-list">
+            {% for activity in recent_activities|slice:":5" %}
+            <div class="activity-entry">
+                <div class="activity-entry__copy">
+                    <strong>{{ activity.action }}</strong>
+                    <span>{{ activity.details|default:"Logged action"|truncatechars:60 }}</span>
+                </div>
+                <span class="activity-entry__time">{{ activity.timestamp|date:"M d, H:i" }}</span>
+            </div>
+            {% empty %}
+            <div class="empty-state">
+                <i class="fa-solid fa-clock-rotate-left"></i>
+                <strong>No activity yet</strong>
+                <span>Actions will appear here as you use the system.</span>
+            </div>
+            {% endfor %}
+        </div>
+    </article>
+</section>
+
+{% include 'includes/proctoring_replay_modal.html' %}
+
+{% block extra_js %}
+<style>
+    @keyframes wave {
+        0% { transform: scaleY(0.3); }
+        100% { transform: scaleY(1.2); }
+    }
+</style>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+
+    // Simulate Live Confidence Polling
+    setInterval(() => {
+        const fluctuation = Math.floor(Math.random() * 20) - 5;
+        const scoreElem = document.getElementById('confidence-score-txt');
+        if(!scoreElem) return;
+        
+        let currentScore = parseInt(scoreElem.innerText);
+        let newScore = currentScore + fluctuation;
+        if(newScore > 100) newScore = 100;
+        if(newScore < 0) newScore = 0;
+        
+        scoreElem.innerText = newScore + "%";
+        
+        if(newScore < 40) {
+            document.getElementById('confidence-status-txt').innerText = "High Stress";
+            document.getElementById('confidence-status-txt').className = "text-danger small text-uppercase fw-bold";
+            document.getElementById('stress-txt').innerText = "Elevated";
+            document.getElementById('stress-txt').className = "text-danger";
+            document.getElementById('pitch-txt').innerText = "Shaky (Var: 1450)";
+        } else if(newScore > 75) {
+            document.getElementById('confidence-status-txt').innerText = "Highly Confident";
+            document.getElementById('confidence-status-txt').className = "text-info small text-uppercase fw-bold";
+            document.getElementById('stress-txt').innerText = "Negative";
+            document.getElementById('stress-txt').className = "text-success";
+            document.getElementById('pitch-txt').innerText = "Stable (Var: 320)";
+        } else {
+            document.getElementById('confidence-status-txt').innerText = "Moderate / Engaged";
+            document.getElementById('confidence-status-txt').className = "text-primary small text-uppercase fw-bold";
+            document.getElementById('stress-txt').innerText = "Nominal";
+            document.getElementById('stress-txt').className = "text-info";
+            document.getElementById('pitch-txt').innerText = "Acceptable (Var: 800)";
+        }
+    }, 2500);
+
+    const proctorFeed = document.getElementById('proctoring-feed');
+    const proctorStatus = document.getElementById('proctoring-status');
+
+    async function pollProctoring() {
+        try {
+            const response = await fetch('/api/get-live-proctoring/');
+            const data = await response.json();
+            
+            if (data.logs && data.logs.length > 0) {
+                renderProctoringLogs(data.logs);
+                proctorStatus.className = 'badge bg-success bg-opacity-25 text-success';
+                proctorStatus.innerHTML = '<i class="fas fa-broadcast-tower me-1"></i> Real-time';
+            } else {
+                proctorStatus.className = 'badge bg-secondary bg-opacity-25 text-secondary';
+                proctorStatus.innerHTML = '<i class="fas fa-satellite me-1"></i> Standby';
+            }
+        } catch (e) {
+            // Quiet fail
+        }
+    }
+
+    function renderProctoringLogs(logs) {
+        if(!proctorFeed) return;
+        proctorFeed.innerHTML = logs.map(log => {
+            const riskClass = log.risk_level === 'High' ? 'danger' : (log.risk_level === 'Medium' ? 'warning' : 'success');
+            const flags = log.flags.length > 0 ? log.flags.join(', ') : 'Optimal Session';
+            
+            return `
+                <div class="activity-entry border-start border-3 border-${riskClass} mb-2 bg-dark bg-opacity-25 rounded" style="padding: 0.8rem;">
+                    <div class="activity-entry__copy">
+                        <strong>${log.candidate} ${log.is_flagged ? '<span class="text-danger ms-1" title="Flagged"><i class="fas fa-exclamation-triangle"></i></span>' : ''}</strong>
+                        <span class="text-${riskClass} mb-1 d-block">${log.risk_level} Risk | ${flags}</span>
+                        <div class="d-flex gap-2 mt-2">
+                            <button class="btn thunder-btn thunder-btn--ghost py-1 px-2 text-primary" style="font-size: 0.75rem;" onclick="window.openProctorReplay(${log.interview_id})">
+                                <i class="fas fa-history me-1"></i> Review
+                            </button>
+                            ${log.application_id ? `
+                            <a href="/jobs/interview/live/${log.application_id}/" class="btn thunder-btn thunder-btn--ghost py-1 px-2 text-warning border-warning" style="font-size: 0.75rem;">
+                                <i class="fas fa-bolt me-1"></i> Join Live
+                            </a>
+                            ` : ''}
+                        </div>
+                    </div>
+                    <span class="activity-entry__time" style="font-size: 0.7rem;">${log.timestamp}</span>
+                </div>
+            `;
+        }).join('');
+    }
+
+    pollProctoring();
+    setInterval(pollProctoring, 5000);
+});
+</script>
+{% endblock %}
+{% endblock %}

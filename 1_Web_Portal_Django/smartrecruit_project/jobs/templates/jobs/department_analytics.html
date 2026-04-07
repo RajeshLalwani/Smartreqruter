@@ -1,0 +1,158 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Department Analytics | SmartRecruit{% endblock %}
+
+{% block content %}
+<style>
+    /* Z-INDEX SAFEGUARDS */
+    .modal { z-index: 2000 !important; }
+    .modal-backdrop { z-index: 1050 !important; }
+    .tracking-widest { letter-spacing: 0.15em; }
+    .x-small { font-size: 0.75rem; }
+
+    /* Job card row */
+    .job-card-row {
+        background: rgba(255,255,255,0.025);
+        border: 1px solid rgba(255,255,255,0.06);
+        border-radius: 0.75rem; padding: 0.85rem 1rem;
+        transition: border-color 0.2s ease;
+    }
+    .job-card-row:hover { border-color: rgba(41,121,255,0.3); }
+</style>
+
+<div class="container-fluid px-4 mt-4 fade-up">
+
+    <!-- ─── Hero ─── -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-5 gap-3" data-aos="fade-down">
+        <div>
+            <div class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-3 py-2 rounded-pill mb-3 tracking-widest text-uppercase x-small fw-bold">
+                <i class="fas fa-sitemap me-2"></i>Department Intelligence
+            </div>
+            <h1 class="display-6 fw-bold text-white mb-2" style="font-family: 'Space Grotesk', sans-serif;">Department-wise <span style="background: linear-gradient(90deg, #2979FF, #00C853); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">Analytics</span></h1>
+            <p class="lead text-secondary mb-0">Hiring performance breakdown by technology stack and department.</p>
+        </div>
+    </div>
+
+    <!-- ─── Stat Cards ─── -->
+    <div class="row g-3 mb-5" data-aos="fade-up">
+        <div class="col-md-4">
+            <div class="glass-panel p-4 text-center rounded-4 border-primary border-opacity-25 hover-scale">
+                <div class="fw-bold text-primary" style="font-size: 2rem; font-family: 'Space Grotesk', sans-serif;">{{ total_apps }}</div>
+                <div class="x-small text-secondary fw-bold tracking-widest text-uppercase mt-1">Total Applications</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="glass-panel p-4 text-center rounded-4 border-success border-opacity-25 hover-scale">
+                <div class="fw-bold text-success" style="font-size: 2rem; font-family: 'Space Grotesk', sans-serif;">{{ total_jobs }}</div>
+                <div class="x-small text-secondary fw-bold tracking-widest text-uppercase mt-1">Total Jobs Posted</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="glass-panel p-4 text-center rounded-4 border-warning border-opacity-25 hover-scale">
+                <div class="fw-bold text-warning" style="font-size: 2rem; font-family: 'Space Grotesk', sans-serif;">{{ dept_data|length }}</div>
+                <div class="x-small text-secondary fw-bold tracking-widest text-uppercase mt-1">Departments Active</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ─── Charts ─── -->
+    <div class="row g-4 mb-5" data-aos="fade-up" data-aos-delay="100">
+        <div class="col-md-6">
+            <div class="glass-panel p-4 h-100 rounded-4 border-secondary border-opacity-25">
+                <h6 class="fw-bold text-white mb-3 x-small tracking-widest text-uppercase border-bottom border-light border-opacity-10 pb-3"><i class="fas fa-chart-bar text-primary me-2"></i>Applications per Department</h6>
+                <canvas id="appChart" height="220"></canvas>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="glass-panel p-4 h-100 rounded-4 border-secondary border-opacity-25">
+                <h6 class="fw-bold text-white mb-3 x-small tracking-widest text-uppercase border-bottom border-light border-opacity-10 pb-3"><i class="fas fa-robot text-info me-2"></i>Avg AI Score per Department</h6>
+                <canvas id="scoreChart" height="220"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- ─── Department Summary Table ─── -->
+    <div class="glass-panel p-0 rounded-4 overflow-hidden border-secondary border-opacity-25 shadow-lg mb-5" data-aos="fade-up" data-aos-delay="150">
+        <div class="p-4 border-bottom border-light border-opacity-10 bg-dark bg-opacity-25">
+            <h6 class="fw-bold text-white mb-0 x-small tracking-widest text-uppercase"><i class="fas fa-table text-warning me-2"></i>Department Summary</h6>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-borderless align-middle mb-0 text-white w-100">
+                <thead class="text-secondary x-small tracking-widest text-uppercase border-bottom border-light border-opacity-10 bg-light bg-opacity-5">
+                    <tr>
+                        <th class="ps-4 py-3 border-0">Department</th>
+                        <th class="py-3 border-0">Applications</th>
+                        <th class="py-3 border-0">Hired</th>
+                        <th class="py-3 border-0">Rejected</th>
+                        <th class="py-3 border-0">Hire Rate</th>
+                        <th class="py-3 pe-4 border-0">Avg AI Score</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for d in dept_data %}
+                    <tr class="border-bottom border-light border-opacity-5">
+                        <td class="ps-4 py-3 x-small fw-semibold text-white">{{ d.dept_label }}</td>
+                        <td class="py-3 x-small" style="font-family: 'Space Grotesk', sans-serif;">{{ d.total }}</td>
+                        <td class="py-3 x-small text-success fw-bold" style="font-family: 'Space Grotesk', sans-serif;">{{ d.hired }}</td>
+                        <td class="py-3 x-small text-danger fw-bold" style="font-family: 'Space Grotesk', sans-serif;">{{ d.rejected }}</td>
+                        <td class="py-3">
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="progress flex-grow-1" style="height: 5px; max-width: 60px; background: rgba(255,255,255,0.06); border-radius: 4px;">
+                                    <div class="progress-bar {% if d.hire_rate >= 30 %}bg-success{% elif d.hire_rate >= 15 %}bg-warning{% else %}bg-danger{% endif %}" style="width: {{ d.hire_rate }}%; border-radius: 4px;"></div>
+                                </div>
+                                <span class="x-small fw-bold" style="font-family: 'Space Grotesk', sans-serif;">{{ d.hire_rate }}%</span>
+                            </div>
+                        </td>
+                        <td class="py-3 pe-4 x-small fw-bold text-info" style="font-family: 'Space Grotesk', sans-serif;">{{ d.avg_score }}%</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ─── Top Jobs by Applications ─── -->
+    <div class="glass-panel p-4 rounded-4 border-secondary border-opacity-25" data-aos="fade-up" data-aos-delay="200">
+        <h6 class="fw-bold text-white mb-4 x-small tracking-widest text-uppercase border-bottom border-light border-opacity-10 pb-3"><i class="fas fa-briefcase text-success me-2"></i>Top Jobs by Applications</h6>
+        {% for job in job_data %}
+        <div class="job-card-row d-flex align-items-center gap-3 mb-2">
+            <div class="flex-grow-1">
+                <div class="fw-semibold text-white x-small">{{ job.title }}</div>
+                <div class="text-secondary" style="font-size: 0.7rem;">{{ job.app_count }} applications &middot; {{ job.hired_count }} hired</div>
+            </div>
+            <div class="text-end flex-shrink-0">
+                <div class="fw-bold text-info x-small" style="font-family: 'Space Grotesk', sans-serif;">{{ job.avg_ai|floatformat:0 }}% avg</div>
+                <div class="progress mt-1" style="height: 4px; width: 60px; background: rgba(255,255,255,0.06); border-radius: 4px;">
+                    <div class="progress-bar bg-info" style="width: {{ job.avg_ai|floatformat:0 }}%; border-radius: 4px;"></div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+Chart.defaults.color = '#94a3b8';
+Chart.defaults.borderColor = 'rgba(255,255,255,0.04)';
+
+const LABELS = {{ dept_labels_json|safe }};
+const TOTALS = {{ dept_totals_json|safe }};
+const HIRED  = {{ dept_hired_json|safe }};
+const SCORES = {{ dept_scores_json|safe }};
+const GRID   = { color: 'rgba(255,255,255,0.04)' };
+const TICK   = { color: '#64748b', font: { size: 11 } };
+
+new Chart(document.getElementById('appChart'), {
+    type: 'bar',
+    data: { labels: LABELS, datasets: [{ label: 'Total', data: TOTALS, backgroundColor: 'rgba(41,121,255,0.6)', borderRadius: 5 }, { label: 'Hired', data: HIRED, backgroundColor: 'rgba(0,200,83,0.6)', borderRadius: 5 }] },
+    options: { plugins: { legend: { labels: { color: '#94a3b8' } } }, scales: { x: { grid: GRID, ticks: TICK }, y: { grid: GRID, ticks: TICK, beginAtZero: true } } }
+});
+new Chart(document.getElementById('scoreChart'), {
+    type: 'bar',
+    data: { labels: LABELS, datasets: [{ label: 'Avg AI Score', data: SCORES, backgroundColor: 'rgba(0,176,255,0.6)', borderRadius: 5 }] },
+    options: { plugins: { legend: { display: false } }, scales: { x: { grid: GRID, ticks: TICK }, y: { grid: GRID, ticks: TICK, beginAtZero: true, max: 100 } } }
+});
+</script>
+{% endblock %}

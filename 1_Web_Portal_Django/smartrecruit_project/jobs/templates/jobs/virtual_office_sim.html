@@ -1,0 +1,381 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Virtual Office Simulator | Reality Check | SmartRecruit{% endblock %}
+
+{% block content %}
+<div class="sim-container">
+    <!-- Background Scene Overlay -->
+    <div class="sim-bg-overlay"></div>
+
+    <!-- HUD Elements -->
+    <div class="sim-hud p-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center gap-3">
+                <div class="logo-box glass-panel px-3 py-2 border-primary border-opacity-30">
+                    <span class="fw-bold text-gradient">SIMULATOR v1.0</span>
+                </div>
+                <div class="timer-box glass-panel px-3 py-2 text-white font-monospace">
+                    <i class="fas fa-clock text-warning me-2"></i><span id="timer">00:00</span>
+                </div>
+            </div>
+
+            <div class="metrics-box d-flex gap-4">
+                <div class="metric text-center">
+                    <div class="xx-small text-muted uppercase">Culture Sync</div>
+                    <div id="syncScore" class="fw-bold text-info">--%</div>
+                </div>
+                <div class="metric text-center">
+                    <div class="xx-small text-muted uppercase">Stress Level</div>
+                    <div class="progress mt-1" style="width: 80px; height: 4px;">
+                        <div id="stressBar" class="progress-bar bg-danger" style="width: 10%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Scenario Module -->
+    <div class="scenario-workspace d-flex align-items-center justify-content-center h-100 p-5">
+        <div id="scenarioCard" class="scenario-card glass-panel shadow-2v p-5 text-center" style="max-width: 800px;">
+            <div class="scenario-icon-box mb-4 mx-auto pulse-ring-slow">
+                <i id="scenarioIcon" class="fas fa-building text-primary display-4"></i>
+            </div>
+
+            <h2 id="scenarioTitle" class="fw-bold text-theme mb-3">Initializing Scenario...</h2>
+            <p id="scenarioText" class="text-muted lead mb-5">Loading the Virtual Office environment and situational
+                data...</p>
+
+            <div id="choiceContainer" class="d-flex flex-column gap-3">
+                <!-- Choices injected here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Transition Overlay -->
+    <div id="simTransition" class="sim-transition">
+        <div class="loader-ripple">
+            <div></div>
+            <div></div>
+        </div>
+        <div class="text-white mt-4 tracking-widest uppercase x-small">Recalibrating Office Reality...</div>
+    </div>
+</div>
+
+<style>
+    .sim-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: #050510;
+        z-index: 1000;
+        overflow: hidden;
+    }
+
+    .sim-bg-overlay {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        background-image: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=2069');
+        background-size: cover;
+        background-position: center;
+        filter: blur(2px) grayscale(0.5);
+        opacity: 0.4;
+        z-index: 1001;
+    }
+
+    .sim-hud {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        z-index: 1010;
+        pointer-events: none;
+    }
+
+    .sim-hud * {
+        pointer-events: auto;
+    }
+
+    .scenario-workspace {
+        position: relative;
+        z-index: 1005;
+    }
+
+    .scenario-card {
+        background: rgba(10, 10, 20, 0.7);
+        backdrop-filter: blur(30px) saturate(200%);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 40px;
+        transform: translateY(0);
+        transition: all 0.6s cubic-bezier(0.19, 1, 0.22, 1);
+    }
+
+    .scenario-card.exit {
+        transform: translateY(-100px);
+        opacity: 0;
+    }
+
+    .choice-btn {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 20px 30px;
+        border-radius: 20px;
+        color: white;
+        text-align: left;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .choice-btn:hover {
+        background: rgba(var(--bs-primary-rgb), 0.15);
+        border-color: var(--bs-primary);
+        transform: scale(1.02);
+    }
+
+    .choice-btn i {
+        opacity: 0.3;
+        transition: opacity 0.3s ease;
+    }
+
+    .choice-btn:hover i {
+        opacity: 1;
+        color: var(--bs-primary);
+    }
+
+    .scenario-icon-box {
+        width: 100px;
+        height: 100px;
+        background: rgba(var(--bs-primary-rgb), 0.1);
+        border-radius: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid rgba(var(--bs-primary-rgb), 0.2);
+    }
+
+    .sim-transition {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: #000;
+        z-index: 2000;
+        display: none;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .pulse-ring-slow {
+        animation: pulse-ring 4s infinite;
+    }
+
+    @keyframes pulse-ring {
+        0% {
+            box-shadow: 0 0 0 0 rgba(var(--bs-primary-rgb), 0.3);
+        }
+
+        70% {
+            box-shadow: 0 0 0 30px rgba(var(--bs-primary-rgb), 0);
+        }
+
+        100% {
+            box-shadow: 0 0 0 0 rgba(var(--bs-primary-rgb), 0);
+        }
+    }
+
+    .xx-small {
+        font-size: 0.65rem;
+    }
+
+    .x-small {
+        font-size: 0.75rem;
+    }
+
+    .tracking-widest {
+        letter-spacing: 0.2em;
+    }
+
+    .uppercase {
+        text-transform: uppercase;
+    }
+
+    .text-gradient {
+        background: linear-gradient(90deg, #00d2ff 0%, #3a7bd5 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    /* Loader */
+    .loader-ripple {
+        display: inline-block;
+        position: relative;
+        width: 80px;
+        height: 80px;
+    }
+
+    .loader-ripple div {
+        position: absolute;
+        border: 4px solid #fff;
+        opacity: 1;
+        border-radius: 50%;
+        animation: loader-ripple 1s cubic-bezier(0, 0.2, 0.8, 1) infinite;
+    }
+
+    .loader-ripple div:nth-child(2) {
+        animation-delay: -0.5s;
+    }
+
+    @keyframes loader-ripple {
+        0% {
+            top: 36px;
+            left: 36px;
+            width: 0;
+            height: 0;
+            opacity: 0;
+        }
+
+        4.9% {
+            top: 36px;
+            left: 36px;
+            width: 0;
+            height: 0;
+            opacity: 0;
+        }
+
+        5% {
+            top: 36px;
+            left: 36px;
+            width: 0;
+            height: 0;
+            opacity: 1;
+        }
+
+        100% {
+            top: 0px;
+            left: 0px;
+            width: 72px;
+            height: 72px;
+            opacity: 0;
+        }
+    }
+</style>
+
+<script>
+    const scenarios = [
+        {
+            title: "The Crisis Call",
+            text: "It's 5:30 PM on a Friday. Your lead dev just went offline, and a high-priority client reports a production bug. What's your move?",
+            icon: "fa-fire-extinguisher",
+            choices: [
+                { text: "Stay back, investigate, and fix it myself before leaving.", value: 10, stress: 20 },
+                { text: "Log the ticket, notify the client, and plan a fix for Monday morning.", value: 5, stress: 5 },
+                { text: "Call the lead dev and insist they handle it since it's their module.", value: -5, stress: 15 }
+            ]
+        },
+        {
+            title: "The Ethical Dilemma",
+            text: "You notice a colleague cutting corners on security checks to meet a deadline. Do you intervene?",
+            icon: "fa-shield-halved",
+            choices: [
+                { text: "Have a private, constructive chat with the colleague about the risks.", value: 10, stress: 10 },
+                { text: "Report it immediately to the security officer anonymously.", value: 7, stress: 5 },
+                { text: "Ignore it; they know what they are doing and the deadline is critical.", value: -10, stress: 0 }
+            ]
+        },
+        {
+            title: "The Feedback Loop",
+            text: "Your manager gives you very blunt, slightly harsh feedback on your latest presentation during a team meeting. How do you respond?",
+            icon: "fa-comment-dots",
+            choices: [
+                { text: "Listen calmly, ask for specific examples of improvement, and thank them.", value: 10, stress: 5 },
+                { text: "Defend my work immediately to clear my reputation in front of the team.", value: -2, stress: 20 },
+                { text: "Stay silent, process it later, and send a clarifying email privately.", value: 5, stress: 10 }
+            ]
+        }
+    ];
+
+    let currentStep = 0;
+    let syncScore = 70;
+    let stressLevel = 10;
+
+    function loadScenario(index) {
+        const s = scenarios[index];
+        const card = document.getElementById('scenarioCard');
+        const overlay = document.getElementById('simTransition');
+
+        overlay.style.display = 'flex';
+
+        setTimeout(() => {
+            document.getElementById('scenarioTitle').innerText = s.title;
+            document.getElementById('scenarioText').innerText = s.text;
+            document.getElementById('scenarioIcon').className = `fas ${s.icon} text-primary display-4`;
+
+            const container = document.getElementById('choiceContainer');
+            container.innerHTML = '';
+
+            s.choices.forEach(c => {
+                const btn = document.createElement('div');
+                btn.className = 'choice-btn';
+                btn.innerHTML = `<i class="fas fa-chevron-right"></i> <span>${c.text}</span>`;
+                btn.onclick = () => selectChoice(c);
+                container.appendChild(btn);
+            });
+
+            overlay.style.display = 'none';
+        }, 1200);
+    }
+
+    function selectChoice(choice) {
+        syncScore = Math.min(100, Math.max(0, syncScore + choice.value));
+        stressLevel = Math.min(100, Math.max(0, stressLevel + choice.stress));
+
+        document.getElementById('syncScore').innerText = syncScore + "%";
+        document.getElementById('stressBar').style.width = stressLevel + "%";
+
+        currentStep++;
+        if (currentStep < scenarios.length) {
+            loadScenario(currentStep);
+        } else {
+            finishSim();
+        }
+    }
+
+    function finishSim() {
+        const card = document.getElementById('scenarioCard');
+        card.innerHTML = `
+            <div class="scenario-icon-box mb-4 mx-auto animate-pulse">
+                <i class="fas fa-trophy text-warning display-4"></i>
+            </div>
+            <h2 class="fw-bold text-theme mb-3">Simulation Complete</h2>
+            <p class="text-muted lead mb-4">Your cultural reflexes have been mapped. Final Sync Score: ${syncScore}%</p>
+            <div class="glass-card p-4 rounded-4 mb-4">
+                <h6 class="xx-small text-muted uppercase fw-bold mb-3">Reflex Signature</h6>
+                <div class="d-flex justify-content-center gap-2">
+                    <span class="badge rounded-pill bg-success bg-opacity-10 text-success border border-success border-opacity-20 px-3">Resilient</span>
+                    <span class="badge rounded-pill bg-info bg-opacity-10 text-info border border-info border-opacity-20 px-3">Ethical</span>
+                    <span class="badge rounded-pill bg-primary bg-opacity-10 text-primary border border-primary border-opacity-20 px-3">Growth Mindset</span>
+                </div>
+            </div>
+            <a href="/application/{{ application.id }}/" class="btn btn-primary rounded-pill px-5 py-3 fw-bold">CLOSE SIMULATOR</a>
+        `;
+    }
+
+    // Timer logic
+    let seconds = 0;
+    setInterval(() => {
+        seconds++;
+        const mins = Math.floor(seconds / 60).toString().padStart(2, '0');
+        const secs = (seconds % 60).toString().padStart(2, '0');
+        document.getElementById('timer').innerText = `${mins}:${secs}`;
+    }, 1000);
+
+    window.onload = () => loadScenario(0);
+</script>
+{% endblock %}

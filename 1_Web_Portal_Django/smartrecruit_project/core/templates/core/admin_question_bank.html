@@ -1,0 +1,395 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Question Governance | SmartRecruit Admin{% endblock %}
+
+{% block content %}
+<div class="d-flex" style="min-height:calc(100vh - 72px)">
+  {% include 'core/_admin_sidebar.html' %}
+  
+  <main class="flex-grow-1 p-4 p-lg-5" style="background: radial-gradient(circle at top right, rgba(239, 68, 68, 0.05), transparent 400px);">
+    
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-start mb-5">
+      <div>
+        <h1 class="glow-text mb-1" style="font-size:1.8rem;">
+          <i class="fa-solid fa-database me-2 text-danger"></i>Question Governance
+        </h1>
+        <p class="text-theme-secondary mb-0">Central repository, bias detection, and bulk ingestion unit</p>
+      </div>
+      <div class="d-flex gap-2">
+        <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#aiGenModal">
+          <i class="fa-solid fa-wand-magic-sparkles me-2"></i>Generate with AI
+        </button>
+        <button class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#importModal">
+          <i class="fa-solid fa-upload me-2"></i>Neural Upload (CSV)
+        </button>
+      </div>
+    </div>
+
+    <!-- Analytics & Bias Detection -->
+    <div class="row g-4 mb-5">
+      <div class="col-lg-4">
+        <div class="glass-card p-4 border-danger border-opacity-25 h-100">
+          <h6 class="text-danger fw-bold mb-3"><i class="fa-solid fa-triangle-exclamation me-2"></i>Bias Alert: High Failure Rates</h6>
+          <div class="space-y-3">
+            {% for q in high_failure_questions %}
+            <div class="p-3 mb-2" style="background: rgba(239,68,68,0.05); border-radius:10px; border: 1px solid rgba(239,68,68,0.1);">
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <span class="badge bg-danger">ID #{{ q.id }}</span>
+                <span class="text-danger fw-bold">{{ q.fail_rate }}% Fail</span>
+              </div>
+              <p class="small text-theme-secondary mb-0 text-truncate">{{ q.text }}</p>
+            </div>
+            {% empty %}
+            <div class="text-center py-4">
+              <i class="fa-solid fa-circle-check text-success fs-3 mb-2"></i>
+              <p class="small text-theme-secondary mb-0">No questions showing extreme bias.</p>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-8">
+        <div class="glass-card p-4 h-100">
+          <h6 class="text-theme-secondary fw-semibold mb-4">Master Repository Overview</h6>
+          <div class="row g-3">
+            <div class="col-md-4">
+              <div class="p-3 text-center" style="background:rgba(255,255,255,0.03); border-radius:12px;">
+                <div class="text-theme-secondary small mb-1">Total Questions</div>
+                <div class="fs-3 fw-bold">{{ total_questions }}</div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="p-3 text-center" style="background:rgba(255,255,255,0.03); border-radius:12px;">
+                <div class="text-warning small mb-1">Pending Sync</div>
+                <div class="fs-3 fw-bold">{{ pending_count }}</div>
+              </div>
+            </div>
+             <div class="col-md-4">
+              <div class="p-3 text-center" style="background:rgba(255,255,255,0.03); border-radius:12px;">
+                <div class="text-success small mb-1">Governance Approved</div>
+                <div class="fs-3 fw-bold">{{ approved_count }}</div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Filter Bar -->
+          <form class="row g-2 mt-4" method="GET">
+            <div class="col-md-4">
+              <select name="round" class="form-select bg-dark border-secondary text-white shadow-none">
+                <option value="all">All Rounds</option>
+                {% for code, label in round_choices %}
+                <option value="{{ code }}" {% if q_round == code %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-4">
+              <select name="status" class="form-select bg-dark border-secondary text-white shadow-none">
+                <option value="all">All Status</option>
+                {% for code, label in status_choices %}
+                <option value="{{ code }}" {% if q_status == code %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-4">
+              <button class="btn btn-secondary w-100 shadow-none"><i class="fa-solid fa-filter me-2"></i>Filter Repository</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Repository Table -->
+    <div class="glass-card p-0 overflow-hidden">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0" style="background:transparent;">
+          <thead style="background: rgba(255,255,255,0.03); border-bottom: 1px solid rgba(255,255,255,0.1);">
+            <tr>
+              <th class="px-4 py-3 text-theme-secondary fw-normal">Question & Details</th>
+              <th class="py-3 text-theme-secondary fw-normal">Round</th>
+              <th class="py-3 text-theme-secondary fw-normal">Performance</th>
+              <th class="py-3 text-theme-secondary fw-normal">Status</th>
+              <th class="px-4 py-3 text-end text-theme-secondary fw-normal">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for q in questions %}
+            <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+              <td class="px-4 py-3">
+                <div class="fw-semibold text-white mb-1" style="font-size: 0.9rem;">{{ q.question_text|truncatechars:100 }}</div>
+                <div class="d-flex gap-2">
+                  <span class="badge bg-secondary bg-opacity-25 text-secondary" style="font-size:0.65rem; border: 1px solid rgba(255,255,255,0.1);">{{ q.category }}</span>
+                  <span class="badge bg-secondary bg-opacity-25 text-secondary" style="font-size:0.65rem; border: 1px solid rgba(255,255,255,0.1);">{{ q.difficulty|upper }}</span>
+                  <small class="text-theme-secondary" style="font-size:0.65rem;">by {{ q.submitted_by.username|default:"System" }}</small>
+                </div>
+              </td>
+              <td><span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25" style="font-size: 0.72rem;">{{ q.get_round_display }}</span></td>
+              <td>
+                <div class="small text-theme-secondary" style="font-size: 0.75rem;">
+                  <i class="fa-solid fa-eye me-1 opacity-50"></i> {{ q.attempt_count }} att.
+                  <span class="ms-2"><i class="fa-solid fa-circle-xmark text-danger me-1 opacity-50"></i> {{ q.failure_count }} fail</span>
+                </div>
+              </td>
+              <td>
+                {% if q.moderation_status == 'APPROVED' %}
+                <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25" style="font-size: 0.7rem;">APPROVED</span>
+                {% elif q.moderation_status == 'PENDING' %}
+                <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25" style="font-size: 0.7rem;">PENDING</span>
+                {% else %}
+                <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25" style="font-size: 0.7rem;">REJECTED</span>
+                {% endif %}
+              </td>
+              <td class="px-4 text-end">
+                {% if q.moderation_status == 'PENDING' %}
+                <form action="{% url 'admin_question_moderate' q.id %}" method="POST" class="d-inline">
+                  {% csrf_token %}
+                  <button name="action" value="approve" class="btn btn-sm btn-success me-1"><i class="fa-solid fa-check"></i></button>
+                  <button name="action" value="reject" class="btn btn-sm btn-danger"><i class="fa-solid fa-xmark"></i></button>
+                </form>
+                {% else %}
+                <button class="btn btn-sm btn-outline-secondary" disabled style="font-size: 0.7rem; opacity: 0.5;">LOCKED</button>
+                {% endif %}
+              </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="5" class="text-center py-5 text-theme-secondary">No questions found in the neural bank.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- Import Modal -->
+<div class="modal fade" id="importModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content glass-card p-0 border-0 overflow-hidden shadow-lg">
+      <div class="modal-header border-bottom border-white border-opacity-10 p-4">
+        <h5 class="modal-title glow-text"><i class="fa-solid fa-microchip me-2 text-danger"></i>Neural Sync: Bulk Import</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        <input type="hidden" name="action_type" value="bulk_import">
+        <div class="modal-body p-4 text-center">
+          <p class="text-theme-secondary mb-4 small">Upload a CSV containing technical/logical questions to expand the bank globally. Admin imports bypass local moderation.</p>
+          <div class="mb-3">
+            <label class="form-label text-theme-secondary small d-block text-start">CSV File Neural Pattern</label>
+            <input type="file" name="csv_file" class="form-control bg-dark border-secondary text-white shadow-none" accept=".csv" required>
+          </div>
+          <div class="p-3 text-start bg-white bg-opacity-5 rounded-3 mb-3 border border-white border-opacity-10">
+            <small class="text-theme-secondary d-block mb-1 fw-bold" style="font-size: 0.65rem; color: #f87171 !important;">SCHEMA REQUIREMENTS:</small>
+            <code class="text-info" style="font-size:0.65rem;">round, category, question_text, options, correct_answer, explanation</code>
+          </div>
+        </div>
+        <div class="modal-footer border-top border-white border-opacity-10 p-3">
+          <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Abort</button>
+          <button type="submit" class="btn btn-danger btn-sm px-4">Initialize Import</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- AI Generation Modal -->
+<div class="modal fade" id="aiGenModal" tabindex="-1">
+  <div class="modal-dialog modal-xl modal-dialog-centered">
+    <div class="modal-content glass-card p-0 border-0 overflow-hidden shadow-lg" style="background: #0a0a0b !important;">
+      <div class="modal-header border-bottom border-white border-opacity-10 p-4">
+        <h5 class="modal-title glow-text"><i class="fa-solid fa-wand-magic-sparkles me-2 text-danger"></i>Neural Synthesis: AI Question Assistant</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      
+      <div class="modal-body p-4">
+        <!-- Configuration Step -->
+        <div id="aiGenConfig">
+          <p class="text-theme-secondary mb-4">Configure the parameters for the generative engine to draft specialized questions.</p>
+          <div class="row g-3">
+            <div class="col-md-3">
+              <label class="form-label small text-theme-secondary">Target Round</label>
+              <select id="genRound" class="form-select bg-dark border-secondary text-white shadow-none">
+                {% for code, label in round_choices %}
+                <option value="{{ code }}">{{ label }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label small text-theme-secondary">Category</label>
+              <select id="genCategory" class="form-select bg-dark border-secondary text-white shadow-none">
+                <option value="DJANGO_ML">Django / Python / ML</option>
+                <option value="PYTHON_CODING">Python Coding</option>
+                <option value="JS_CODING">JS Coding</option>
+                <option value="SYSTEM_DESIGN">System Design</option>
+                <option value="LOGICAL">Logical Reasoning</option>
+              </select>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label small text-theme-secondary">Difficulty</label>
+              <select id="genDifficulty" class="form-select bg-dark border-secondary text-white shadow-none">
+                <option value="easy">Easy</option>
+                <option value="medium" selected>Medium</option>
+                <option value="hard">Hard</option>
+              </select>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label small text-theme-secondary">Quantity</label>
+              <input type="number" id="genCount" class="form-control bg-dark border-secondary text-white shadow-none" value="5" min="1" max="20">
+            </div>
+          </div>
+          <div class="text-end mt-4">
+            <button onclick="synthesizeQuestions()" class="btn btn-danger px-5">
+              <span id="genBtnText">Initialize Synthesis</span>
+              <span id="genBtnSpinner" class="spinner-border spinner-border-sm ms-2 d-none"></span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Review Step (Hidden by default) -->
+        <div id="aiGenReview" class="d-none">
+          <div class="d-flex justify-content-between align-items-center mb-4">
+             <h6 class="text-theme-secondary mb-0">Review Synthesis Output</h6>
+             <button onclick="resetGenUI()" class="btn btn-sm btn-outline-secondary">Discard & Restart</button>
+          </div>
+          <div id="aiGenResults" class="space-y-4" style="max-height: 400px; overflow-y: auto; padding-right: 10px;">
+            <!-- Questions will be injected here -->
+          </div>
+          <div class="text-end mt-4 pt-3 border-top border-white border-opacity-10">
+            <button onclick="bulkSaveQuestions()" id="saveBtn" class="btn btn-success px-5">Inject into Global Bank</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let lastGeneratedQuestions = [];
+
+function synthesizeQuestions() {
+    const data = {
+        round: document.getElementById('genRound').value,
+        category: document.getElementById('genCategory').value,
+        difficulty: document.getElementById('genDifficulty').value,
+        count: document.getElementById('genCount').value
+    };
+
+    const btnText = document.getElementById('genBtnText');
+    const btnSpinner = document.getElementById('genBtnSpinner');
+    
+    btnText.innerText = "Synthesizing...";
+    btnSpinner.classList.remove('d-none');
+
+    fetch("{% url 'admin_question_gen_api' %}", {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: JSON.stringify(data)
+    })
+    .then(r => r.json())
+    .then(res => {
+        if(res.status === 'success') {
+            displayGeneratedQuestions(res.questions);
+            lastGeneratedQuestions = res.questions;
+        } else {
+            alert("Synthesis Error: " + res.message);
+        }
+    })
+    .finally(() => {
+        btnText.innerText = "Initialize Synthesis";
+        btnSpinner.classList.add('d-none');
+    });
+}
+
+function displayGeneratedQuestions(questions) {
+    const container = document.getElementById('aiGenResults');
+    container.innerHTML = '';
+    
+    questions.forEach((q, idx) => {
+        const card = document.createElement('div');
+        card.className = 'glass-card p-4 mb-3 border-white border-opacity-10';
+        card.style.background = 'rgba(255,255,255,0.02)';
+        card.innerHTML = `
+            <div class="d-flex justify-content-between mb-2">
+                <span class="badge bg-secondary opacity-50 small">Q #${idx + 1}</span>
+                <span class="text-success small fw-bold">Correct: ${q.correct_answer}</span>
+            </div>
+            <p class="text-white mb-3" style="font-size: 0.95rem;">${q.question_text}</p>
+            <div class="row g-2 mb-3">
+                ${q.options.map(opt => `
+                    <div class="col-6">
+                        <div class="p-2 small rounded border border-white border-opacity-5 ${opt === q.correct_answer ? 'bg-success bg-opacity-10 border-success' : 'bg-white bg-opacity-5'}" style="font-size: 0.8rem;">
+                            ${opt}
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+            <div class="p-2 rounded bg-info bg-opacity-5 border border-info border-opacity-10 small text-info" style="font-size: 0.75rem;">
+                <strong>Explanation:</strong> ${q.explanation}
+            </div>
+        `;
+        container.appendChild(card);
+    });
+
+    document.getElementById('aiGenConfig').classList.add('d-none');
+    document.getElementById('aiGenReview').classList.remove('d-none');
+}
+
+function resetGenUI() {
+    document.getElementById('aiGenConfig').classList.remove('d-none');
+    document.getElementById('aiGenReview').classList.add('d-none');
+    lastGeneratedQuestions = [];
+}
+
+function bulkSaveQuestions() {
+    const saveBtn = document.getElementById('saveBtn');
+    saveBtn.innerText = "Injecting...";
+    saveBtn.disabled = true;
+
+    const data = {
+        round: document.getElementById('genRound').value,
+        category: document.getElementById('genCategory').value,
+        difficulty: document.getElementById('genDifficulty').value,
+        questions: lastGeneratedQuestions
+    };
+
+    fetch("{% url 'admin_question_bulk_save' %}", {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: JSON.stringify(data)
+    })
+    .then(r => r.json())
+    .then(res => {
+        if(res.status === 'success') {
+            location.reload();
+        } else {
+            alert("Injection Error: " + res.message);
+            saveBtn.innerText = "Inject into Global Bank";
+            saveBtn.disabled = false;
+        }
+    });
+}
+</script>
+
+<style>
+.space-y-4 > * + * { margin-top: 1.5rem; }
+#aiGenResults::-webkit-scrollbar {
+  width: 5px;
+}
+#aiGenResults::-webkit-scrollbar-track {
+  background: rgba(255,255,255,0.05);
+}
+#aiGenResults::-webkit-scrollbar-thumb {
+  background: #ef4444;
+  border-radius: 10px;
+}
+</style>
+
+{% endblock %}

@@ -1,0 +1,460 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load job_filters %}
+
+{% block title %}Neural Profile | SmartRecruit{% endblock %}
+
+{% block sidebar %}
+  {% include 'jobs/_candidate_sidebar.html' %}
+{% endblock %}
+
+{% block content %}
+<div class="d-flex" id="candidate-wrapper" style="min-height:calc(100vh - 72px)">
+    <!-- Sidebar is handled by block sidebar in app-shell -->
+    
+    <main class="flex-grow-1 p-4 p-lg-5 overflow-auto">
+        <style>
+    /* Z-INDEX SAFEGUARDS */
+    .modal { z-index: 2000 !important; }
+    .modal-backdrop { z-index: 1050 !important; }
+
+    .tracking-widest { letter-spacing: 0.15em; }
+    .x-small { font-size: 0.75rem; }
+    .xx-small { font-size: 0.65rem; }
+
+    /* Hero Header */
+    .profile-hero {
+        background: linear-gradient(135deg, rgba(99,102,241,0.12), rgba(236,72,153,0.08));
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 1.5rem;
+        padding: 3rem;
+        position: relative; overflow: hidden;
+        margin-bottom: 2rem;
+    }
+    .profile-hero::before {
+        content: '';
+        position: absolute; top: -50%; left: -50%;
+        width: 200%; height: 200%;
+        background: radial-gradient(circle, rgba(236,72,153,0.06) 0%, transparent 60%);
+        animation: rotate-gradient 30s linear infinite;
+    }
+    @keyframes rotate-gradient { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+    /* Avatar */
+    .profile-avatar {
+        width: 100px; height: 100px; border-radius: 50%;
+        background: linear-gradient(135deg, #6366f1, #ec4899);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 2.5rem; font-weight: 700; color: white;
+        box-shadow: 0 0 30px rgba(99,102,241,0.4), 0 0 60px rgba(236,72,153,0.15);
+        font-family: 'Space Grotesk', sans-serif;
+        flex-shrink: 0;
+    }
+
+    /* Completeness Bar */
+    .completeness-track { height: 10px; background: rgba(255,255,255,0.06); border-radius: 8px; overflow: hidden; }
+    .completeness-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #6366f1, #ec4899);
+        box-shadow: 0 0 15px rgba(99,102,241,0.6);
+        border-radius: 8px;
+        transition: width 1.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    /* Stat Cards (icon with glow) */
+    .stat-icon {
+        width: 56px; height: 56px; border-radius: 14px;
+        display: flex; align-items: center; justify-content: center;
+        margin: 0 auto 1rem; font-size: 1.4rem; position: relative; z-index: 1;
+    }
+    .stat-icon::after {
+        content: ''; position: absolute; inset: 0;
+        background: inherit; filter: blur(14px); opacity: 0.45;
+        border-radius: inherit; z-index: -1;
+    }
+
+    /* Chart Panels */
+    .chart-panel {
+        background: rgba(15, 15, 20, 0.6);
+        backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+        border: 1px solid rgba(255,255,255,0.07);
+        border-radius: 1rem;
+        padding: 1.75rem;
+        height: 100%;
+    }
+
+    /* Skills */
+    .skill-item { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem; }
+    .skill-name { min-width: 120px; font-size: 0.8rem; font-weight: 600; color: #cbd5e1; }
+    .skill-bar { flex: 1; height: 6px; background: rgba(255,255,255,0.06); border-radius: 4px; overflow: hidden; }
+    .skill-fill { height: 100%; background: linear-gradient(90deg, #6366f1, #ec4899); border-radius: 4px; transition: width 1s ease; box-shadow: 0 0 8px rgba(99,102,241,0.5); }
+    .skill-level { font-size: 0.65rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; min-width: 62px; text-align: right; }
+
+    /* Badge Proficiency Pills */
+    .badge-expert { color: #22d3ee; }
+    .badge-proficient { color: #818cf8; }
+    .badge-learning { color: #fb923c; }
+
+    /* Timeline */
+    .timeline-item { display: flex; gap: 1rem; margin-bottom: 1.25rem; }
+    .timeline-dot { width: 10px; height: 10px; border-radius: 50%; background: #6366f1; box-shadow: 0 0 8px rgba(99,102,241,0.7); flex-shrink: 0; margin-top: 0.35rem; }
+    .timeline-date { font-size: 0.65rem; color: #64748b; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 700; }
+    .timeline-title { font-size: 0.88rem; font-weight: 700; color: #e2e8f0; }
+    .timeline-company { font-size: 0.75rem; color: #94a3b8; }
+
+    /* PathwayAI */
+    .node {
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        gap: 0.5rem; padding: 1rem 1.5rem; min-width: 140px;
+        background: rgba(99,102,241,0.1); border-radius: 1rem;
+        border: 1px solid rgba(99,102,241,0.25); font-size: 0.8rem; font-weight: 600; color: #a5b4fc;
+        text-align: center;
+    }
+    .node.featured {
+        background: linear-gradient(135deg, rgba(99,102,241,0.2), rgba(236,72,153,0.15));
+        border-color: rgba(99,102,241,0.5);
+        box-shadow: 0 0 20px rgba(99,102,241,0.2);
+        color: white;
+    }
+    .path-line { flex: 1; height: 2px; background: linear-gradient(90deg, #6366f1, #ec4899); opacity: 0.35; align-self: center; min-width: 24px; }
+
+    /* Roadmap Steps */
+    .step-num {
+        width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0;
+        background: rgba(99,102,241,0.2); border: 1px solid rgba(99,102,241,0.4);
+        color: #a5b4fc; font-size: 0.75rem; font-weight: 700;
+        display: flex; align-items: center; justify-content: center;
+        box-shadow: 0 0 10px rgba(99,102,241,0.2);
+    }
+
+    /* Recommended Job Cards */
+    .job-card-profile {
+        background: rgba(15,15,20,0.55);
+        border: 1px solid rgba(255,255,255,0.07);
+        border-radius: 0.75rem; padding: 1.25rem;
+        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .job-card-profile:hover { transform: translateY(-4px); border-color: rgba(99,102,241,0.35); box-shadow: 0 12px 30px rgba(0,0,0,0.4); }
+    .match-score { font-size: 0.75rem; font-weight: 700; color: #86efac; background: rgba(34,197,94,0.12); border: 1px solid rgba(34,197,94,0.3); border-radius: 50px; padding: 3px 10px; }
+</style>
+
+<div class="container-fluid fade-up">
+
+    <!-- ─── Hero Profile Header ─── -->
+    <div class="profile-hero" data-aos="fade-down">
+        <div class="row align-items-center g-4 position-relative z-2">
+            <div class="col-lg-8">
+                <div class="d-flex align-items-center gap-4">
+                    <div class="profile-avatar">{{ user.get_full_name|slice:":1"|default:user.username|slice:":1" }}</div>
+                    <div>
+                        <h1 class="display-5 fw-bold text-white mb-1" style="font-family: 'Space Grotesk', sans-serif;">{{ user.get_full_name|default:user.username }}</h1>
+                        <p class="text-secondary mb-3"><i class="fas fa-envelope me-2 opacity-50"></i>{{ user.email }}</p>
+                        <div class="d-flex gap-2 flex-wrap">
+                            <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-3 py-2 rounded-pill x-small fw-bold tracking-widest"><i class="fas fa-shield-alt me-2"></i>Verified Profile</span>
+                            <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 px-3 py-2 rounded-pill x-small fw-bold tracking-widest"><i class="fas fa-star me-2"></i>Elite Status</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 text-lg-end">
+                <a href="{% url 'candidate_applications' %}" class="btn btn-primary btn-lg rounded-pill px-5 fw-bold shadow-lg hover-scale">
+                    <i class="fas fa-columns me-2"></i>Mission Control
+                </a>
+            </div>
+        </div>
+
+        <!-- Profile Completeness -->
+        <div class="mt-5 pt-4 border-top border-light border-opacity-10 position-relative z-2">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="text-secondary fw-bold x-small tracking-widest text-uppercase">Profile Integrity Score</span>
+                <span class="fw-bold text-white" style="font-family: 'Space Grotesk', sans-serif;">{{ profile.completeness }}%</span>
+            </div>
+            <div class="completeness-track">
+                <div class="completeness-fill" style="width: {{ profile.completeness }}%;"></div>
+            </div>
+            <p class="text-info x-small mt-2 mb-0">
+                <i class="fas fa-info-circle me-1"></i>
+                {% if profile.completeness < 50 %}Complete your profile to unlock premium AI insights.{% elif profile.completeness < 80 %}You're in the top 20% of candidates. Add 5 more skills to hit 100%.{% else %}Peak profile optimization achieved.{% endif %}
+            </p>
+        </div>
+    </div>
+
+    <!-- ─── Statistics Cards ─── -->
+    <div class="row g-4 mb-5" data-aos="fade-up">
+        <div class="col-6 col-md-3">
+            <div class="glass-panel p-4 text-center rounded-4 border-primary border-opacity-25 shadow-inner hover-scale h-100">
+                <div class="stat-icon" style="background: rgba(33,150,243,0.15); color: #2196F3;"><i class="fas fa-file-alt"></i></div>
+                <h2 class="fw-bold text-white mb-0" style="font-family: 'Space Grotesk', sans-serif;">{{ profile.total_applications }}</h2>
+                <p class="text-secondary x-small mb-0 tracking-widest text-uppercase fw-bold mt-1">Submissions</p>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="glass-panel p-4 text-center rounded-4 border-warning border-opacity-25 shadow-inner hover-scale h-100">
+                <div class="stat-icon" style="background: rgba(255,152,0,0.15); color: #FF9800;"><i class="fas fa-cpu"></i></div>
+                <h2 class="fw-bold text-white mb-0" style="font-family: 'Space Grotemp', sans-serif;">{{ profile.active_applications }}</h2>
+                <p class="text-secondary x-small mb-0 tracking-widest text-uppercase fw-bold mt-1">Active AI Syncs</p>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="glass-panel p-4 text-center rounded-4 border-success border-opacity-25 shadow-inner hover-scale h-100">
+                <div class="stat-icon" style="background: rgba(76,175,80,0.15); color: #4CAF50;"><i class="fas fa-check-circle"></i></div>
+                <h2 class="fw-bold text-white mb-0" style="font-family: 'Space Grotesk', sans-serif;">{{ profile.offers_received }}</h2>
+                <p class="text-secondary x-small mb-0 tracking-widest text-uppercase fw-bold mt-1">Offers Secured</p>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="glass-panel p-4 text-center rounded-4 border-secondary border-opacity-25 shadow-inner hover-scale h-100">
+                <div class="stat-icon" style="background: rgba(156,39,176,0.15); color: #9C27B0;"><i class="fas fa-bolt"></i></div>
+                <h2 class="fw-bold text-white mb-0" style="font-family: 'Space Grotesk', sans-serif;">{{ profile.success_rate }}%</h2>
+                <p class="text-secondary x-small mb-0 tracking-widest text-uppercase fw-bold mt-1">Velocity Rate</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ─── Trophy Case (Achievements) ─── -->
+    <div class="mb-5" data-aos="fade-up">
+        {% include 'jobs/widgets/trophy_case.html' %}
+    </div>
+
+    <!-- ─── Charts Row ─── -->
+    <div class="row g-4 mb-5" data-aos="fade-up">
+        <div class="col-lg-6">
+            <div class="chart-panel">
+                <h5 class="fw-bold text-white mb-4 x-small tracking-widest text-uppercase border-bottom border-light border-opacity-10 pb-3"><i class="fas fa-chart-bar text-primary me-2"></i>Top Skills Matrix</h5>
+                <canvas id="skillsChart" height="260"></canvas>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="chart-panel">
+                <h5 class="fw-bold text-white mb-4 x-small tracking-widest text-uppercase border-bottom border-light border-opacity-10 pb-3"><i class="fas fa-chart-pie text-info me-2"></i>Application Status</h5>
+                <canvas id="statusChart" height="260"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- ─── Skills & Timeline ─── -->
+    <div class="row g-4 mb-5" data-aos="fade-up">
+        <div class="col-lg-6">
+            <div class="chart-panel">
+                <h5 class="fw-bold text-white mb-4 x-small tracking-widest text-uppercase border-bottom border-light border-opacity-10 pb-3"><i class="fas fa-stars text-warning me-2"></i>Skill Proficiency</h5>
+                {% if skills_analysis %}
+                {% for skill in skills_analysis|slice:":10" %}
+                <div class="skill-item">
+                    <div class="skill-name">{{ skill.skill }}</div>
+                    <div class="skill-bar"><div class="skill-fill" style="width: {{ skill.avg_score }}%;"></div></div>
+                    <div class="skill-level badge-{{ skill.proficiency|lower }}">{{ skill.proficiency }}</div>
+                </div>
+                {% endfor %}
+                {% else %}
+                <p class="text-secondary small">Apply to jobs to build your skill profile!</p>
+                {% endif %}
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="chart-panel">
+                <h5 class="fw-bold text-white mb-4 x-small tracking-widest text-uppercase border-bottom border-light border-opacity-10 pb-3"><i class="fas fa-history text-secondary me-2"></i>Recent Applications</h5>
+                {% if timeline %}
+                {% for item in timeline %}
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div>
+                        <div class="timeline-date">{{ item.date|date:"F d, Y" }}</div>
+                        <div class="timeline-title">{{ item.job_title }}</div>
+                        <div class="timeline-company">{{ item.company }}</div>
+                        <div class="mt-1 d-flex gap-2 flex-wrap">
+                            <span class="badge bg-{{ item.status_code|status_badge }} bg-opacity-25 border border-{{ item.status_code|status_badge }} border-opacity-25 rounded-pill x-small fw-bold px-2">{{ item.status }}</span>
+                            {% if item.score > 0 %}<span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25 rounded-pill x-small fw-bold px-2">Score: {{ item.score }}%</span>{% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+                {% else %}
+                <p class="text-secondary small">No applications yet. Start applying to jobs!</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- ─── AI Insights Row ─── -->
+    <div class="row g-4 mb-5" data-aos="fade-up">
+
+        <!-- PathwayAI: Career Trajectory -->
+        <div class="col-lg-7">
+            <div class="chart-panel border-start border-primary border-4 position-relative overflow-hidden">
+                <div class="position-absolute top-0 end-0 p-4 opacity-5 pointer-events-none"><i class="fas fa-compass fa-8x text-primary"></i></div>
+                <div class="d-flex justify-content-between align-items-center mb-4 position-relative z-2">
+                    <h5 class="fw-bold mb-0" style="color: #a5b4fc;"><i class="fas fa-compass me-2"></i>PathwayAI™ Career Trajectory</h5>
+                    <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 rounded-pill x-small fw-bold px-3 py-2">Deep Learning Insight</span>
+                </div>
+
+                <div class="p-4 rounded-3 mb-4 position-relative z-2" style="background: rgba(99,102,241,0.07); border: 1px solid rgba(99,102,241,0.15);">
+                    <div class="d-flex align-items-center gap-3 mb-4">
+                        <div class="node">
+                            <i class="fas fa-user-check"></i>
+                            <span>{{ profile.current_role|default:"Current Role" }}</span>
+                        </div>
+                        <div class="path-line"></div>
+                        <div class="node featured">
+                            <i class="fas fa-arrow-up-right-dots"></i>
+                            <span>{{ career_trajectory.next_milestone_role }}</span>
+                        </div>
+                    </div>
+                    <div class="row text-center g-3">
+                        <div class="col-4">
+                            <div class="x-small text-muted mb-1 tracking-widest text-uppercase fw-bold">Time to Next</div>
+                            <div class="fw-bold text-primary" style="font-family: 'Space Grotesk', sans-serif;">{{ career_trajectory.estimated_time_to_next }}</div>
+                        </div>
+                        <div class="col-4">
+                            <div class="x-small text-muted mb-1 tracking-widest text-uppercase fw-bold">Salary Jump</div>
+                            <div class="fw-bold text-success" style="font-family: 'Space Grotesk', sans-serif;">{{ career_trajectory.predicted_salary_jump }}</div>
+                        </div>
+                        <div class="col-4">
+                            <div class="x-small text-muted mb-1 tracking-widest text-uppercase fw-bold">Confidence</div>
+                            <div class="fw-bold text-info" style="font-family: 'Space Grotesk', sans-serif;">{{ career_trajectory.confidence_score }}%</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-3 rounded-3 mb-4 border-start border-primary border-2 position-relative z-2" style="background: rgba(99,102,241,0.06);">
+                    <p class="mb-0 x-small text-light lh-base"><span class="fw-bold text-primary">AI Rationale: </span>{{ career_trajectory.rationale }}</p>
+                </div>
+
+                <div class="position-relative z-2">
+                    <div class="x-small fw-bold text-muted tracking-widest text-uppercase mb-2">Secondary Growth Paths</div>
+                    <div class="d-flex flex-wrap gap-2">
+                        {% for role in career_trajectory.secondary_roles %}
+                        <span class="badge bg-dark border border-secondary border-opacity-25 text-secondary rounded-pill px-3 py-2 x-small"><i class="fas fa-arrow-up-right me-1"></i>{{ role }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SkillForge: Learning Roadmap -->
+        <div class="col-lg-5">
+            <div class="chart-panel border-start border-4" style="border-color: #ec4899 !important;">
+                <h5 class="fw-bold mb-1" style="color: #f9a8d4;"><i class="fas fa-graduation-cap me-2"></i>SkillForge™ Roadmap</h5>
+                <p class="text-secondary x-small mb-4">Personalized learning path based on your skill gap analysis.</p>
+
+                {% if learning_roadmap %}
+                {% for item in learning_roadmap %}
+                <div class="d-flex mb-4 align-items-start gap-3">
+                    <div class="step-num">{{ forloop.counter }}</div>
+                    <div>
+                        <div class="d-flex justify-content-between align-items-center gap-2 mb-1">
+                            <h6 class="mb-0 fw-bold text-white x-small">{{ item.skill }}</h6>
+                            <span class="badge bg-pink bg-opacity-10 rounded-pill x-small px-2" style="background: rgba(236,72,153,0.12); border: 1px solid rgba(236,72,153,0.3); color: #f9a8d4;">{{ item.difficulty }}</span>
+                        </div>
+                        <a href="{{ item.url }}" target="_blank" class="text-decoration-none x-small text-primary d-block mb-1"><i class="fas fa-play-circle me-1"></i>{{ item.title }}</a>
+                        <div class="xx-small text-muted">{{ item.platform }}</div>
+                    </div>
+                </div>
+                {% endfor %}
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-check-circle fa-3x text-success opacity-75 mb-3"></i>
+                    <p class="text-secondary small">Your skills perfectly match the current market demand!</p>
+                </div>
+                {% endif %}
+
+                <button class="btn w-100 mt-2 rounded-pill fw-bold hover-scale" style="background: rgba(236,72,153,0.1); border: 1px solid rgba(236,72,153,0.3); color: #f9a8d4;">
+                    <i class="fas fa-road me-2"></i>Generate Full Career Roadmap
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ─── Recommended Jobs ─── -->
+    {% if saved_jobs %}
+    <div class="glass-panel p-4 mb-5 rounded-4 border-secondary border-opacity-25 shadow-lg" data-aos="fade-up">
+        <h5 class="fw-bold text-white mb-4 x-small tracking-widest text-uppercase border-bottom border-light border-opacity-10 pb-3"><i class="fas fa-lightbulb text-warning me-2"></i>Neural Job Matches</h5>
+        <div class="row g-4">
+            {% for recommendation in saved_jobs %}
+            <div class="col-md-6">
+                <div class="job-card-profile">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h6 class="fw-bold text-white mb-0">{{ recommendation.job.title }}</h6>
+                        <span class="match-score">{{ recommendation.match_score }}%</span>
+                    </div>
+                    <p class="text-secondary x-small mb-1"><i class="fas fa-building me-1 opacity-50"></i>{{ recommendation.job.recruiter_name }}</p>
+                    <p class="text-secondary x-small mb-3"><i class="fas fa-map-marker-alt me-1 opacity-50"></i>{{ recommendation.job.location }}</p>
+                    <div class="d-flex flex-wrap gap-2 mb-3">
+                        {% for reason in recommendation.reasons %}
+                        <span class="badge bg-dark border border-secondary border-opacity-25 text-secondary rounded-pill x-small px-2"><i class="fas fa-check me-1 text-success"></i>{{ reason }}</span>
+                        {% endfor %}
+                    </div>
+                    <a href="{% url 'job_detail' recommendation.job.id %}" class="btn btn-sm btn-outline-primary rounded-pill px-4 fw-bold hover-scale">View Details</a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+    </main>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Set global Chart.js defaults for dark mode
+Chart.defaults.color = '#94a3b8';
+Chart.defaults.borderColor = 'rgba(255,255,255,0.05)';
+
+// ─── Skills Chart ───
+fetch('{% url "candidate_skills_api" %}')
+    .then(r => r.json())
+    .then(data => {
+        const ctx = document.getElementById('skillsChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: data.labels,
+                datasets: [{
+                    label: 'Skill Frequency',
+                    data: data.frequencies,
+                    backgroundColor: 'rgba(99,102,241,0.6)',
+                    borderColor: 'rgba(99,102,241,1)',
+                    borderWidth: 1,
+                    borderRadius: 4,
+                }]
+            },
+            options: {
+                indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { callbacks: { label: ctx => 'Used in ' + ctx.parsed.x + ' applications' } }
+                },
+                scales: {
+                    x: { beginAtZero: true, ticks: { stepSize: 1 }, grid: { color: 'rgba(255,255,255,0.05)' } },
+                    y: { grid: { color: 'rgba(255,255,255,0.03)' } }
+                }
+            }
+        });
+    });
+
+// ─── Status Chart ───
+fetch('{% url "candidate_statistics_api" %}')
+    .then(r => r.json())
+    .then(data => {
+        const ctx = document.getElementById('statusChart').getContext('2d');
+        const labels = Object.keys(data.status_distribution);
+        const values = Object.values(data.status_distribution);
+        const colors = ['rgba(76,175,80,0.8)', 'rgba(33,150,243,0.8)', 'rgba(255,152,0,0.8)', 'rgba(244,67,54,0.8)', 'rgba(156,39,176,0.8)', 'rgba(0,188,212,0.8)', 'rgba(255,193,7,0.8)', 'rgba(96,125,139,0.8)'];
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels,
+                datasets: [{ data: values, backgroundColor: colors.slice(0, labels.length), borderWidth: 2, borderColor: 'rgba(15,15,20,0.8)' }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom', labels: { padding: 15, font: { size: 11 }, boxWidth: 10 } },
+                    tooltip: { callbacks: { label: ctx => { const total = ctx.dataset.data.reduce((a,b) => a+b, 0); return ctx.label + ': ' + ctx.parsed + ' (' + ((ctx.parsed/total)*100).toFixed(1) + '%)'; } } }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

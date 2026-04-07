@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+{% block title %}Recruiter Analytics - SmartRecruit{% endblock %}
+
+{% block sidebar %}
+    {% include 'jobs/_recruiter_sidebar.html' %}
+{% endblock %}
+
+{% block content %}
+<div class="candidate-wrapper d-flex flex-grow-1" style="background: #0a0b10; min-height: 100vh;">
+    <div class="main-content flex-grow-1 p-4" style="max-height: 100vh; overflow-y: auto; scrollbar-width: none;">
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h2 mb-0 text-gradient">Predictive Hiring BI</h1>
+        <ul class="nav nav-pills glass-panel p-1" id="analyticsTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active rounded-pill px-4" id="overview-tab" data-bs-toggle="pill" data-bs-target="#overview" type="button" role="tab">Overview</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link rounded-pill px-4" id="ethics-tab" data-bs-toggle="pill" data-bs-target="#ethics" type="button" role="tab"><i class="fas fa-balance-scale me-2"></i>Ethics & Bias</button>
+            </li>
+        </ul>
+    </div>
+
+    <div class="tab-content" id="analyticsTabsContent">
+        <!-- Overview Tab -->
+        <div class="tab-pane fade show active" id="overview" role="tabpanel">
+            <div class="row g-4">
+        <!-- Key Metrics -->
+        <div class="col-md-3">
+            <div class="glass-card p-4 text-center h-100">
+                <div class="h4 text-primary mb-2">{{ avg_velocity }} Days</div>
+                <div class="small text-muted text-uppercase fw-bold">Avg. Hiring Velocity</div>
+                <div class="mt-3 progress" style="height: 6px;">
+                    <div class="progress-bar bg-primary" style="width: 75%"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-9">
+            <div class="glass-card p-4 h-100">
+                <h5 class="mb-4">Hiring Funnel Efficiency</h5>
+                <div class="d-flex justify-content-between align-items-end" style="height: 200px;">
+                    {% for stage, count in funnel_data.items %}
+                    <div class="text-center" style="width: 20%;">
+                        <div class="small fw-bold mb-2">{{ count }}</div>
+                        <div class="bg-gradient-primary rounded-top mx-auto"
+                            style="width: 40px; height: {{ count|default:0 }}px; min-height: 10px; max-height: 180px; opacity: 0.8;">
+                        </div>
+                        <div class="x-small text-muted mt-2" style="font-size: 0.75rem;">{{ stage }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Source ROI & Agent Insights -->
+        <div class="col-md-6">
+            <div class="glass-card p-4 h-100">
+                <h5 class="mb-4">Source Quality (Performance ROI)</h5>
+                <div class="table-responsive">
+                    <table class="table table-borderless align-middle">
+                        <thead>
+                            <tr class="x-small text-muted text-uppercase">
+                                <th>Source</th>
+                                <th>Total</th>
+                                <th>Avg. AI Score</th>
+                                <th>Quality</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for source in sources %}
+                            <tr>
+                                <td class="fw-bold">{{ source.source_of_hire }}</td>
+                                <td>{{ source.count }}</td>
+                                <td>{{ source.avg_score|floatformat:1 }}%</td>
+                                <td>
+                                    <div class="progress" style="height: 4px; width: 60px;">
+                                        <div class="progress-bar bg-success"
+                                            style="width: {{ source.avg_score|default:0 }}%;">
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="glass-card p-4 h-100 bg-black-50">
+                <h5 class="mb-4 text-primary"><i class="fas fa-robot me-2"></i>RecruitAgent Proactive Alerts</h5>
+                <div class="list-group list-group-flush bg-transparent">
+                    {% for insight in agent_insights %}
+                    <div class="list-group-item bg-transparent border-0 px-0 mb-3">
+                        <div class="d-flex">
+                            <i class="fas fa-bolt text-warning mt-1 me-3"></i>
+                            <div class="small">{{ insight }}</div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="text-muted small">No active interventions suggested.</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        </div> <!-- End Overview Tab -->
+    </div>
+</div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        console.log('Hiring analytics initialized.');
+    });
+</script>
+
+<style>
+    .bg-gradient-primary {
+        background: linear-gradient(180deg, #00d2ff 0%, #3a7bd5 100%);
+    }
+
+    .x-small {
+        font-size: 0.7rem;
+    }
+</style>
+    </div>
+</div>
+{% endblock %}

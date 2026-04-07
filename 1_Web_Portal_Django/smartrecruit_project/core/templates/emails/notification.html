@@ -1,0 +1,17 @@
+{% extends 'emails/base_email.html' %}
+
+{% block content %}
+<div class="info-box">
+    <h2>{{ title }}</h2>
+    <p>Dear {{ candidate_name }},</p>
+    <p>{{ message }}</p>
+
+    {% if action_url %}
+    <div style="text-align: center;">
+        <a href="{{ action_url }}" class="button">{{ action_text }}</a>
+    </div>
+    {% endif %}
+
+    <p>Best regards,<br>The SmartRecruit Team</p>
+</div>
+{% endblock %}

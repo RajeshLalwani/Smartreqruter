@@ -1,0 +1,1 @@
+web: gunicorn smartrecruit_project.wsgi:application --log-file -

@@ -1,0 +1,280 @@
+<div id="architecture-system" class="h-100 w-100 position-relative">
+    <div id="react-flow-root" class="h-100 w-100"></div>
+</div>
+
+<!-- React & Dependencies -->
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+<!-- React Flow -->
+<link rel="stylesheet" href="https://unpkg.com/reactflow@11.10.3/dist/style.css" />
+<script src="https://unpkg.com/reactflow@11.10.3/dist/umd/index.js"></script>
+
+<!-- html2canvas / html-to-image -->
+<script src="https://unpkg.com/html-to-image@1.11.11/dist/html-to-image.js"></script>
+
+<style>
+/* Midnight Dark Theme for React Flow */
+.react-flow__node-customNode {
+    background: rgba(15, 23, 42, 0.85);
+    border: 1px solid rgba(0, 210, 255, 0.5);
+    border-radius: 12px;
+    padding: 10px;
+    color: white;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+    min-width: 150px;
+}
+.react-flow__node-customNode.selected {
+    box-shadow: 0 0 20px rgba(0, 210, 255, 0.6);
+    border-color: #00d2ff;
+}
+.react-flow__edge-path {
+    stroke: #00d2ff;
+    stroke-width: 2;
+    filter: drop-shadow(0 0 5px #00d2ff);
+}
+.react-flow__edge.selected .react-flow__edge-path {
+    stroke: #00ff88;
+    filter: drop-shadow(0 0 8px #00ff88);
+}
+.arch-toolbar {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    z-index: 5;
+    background: rgba(10, 11, 16, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    padding: 15px;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.palette-node {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 10px 15px;
+    border-radius: 8px;
+    color: white;
+    font-size: 0.85rem;
+    cursor: grab;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.palette-node:hover {
+    border-color: #00d2ff;
+    box-shadow: 0 0 10px rgba(0, 210, 255, 0.2);
+}
+.arch-actions {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    z-index: 5;
+    display: flex;
+    gap: 10px;
+}
+.node-input {
+    background: transparent;
+    border: none;
+    color: white;
+    width: 100%;
+    margin-top: 5px;
+    font-size: 0.8em;
+    border-bottom: 1px dashed rgba(255,255,255,0.3);
+}
+.node-input:focus {
+    outline: none;
+    border-bottom-color: #00d2ff;
+}
+</style>
+
+<script type="text/babel">
+const { useState, useCallback, useRef, useEffect } = React;
+const ReactFlowPkg = window.ReactFlow;
+const Flow = ReactFlowPkg.default || ReactFlowPkg.ReactFlow;
+const { Background, Controls, applyNodeChanges, applyEdgeChanges, addEdge, ReactFlowProvider, Handle, Position } = ReactFlowPkg;
+
+// 1. Custom Node with Editable Text
+const CustomNode = ({ data, id }) => {
+    return (
+        <div className="react-flow__node-customNode">
+            <Handle type="target" position={Position.Left} style={{ background: '#00d2ff', width: '8px', height: '8px' }} />
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <i className={`fas ${data.icon}`} style={{ color: data.color, fontSize: '1.2rem' }}></i>
+                <div style={{ fontWeight: 'bold', fontSize: '0.9rem' }}>{data.label}</div>
+            </div>
+            <input 
+                type="text" 
+                className="node-input"
+                placeholder="Name/Details..." 
+                defaultValue={data.customName || ""}
+                onChange={(e) => data.onChange(id, e.target.value)}
+            />
+            <Handle type="source" position={Position.Right} style={{ background: '#00d2ff', width: '8px', height: '8px' }} />
+        </div>
+    );
+};
+
+const nodeTypes = { custom: CustomNode };
+
+// 2. Main Canvas Application
+const ArchitectureCanvas = () => {
+    const reactFlowWrapper = useRef(null);
+    const [nodes, setNodes] = useState([]);
+    const [edges, setEdges] = useState([]);
+    const [reactFlowInstance, setReactFlowInstance] = useState(null);
+    const [isScoring, setIsScoring] = useState(false);
+    
+    let idCounter = useRef(0);
+    const getId = () => `node-${idCounter.current++}`;
+
+    const onNodesChange = useCallback((changes) => setNodes((nds) => applyNodeChanges(changes, nds)), []);
+    const onEdgesChange = useCallback((changes) => setEdges((eds) => applyEdgeChanges(changes, eds)), []);
+    const onConnect = useCallback((params) => setEdges((eds) => addEdge({ ...params, animated: true, style: { stroke: '#00d2ff', strokeWidth: 2 } }, eds)), []);
+
+    const onNodeNameChange = (id, newName) => {
+        setNodes((nds) => nds.map((node) => {
+            if (node.id === id) {
+                node.data = { ...node.data, customName: newName };
+            }
+            return node;
+        }));
+    };
+
+    const onDragOver = useCallback((event) => {
+        event.preventDefault();
+        event.dataTransfer.dropEffect = 'move';
+    }, []);
+
+    const onDrop = useCallback((event) => {
+        event.preventDefault();
+        const reactFlowBounds = reactFlowWrapper.current.getBoundingClientRect();
+        const typeStr = event.dataTransfer.getData('application/reactflow');
+        if (!typeStr) return;
+        
+        const data = JSON.parse(typeStr);
+        const position = reactFlowInstance.project({
+            x: event.clientX - reactFlowBounds.left,
+            y: event.clientY - reactFlowBounds.top,
+        });
+
+        const newNode = {
+            id: getId(),
+            type: 'custom',
+            position,
+            data: { ...data, onChange: onNodeNameChange },
+        };
+        setNodes((nds) => nds.concat(newNode));
+    }, [reactFlowInstance]);
+
+    // 3. Export to PNG using html-to-image
+    const handleExport = () => {
+        const flowEl = document.querySelector('.react-flow');
+        window.htmlToImage.toPng(flowEl, { 
+            filter: (node) => !node.classList?.contains('react-flow__controls') && !node.classList?.contains('react-flow__panel')
+        })
+        .then((dataUrl) => {
+            const link = document.createElement('a');
+            link.download = 'architecture_design.png';
+            link.href = dataUrl;
+            link.click();
+        });
+    };
+
+    // 4. Send JSON Schema to API for AI Evaluation
+    const handleSaveAndScore = async () => {
+        if (!reactFlowInstance) return;
+        setIsScoring(true);
+        const diagramData = reactFlowInstance.toObject();
+        
+        try {
+            const response = await fetch(`/api/save-system-design/{{ application.id }}/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify(diagramData)
+            });
+            const result = await response.json();
+            if (result.status === 'success') {
+                alert(`AI Evaluation Score: ${result.score}%\n\nFeedback: ${result.feedback}`);
+            } else {
+                alert(`Error: ${result.error || 'Failed to analyze diagram.'}`);
+            }
+        } catch (e) {
+            console.error("Scoring failed", e);
+            alert("Network error: Could not reach AI engine.");
+        } finally {
+            setIsScoring(false);
+        }
+    };
+
+    const paletteItems = [
+        { label: 'Load Balancer', icon: 'fa-project-diagram', color: '#10b981', type: 'lb' },
+        { label: 'Web Server', icon: 'fa-server', color: '#3b82f6', type: 'web' },
+        { label: 'Database', icon: 'fa-hdd', color: '#06b6d4', type: 'db' },
+        { label: 'Cache', icon: 'fa-bolt', color: '#f59e0b', type: 'cache' },
+        { label: 'Message Queue', icon: 'fa-envelope-open-text', color: '#8b5cf6', type: 'mq' },
+        { label: 'S3 Bucket', icon: 'fa-database', color: '#f59e0b', type: 's3' }
+    ];
+
+    const onDragStart = (event, nodeData) => {
+        event.dataTransfer.setData('application/reactflow', JSON.stringify(nodeData));
+        event.dataTransfer.effectAllowed = 'move';
+    };
+
+    return (
+        <ReactFlowProvider>
+            <div style={{ width: '100%', height: '100%', position: 'relative' }} ref={reactFlowWrapper}>
+                {/* Visual Palette */}
+                <div className="arch-toolbar">
+                    <div className="text-info fw-bold small text-uppercase mb-2"><i className="fas fa-cubes me-2"></i>Node Palette</div>
+                    {paletteItems.map((item, idx) => (
+                        <div key={idx} className="palette-node" onDragStart={(e) => onDragStart(e, item)} draggable>
+                            <i className={`fas ${item.icon}`} style={{ color: item.color }}></i>
+                            <span>{item.label}</span>
+                        </div>
+                    ))}
+                </div>
+                
+                {/* Actions */}
+                <div className="arch-actions">
+                    <button onClick={handleExport} className="btn btn-sm btn-outline-info rounded-pill px-3 shadow-sm">
+                        <i className="fas fa-download me-2"></i> Export PNG
+                    </button>
+                    <button onClick={handleSaveAndScore} disabled={isScoring} className="btn btn-sm btn-info rounded-pill px-3 shadow-none text-white fw-bold">
+                        {isScoring ? <><i className="fas fa-spinner fa-spin me-2"></i> Scoring...</> : <><i className="fas fa-brain me-2"></i> Evaluate Architecture</>}
+                    </button>
+                </div>
+
+                {/* Canvas */}
+                <Flow
+                    nodes={nodes}
+                    edges={edges}
+                    onNodesChange={onNodesChange}
+                    onEdgesChange={onEdgesChange}
+                    onConnect={onConnect}
+                    onInit={setReactFlowInstance}
+                    onDrop={onDrop}
+                    onDragOver={onDragOver}
+                    nodeTypes={nodeTypes}
+                    fitView
+                    theme="dark"
+                >
+                    <Background color="#00d2ff" gap={20} size={1} variant="dots" />
+                    <Controls style={{ bottom: 20, right: 20, zIndex: 10 }} />
+                </Flow>
+            </div>
+        </ReactFlowProvider>
+    );
+};
+
+const domNode = document.getElementById('react-flow-root');
+const root = ReactDOM.createRoot(domNode);
+root.render(<ArchitectureCanvas />);
+</script>

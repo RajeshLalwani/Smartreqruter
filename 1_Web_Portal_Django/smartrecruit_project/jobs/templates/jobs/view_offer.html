@@ -1,0 +1,147 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="glass-panel p-0 overflow-hidden">
+                <div class="p-4 border-bottom border-light border-opacity-10 d-flex justify-content-between align-items-center"
+                    style="background: rgba(40, 167, 69, 0.1);">
+                    <h3 class="mb-0 text-theme"><i class="fas fa-file-contract me-2 text-success"></i> Job Offer Letter
+                    </h3>
+                    <button onclick="window.print()"
+                        class="btn btn-sm btn-outline-success rounded-pill px-3 shadow-none">
+                        <i class="fas fa-print me-1"></i> Print / Download PDF
+                    </button>
+                </div>
+                <div class="p-5">
+
+                    <div class="text-center mb-5">
+                        <div class="d-inline-flex align-items-center justify-content-center mb-3 rounded-circle"
+                            style="width: 80px; height: 80px; background: rgba(40, 167, 69, 0.1);">
+                            <i class="fas fa-certificate fa-3x text-success"></i>
+                        </div>
+                        <h2 class="fw-bold text-theme">Congratulations, {{ offer.application.candidate.full_name }}!
+                        </h2>
+                        <p class="lead text-muted">We are pleased to offer you the position of <strong
+                                class="text-theme">{{ offer.designation }}</strong>.</p>
+                    </div>
+
+                    <div class="table-responsive mb-4">
+                        <table class="table table-borderless text-theme">
+                            <tbody>
+                                <tr>
+                                    <td class="fw-bold opacity-75">Role:</td>
+                                    <td class="fw-bold">{{ offer.designation }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold opacity-75">Offered Salary:</td>
+                                    <td class="fw-bold">{{ offer.salary_offered }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold opacity-75">Joining Date:</td>
+                                    <td class="fw-bold text-primary">{{ offer.joining_date|date:"F d, Y" }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold opacity-75">Response Deadline:</td>
+                                    <td class="text-danger fw-bold">{{ offer.response_deadline|date:"M d, Y" }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="p-4 rounded-3 mb-4"
+                        style="background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border);">
+                        <p class="mb-2"><strong class="text-theme">Conditions:</strong></p>
+                        <ul class="small text-muted mb-0">
+                            <li>This offer is subject to background verification.</li>
+                            <li>You must accept or reject this offer before the deadline.</li>
+                            <li>Standard company policies apply.</li>
+                        </ul>
+                    </div>
+
+                    {% if offer.status == 'GENERATED' or offer.status == 'SENT' %}
+                    <div class="d-flex gap-3 justify-content-center mt-5">
+                        <form method="POST" class="d-inline">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="accept">
+                            <button type="submit"
+                                class="btn btn-success btn-lg px-5 rounded-pill shadow-lg hover-scale">
+                                <i class="fas fa-check-circle me-2"></i> Accept Offer
+                            </button>
+                        </form>
+
+                        <form method="POST" class="d-inline">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="reject">
+                            <button type="submit" class="btn btn-outline-danger btn-lg px-5 rounded-pill hover-scale">
+                                <i class="fas fa-times-circle me-2"></i> Reject
+                            </button>
+                        </form>
+                    </div>
+                    {% elif offer.status == 'ACCEPTED' %}
+                    <style>
+                        .thunder-success {
+                            background: rgba(10, 11, 16, 0.95);
+                            border: 2px solid var(--neon-cyan, #00f2ff);
+                            box-shadow: 0 0 30px rgba(0, 242, 255, 0.4), inset 0 0 20px rgba(0, 242, 255, 0.2);
+                            position: relative;
+                            overflow: hidden;
+                            animation: glassRumble 0.5s ease-out;
+                        }
+
+                        .thunder-success::after {
+                            content: '';
+                            position: absolute;
+                            top: -50%;
+                            left: -50%;
+                            width: 200%;
+                            height: 200%;
+                            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.8), transparent);
+                            transform: rotate(45deg);
+                            animation: thunderStrike 1.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+                        }
+
+                        .thunder-icon {
+                            font-size: 4rem;
+                            background: linear-gradient(135deg, #00f2ff, #bc13fe);
+                            -webkit-background-clip: text;
+                            -webkit-text-fill-color: transparent;
+                            animation: pulseGlow 2s infinite;
+                        }
+
+                        @keyframes thunderStrike {
+                            0% { left: -100%; opacity: 0; }
+                            50% { opacity: 1; box-shadow: 0 0 100px #fff; }
+                            100% { left: 100%; opacity: 0; }
+                        }
+                        
+                        @keyframes pulseGlow {
+                            0% { filter: drop-shadow(0 0 10px rgba(0,242,255,0.5)); }
+                            50% { filter: drop-shadow(0 0 25px rgba(188,19,254,0.8)); }
+                            100% { filter: drop-shadow(0 0 10px rgba(0,242,255,0.5)); }
+                        }
+
+                        @keyframes glassRumble {
+                            0% { transform: scale(0.95) translateY(10px); }
+                            100% { transform: scale(1) translateY(0); }
+                        }
+                    </style>
+                    <div class="text-center mt-5 p-5 rounded-4 thunder-success">
+                        <i class="fas fa-bolt thunder-icon mb-3"></i>
+                        <h3 class="fw-bold tracking-widest text-uppercase text-white mb-2" style="letter-spacing: 2px;">Offer Accepted!</h3>
+                        <p class="text-white-50 mb-0 fs-5">Welcome to the Raj Tech Empire. HR will contact you shortly to initiate onboarding.</p>
+                    </div>
+                    {% else %}
+                    <div class="text-center mt-4 p-4 rounded-3"
+                        style="background: rgba(220, 53, 69, 0.1); border: 1px solid rgba(220, 53, 69, 0.2);">
+                        <h4 class="text-danger fw-bold"><i class="fas fa-ban me-2"></i> Offer Rejected</h4>
+                    </div>
+                    {% endif %}
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

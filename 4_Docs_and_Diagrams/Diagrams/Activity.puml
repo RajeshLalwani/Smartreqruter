@@ -1,0 +1,24 @@
+@startuml
+skinparam backgroundColor white
+skinparam activity {
+    BackgroundColor white
+    BorderColor black
+}
+start
+:Candidate logs in;
+:Search for Jobs;
+if (Job matched?) then (yes)
+  :Click Apply;
+  :Upload Resume;
+  :System Parses Resume;
+  if (Score > Threshold?) then (High)
+    :Ranked Top Tier;
+  else (Low)
+    :Ranked Standard;
+  endif
+  :Application Saved;
+else (no)
+  :Refine Filters;
+endif
+stop
+@enduml

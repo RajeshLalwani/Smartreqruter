@@ -1,0 +1,165 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Application Tracking | SmartRecruit{% endblock %}
+
+{% block content %}
+<style>
+    /* Z-INDEX SAFEGUARDS */
+    .modal { z-index: 2000 !important; }
+    .modal-backdrop { z-index: 1050 !important; }
+
+    .tracking-widest { letter-spacing: 0.15em; }
+    .x-small { font-size: 0.75rem; }
+    .xx-small { font-size: 0.65rem; }
+
+    .tracker-col {
+        width: 300px; flex-shrink: 0;
+        display: flex; flex-direction: column;
+    }
+    .tracker-col-header {
+        position: sticky; top: 0; z-index: 5;
+        padding: 1rem;
+        border-radius: 0.75rem 0.75rem 0 0;
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        background: rgba(15, 15, 20, 0.85);
+    }
+    .tracker-app-card {
+        background: rgba(15, 15, 20, 0.6);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border-radius: 0.75rem;
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        cursor: default;
+    }
+    .tracker-app-card:hover {
+        transform: translateY(-4px) scale(1.01);
+        border-color: rgba(255, 255, 255, 0.18) !important;
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+    }
+    .tracker-body {
+        padding: 0.75rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        min-height: 0;
+        overflow-y: auto;
+        flex: 1;
+    }
+    .tracker-body::-webkit-scrollbar { width: 4px; }
+    .tracker-body::-webkit-scrollbar-track { background: rgba(255,255,255,0.02); }
+    .tracker-body::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 4px; }
+    
+    .kanban-scrolltrack {
+        display: flex;
+        gap: 1rem;
+        overflow-x: auto;
+        align-items: flex-start;
+        padding-bottom: 1.5rem;
+    }
+    .kanban-scrolltrack::-webkit-scrollbar { height: 6px; }
+    .kanban-scrolltrack::-webkit-scrollbar-track { background: rgba(255,255,255,0.03); border-radius: 10px; }
+    .kanban-scrolltrack::-webkit-scrollbar-thumb { background: rgba(41,121,255,0.4); border-radius: 10px; }
+</style>
+
+<div class="container-fluid fade-up">
+
+    <!-- Hero Header -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-5 gap-3" data-aos="fade-down">
+        <div>
+            <div class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-3 py-2 rounded-pill mb-3 text-uppercase tracking-widest small fw-bold">
+                <i class="fas fa-columns me-2"></i> Status View
+            </div>
+            <h1 class="display-6 fw-bold text-white mb-1 tracking-tight">
+                All <span style="background: linear-gradient(90deg, #2979FF, #7C4DFF); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Applications</span>
+            </h1>
+            <p class="text-secondary mb-0">{{ total }} application{{ total|pluralize }} — track your progress here.</p>
+        </div>
+        <a href="{% url 'job_list' %}" class="btn btn-outline-info btn-lg rounded-pill px-5 fw-bold hover-scale shadow-sm">
+            <i class="fas fa-search me-2"></i> Find Jobs
+        </a>
+    </div>
+
+    <!-- KANBAN BOARD -->
+    <div class="kanban-scrolltrack" style="min-height: 72vh;" data-aos="fade-up">
+        {% for col in columns %}
+        <div class="tracker-col" style="min-height: 72vh;">
+
+            <!-- Column Header -->
+            <div class="tracker-col-header border border-opacity-25 mb-3 shadow-sm" style="border-color: {{ col.color }}; border-bottom: 3px solid {{ col.color }}; box-shadow: 0 0 25px {{ col.color }}22;">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="rounded-circle d-flex justify-content-center align-items-center" style="width: 36px; height: 36px; background: {{ col.color }}22; border: 1.5px solid {{ col.color }}; box-shadow: 0 0 12px {{ col.color }}44;">
+                        <i class="{{ col.icon }}" style="color: {{ col.color }}; font-size: 0.9rem;"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="fw-bold text-white x-small tracking-widest text-uppercase">{{ col.label }}</div>
+                    </div>
+                    <span class="badge rounded-pill fw-bold x-small px-3 py-2 shadow-inner" style="background: {{ col.color }}22; color: {{ col.color }}; border: 1px solid {{ col.color }}55;">
+                        {{ col.count }}
+                    </span>
+                </div>
+            </div>
+
+            <!-- Card Column Body -->
+            <div class="tracker-body">
+                {% for app in col.apps %}
+                <div class="tracker-app-card p-3" style="border-color: {{ col.color }}33;">
+                    <div class="fw-semibold text-white x-small mb-1 text-truncate" title="{{ app.job.title }}">{{ app.job.title }}</div>
+                    <div class="text-secondary xx-small text-truncate mb-2">
+                        <i class="fas fa-building me-1 opacity-50"></i>{{ app.job.recruiter.get_full_name|default:app.job.recruiter.username }}
+                    </div>
+
+                    {% if app.ai_score %}
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <div class="progress flex-grow-1 bg-dark" style="height: 4px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.05);">
+                            <div class="progress-bar" style="width: {{ app.ai_score|floatformat:0 }}%; background: {{ col.color }}; box-shadow: 0 0 8px {{ col.color }};"></div>
+                        </div>
+                        <span class="fw-bold" style="font-size: 0.68rem; color: {{ col.color }};">{{ app.ai_score|floatformat:0 }}%</span>
+                    </div>
+                    {% endif %}
+
+                    <div class="d-flex justify-content-between align-items-center pt-1 border-top border-light border-opacity-5 mt-1">
+                        <span class="text-secondary" style="font-size: 0.6rem;">
+                            <i class="fas fa-clock me-1 opacity-50"></i>{{ app.applied_at|timesince }} ago
+                        </span>
+                        <div class="d-flex gap-1 align-items-center">
+                            <a href="{% url 'application_details' app.id %}" class="btn rounded-pill px-2 py-1 btn-sm fw-bold hover-scale" style="font-size: 0.65rem; background: rgba(255,255,255,0.06); color: {{ col.color }}; border: 1px solid {{ col.color }}44;">
+                                <i class="fas fa-eye me-1"></i>View
+                            </a>
+                            
+                            {% if not app.candidate.is_verified_on_chain %}
+                            <button class="btn rounded-pill px-2 py-1 btn-sm fw-bold hover-scale verify-blockchain-btn" 
+                                    data-candidate-id="{{ app.candidate.id }}"
+                                    style="font-size: 0.65rem; background: rgba(0, 255, 136, 0.1); color: #00ff88; border: 1px solid rgba(0, 255, 136, 0.3);">
+                                <i class="fas fa-shield-alt me-1"></i>Verify
+                            </button>
+                            {% else %}
+                            <span class="badge rounded-pill bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2 py-1" style="font-size: 0.65rem;">
+                                <i class="fas fa-check-shield"></i> Validated
+                            </span>
+                            {% endif %}
+
+                            {% if app.status in 'RESUME_REJECTED,ROUND_1_FAILED,ROUND_2_FAILED,OFFER_REJECTED,REJECTED' %}
+                            <a href="{% url 'upskilling_roadmap' app.id %}" class="btn rounded-pill px-2 py-1 btn-sm fw-bold hover-scale" style="font-size: 0.65rem; background: rgba(255, 109, 0, 0.1); color: #ffcc80; border: 1px solid rgba(255,109,0,0.3);">
+                                <i class="fas fa-chart-line me-1"></i>Upskill
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="text-center py-5 rounded-3 border border-dashed border-light border-opacity-10 text-muted" style="border-style: dashed !important;">
+                    <i class="fas fa-satellite-dish d-block mb-2 opacity-25" style="font-size: 2rem; color: {{ col.color }};"></i>
+                    <span class="xx-small tracking-widest text-uppercase opacity-50">Nothing here yet</span>
+                </div>
+                {% endfor %}
+            </div>
+
+        </div>
+        {% endfor %}
+    </div>
+
+</div>
+{% endblock %}

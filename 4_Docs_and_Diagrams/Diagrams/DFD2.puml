@@ -1,0 +1,28 @@
+@startuml
+skinparam backgroundColor white
+skinparam rectangle {
+    BackgroundColor white
+    BorderColor black
+}
+skinparam node {
+    BackgroundColor white
+    BorderColor black
+}
+skinparam storage {
+    BackgroundColor white
+    BorderColor black
+}
+
+rectangle "Candidate" as C
+node "3.1\nExtract Text from PDF" as 31
+node "3.2\nAnalyze Skills (RAG)" as 32
+node "3.3\nCalculate Matrix Score" as 33
+storage "Resume File DB" as D3a
+storage "Parsed Skills DB" as D3b
+
+C --> 31 : Upload CV
+31 --> D3a : Save PDF
+31 --> 32 : Raw Text
+32 --> 33 : Semantic Vector
+33 --> D3b : Save Final Score
+@enduml

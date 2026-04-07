@@ -1,0 +1,137 @@
+{% extends 'base.html' %}{% load static %}
+{% block title %}AI Voice Screening | SmartRecruit{% endblock %}
+{% block content %}
+<div class="container-fluid px-4 mt-4">
+    <!-- Header -->
+    <div class="glass-panel p-4 mb-4"
+        style="background:linear-gradient(135deg,rgba(233,30,99,0.08),rgba(41,121,255,0.08));border:1px solid rgba(233,30,99,0.25);">
+        <div class="d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center gap-3">
+                <div class="bg-danger bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center text-danger fw-bold shadow-sm"
+                    style="width: 56px; height: 56px; font-size: 1.25rem;">
+                    <i class="fas fa-microphone-alt"></i>
+                </div>
+                <div>
+                    <h2 class="fw-bold text-theme mb-1">AI Voice Screening Round</h2>
+                    <p class="text-muted mb-0 small"><i class="fas fa-user-robot me-2"></i>Analyzing vocal confidence
+                        and technical articulation for {{ candidate.full_name }}</p>
+                </div>
+            </div>
+            <div class="text-end">
+                <span class="badge rounded-pill bg-danger px-3 py-2 fs-6 shadow-sm">
+                    ROUND 1.5: VOICE AUDIT
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-5">
+        <!-- Live Waveform & Interaction (Mock) -->
+        <div class="col-lg-7">
+            <div class="glass-panel p-5 text-center d-flex flex-column justify-content-center min-vh-50"
+                style="background: radial-gradient(circle at center, rgba(233,30,99,0.1), transparent);"
+                data-aos="zoom-in">
+
+                <h5 class="text-theme opacity-75 mb-5">"Describe your experience with scalable web architectures."</h5>
+
+                <!-- Animated Waveform -->
+                <div class="d-flex align-items-center justify-content-center gap-1 mb-5" style="height: 100px;">
+                    {% for i in "12345678901234567890" %}
+                    <div class="bg-danger rounded-pill waveform-bar"
+                        style="width:4px; height:{{ i }}0%; animation: pulse-wave {{ i }}s infinite ease-in-out;"></div>
+                    {% endfor %}
+                </div>
+
+                <div class="d-flex justify-content-center gap-4 mt-4">
+                    <div class="text-center">
+                        <div class="rounded-circle border border-danger p-3 mb-2 shadow"
+                            style="width:64px;height:64px;">
+                            <i class="fas fa-robot text-danger fa-lg mt-1"></i>
+                        </div>
+                        <div class="xx-small uppercase fw-bold text-muted">AI Bot Speaking</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Voice Analytics Panel -->
+        <div class="col-lg-5">
+            <div class="glass-panel p-4 h-100 shadow-lg" data-aos="fade-left">
+                <h5 class="fw-bold text-theme mb-4"><i class="fas fa-waveform-path text-danger me-2"></i>Vocal
+                    Intelligence Audit</h5>
+
+                <!-- Metrics Grid -->
+                <div class="row g-3 mb-5">
+                    <div class="col-6">
+                        <div class="p-3 rounded-3 border border-secondary border-opacity-10 text-center shadow-sm">
+                            <div class="text-muted x-small uppercase fw-bold mb-1">Articulation</div>
+                            <div class="h4 fw-bold text-theme mb-0">{{ metrics.clarity }}%</div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="p-3 rounded-3 border border-secondary border-opacity-10 text-center shadow-sm">
+                            <div class="text-muted x-small uppercase fw-bold mb-1">Confidence</div>
+                            <div class="h4 fw-bold text-danger mb-0">{{ metrics.confidence }}%</div>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <div
+                            class="p-3 rounded-3 border border-secondary border-opacity-10 d-flex justify-content-between align-items-center">
+                            <span class="text-muted x-small uppercase fw-bold">Speech Pace</span>
+                            <span class="badge bg-light bg-opacity-10 text-theme">{{ metrics.pace }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AI Outcome -->
+                <div class="p-4 rounded-4 border border-danger border-opacity-20 shadow-sm"
+                    style="background:rgba(233,30,99,0.03);">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="text-danger fw-bold mb-0">AI Outcome Analysis</h6>
+                        <span class="badge bg-danger rounded-pill">{{ analysis.ai_confidence_score }}% Confidence</span>
+                    </div>
+                    <div class="h5 fw-bold text-theme mb-2">{{ analysis.screening_outcome }}</div>
+                    <p class="text-muted small mb-4 fst-italic">"{{ analysis.detailed_feedback }}"</p>
+
+                    <div class="border-top border-secondary border-opacity-10 pt-3">
+                        <div class="text-muted x-small uppercase fw-bold mb-1">Recommended Next Step</div>
+                        <div class="fw-bold text-primary">{{ analysis.recommended_next_round }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .x-small {
+        font-size: 0.72rem;
+    }
+
+    .xx-small {
+        font-size: 0.6rem;
+    }
+
+    .uppercase {
+        text-transform: uppercase;
+    }
+
+    @keyframes pulse-wave {
+
+        0%,
+        100% {
+            height: 20%;
+            transform: scaleY(1);
+        }
+
+        50% {
+            height: 80%;
+            transform: scaleY(1.2);
+        }
+    }
+
+    .waveform-bar {
+        transition: height 0.3s ease;
+    }
+</style>
+{% endblock %}

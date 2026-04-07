@@ -1,0 +1,141 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-1 text-theme">Assessment Lab: Question Bank</h2>
+            <div class="d-flex align-items-center gap-3">
+                <p class="text-secondary mb-0 small">Reviewing industry-standard questions for: <strong>{{ job.title                         }}</strong></p>
+                <span
+                    class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 rounded-pill">
+                    <i class="fas fa-clock me-1"></i>
+                    {% if test_type == 'aptitude' %}{{ job.time_limit_r1 }}{% else %}{{ job.time_limit_r2 }}{% endif %}
+                    Mins
+                </span>
+            </div>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'preview_assessment' job.id test_type %}?regen=1"
+                class="btn btn-warning rounded-pill shadow-sm"
+                onclick="return confirm('This will trigger AI to generate 20 NEW questions for each domain. Continue?')">
+                <i class="fas fa-magic me-2"></i> AI Regenerate All
+            </a>
+            <a href="{% url 'preview_assessment' job.id test_type %}"
+                class="btn btn-outline-primary rounded-pill shadow-sm">
+                <i class="fas fa-random me-2"></i> Shuffle Pool
+            </a>
+            <a href="{% url 'job_detail' job.id %}" class="btn btn-primary rounded-pill shadow-sm">
+                <i class="fas fa-arrow-left me-2"></i> Back to Job
+            </a>
+        </div>
+    </div>
+
+    <div class="glass-panel p-4 rounded-4 mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h5 class="fw-bold mb-0">Question Bank Preview: {{ test_type|title }}</h5>
+            <span class="badge bg-success bg-opacity-15 text-success border border-success border-opacity-25 px-3 py-2">
+                <i class="fas fa-layer-group me-1"></i> {{ domains|length }} Domains × 3 Levels = 150+ Questions
+            </span>
+        </div>
+
+        {% if grouped_questions %}
+        <!-- nav tabs for domains -->
+        <ul class="nav nav-pills mb-4 gap-2" id="domainTabs" role="tablist">
+            {% for domain, difficulties in grouped_questions.items %}
+            <li class="nav-item" role="presentation">
+                <button
+                    class="nav-link fw-bold border border-primary border-opacity-25 rounded-pill {% if forloop.first %}active{% endif %}"
+                    id="pills-{{ domain|slugify }}-tab" data-bs-toggle="pill"
+                    data-bs-target="#pills-{{ domain|slugify }}" type="button" role="tab">{{ domain|title }}</button>
+            </li>
+            {% endfor %}
+        </ul>
+
+        <div class="tab-content border-top border-secondary border-opacity-25 pt-4" id="domainTabsContent">
+            {% for domain, difficulties in grouped_questions.items %}
+            <div class="tab-pane fade {% if forloop.first %}show active{% endif %}" id="pills-{{ domain|slugify }}"
+                role="tabpanel">
+
+                <!-- Difficulties -->
+                {% for diff, questions in difficulties.items %}
+                <div class="mb-5">
+                    <h6
+                        class="text-theme border-bottom border-light border-opacity-10 pb-2 mb-3 d-flex justify-content-between align-items-center">
+                        <div>
+                            {% with diff_val=diff %}
+                            <span
+                                class="badge {% if diff_val == 'easy' %}bg-success{% elif diff_val == 'medium' %}bg-warning{% else %}bg-danger{% endif %} text-uppercase me-2">
+                                {{ diff_val }}
+                            </span>
+                            {% endwith %}
+                            <span class="text-muted fw-normal" style="font-size: 0.9rem;">Skill Level</span>
+                        </div>
+                        {% with qcount=questions|length %}
+                        <span class="badge bg-primary bg-opacity-25 text-primary rounded-pill px-3">{{ qcount }}
+                            Questions</span>
+                        {% endwith %}
+                    </h6>
+
+                    {% if questions %}
+                    <div class="accordion" id="acc-{{ domain|slugify }}-{{ diff }}">
+                        {% for q in questions %}
+                        <div
+                            class="accordion-item bg-transparent border-secondary border-opacity-25 mb-3 rounded overflow-hidden shadow-sm">
+                            <h2 class="accordion-header"
+                                id="heading-{{ domain|slugify }}-{{ diff }}-{{ forloop.counter }}">
+                                <button
+                                    class="accordion-button bg-light bg-opacity-10 text-theme shadow-none collapsed fw-medium"
+                                    type="button" data-bs-toggle="collapse"
+                                    data-bs-target="#collapse-{{ domain|slugify }}-{{ diff }}-{{ forloop.counter }}">
+                                    <span class="text-primary me-2">Q{{ forloop.counter }}.</span> {{ q.question }}
+                                </button>
+                            </h2>
+                            <div id="collapse-{{ domain|slugify }}-{{ diff }}-{{ forloop.counter }}"
+                                class="accordion-collapse collapse"
+                                data-bs-parent="#acc-{{ domain|slugify }}-{{ diff }}">
+                                <div class="accordion-body text-secondary bg-dark bg-opacity-10">
+                                    <ul class="list-group list-group-flush mb-0">
+                                        {% for opt in q.options %}
+                                        <li
+                                            class="list-group-item bg-transparent border-secondary border-opacity-10 py-3 {% if opt == q.correct %}text-success fw-bold bg-success bg-opacity-10{% else %}text-secondary{% endif %}">
+                                            {% if opt == q.correct %}
+                                            <i class="fas fa-check-circle me-3 fa-lg"></i>
+                                            {% else %}
+                                            <i class="far fa-circle me-3 opacity-50"></i>
+                                            {% endif %}
+                                            {{ opt }}
+                                        </li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div
+                        class="text-center py-4 bg-light bg-opacity-10 rounded-3 border border-secondary border-opacity-25">
+                        <i class="fas fa-info-circle text-muted mb-2 fa-2x opacity-50"></i>
+                        <p class="text-muted small mb-0">No questions found for {{ domain }} - {{ diff }}.
+                            Generating in
+                            background...</p>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-exclamation-circle fa-3x text-warning mb-3 opacity-50"></i>
+            <p class="text-secondary text-uppercase small fw-bold tracking-wider">No Questions Found</p>
+            <p class="text-muted small">Try triggering question generation again.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

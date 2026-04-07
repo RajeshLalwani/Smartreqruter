@@ -1,0 +1,61 @@
+<div id="command-palette-overlay" class="command-palette-overlay" onclick="closeCommandPalette(event)">
+    <div class="command-palette-modal">
+        <div class="command-palette-header">
+            <i class="fas fa-search text-muted me-3"></i>
+            <input type="text" id="command-input" placeholder="Type a command or search..." autocomplete="off">
+            <span class="badge bg-secondary opacity-50 ms-3">ESC</span>
+        </div>
+        <div class="command-palette-body" id="command-results">
+
+            <!-- Quick Actions -->
+            <div class="command-group">
+                <h6 class="text-muted text-uppercase small px-3 mt-3 mb-2 fw-bold" style="font-size: 0.7rem;">Quick
+                    Actions</h6>
+                <div class="command-item" onclick="toggleGlobalTheme(); closeCommandPalette()">
+                    <i class="fas fa-adjust me-3 text-warning"></i>
+                    <span>Toggle Theme</span>
+                </div>
+                <div class="command-item" onclick="toggleGlobalEye(); closeCommandPalette()">
+                    <i class="fas fa-eye me-3 text-info"></i>
+                    <span>Toggle Eye Protection</span>
+                </div>
+                <div class="command-item" onclick="startVoiceInteraction(); closeCommandPalette()">
+                    <i class="fas fa-robot me-3 text-primary"></i>
+                    <span>Ask AI Assistant (Voice)</span>
+                </div>
+            </div>
+
+            <!-- Navigation -->
+            <div class="command-group">
+                <h6 class="text-muted text-uppercase small px-3 mt-3 mb-2 fw-bold" style="font-size: 0.7rem;">Navigation
+                </h6>
+                <a href="{% url 'dashboard' %}" class="command-item text-decoration-none">
+                    <i class="fas fa-chart-pie me-3 text-success"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="{% url 'job_list' %}" class="command-item text-decoration-none">
+                    <i class="fas fa-briefcase me-3 text-secondary"></i>
+                    <span>Jobs</span>
+                </a>
+                {% if user.is_authenticated %}
+                <form method="post" action="{% url 'logout' %}" style="margin: 0; padding: 0;" id="cmd-logout-form">
+                    {% csrf_token %}
+                    <button type="submit" class="command-item text-decoration-none w-100 text-start border-0 logout-btn-sv" style="background: transparent;">
+                        <i class="fas fa-sign-out-alt me-3 text-danger"></i>
+                        <span>Logout</span>
+                    </button>
+                </form>
+                {% else %}
+                <a href="{% url 'login' %}" class="command-item text-decoration-none">
+                    <i class="fas fa-sign-in-alt me-3 text-primary"></i>
+                    <span>Login</span>
+                </a>
+                {% endif %}
+            </div>
+
+        </div>
+        <div class="command-palette-footer p-2 text-center border-top border-secondary border-opacity-10">
+            <small class="text-muted">ProTip: Use <kbd>Ctrl</kbd> + <kbd>K</kbd> to open</small>
+        </div>
+    </div>
+</div>

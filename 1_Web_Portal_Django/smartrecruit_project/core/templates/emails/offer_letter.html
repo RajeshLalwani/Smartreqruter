@@ -1,0 +1,64 @@
+{% extends 'emails/base_email.html' %}
+
+{% block title %}Job Offer - IR Info Tech{% endblock %}
+
+{% block content %}
+<div style="text-align: center; margin-bottom: 20px;">
+    <h2 style="color: #4A90E2; font-size: 24px; margin-bottom: 5px;">🎉 Congratulations!</h2>
+    <p style="color: #666; font-size: 16px; margin-top: 0;">You have a new Job Offer.</p>
+</div>
+
+<p>Dear <strong>{{ candidate_name }}</strong>,</p>
+
+<p>We are delighted to extend an offer for the position of <strong style="color: #4A90E2;">{{ job_title }}</strong> at
+    IR Info Tech.</p>
+
+<p>After careful consideration of your application, assessments, and interviews, we believe your skills and experience
+    will be an excellent addition to our team.</p>
+
+<div class="info-box"
+    style="background: #f8fbff; border-left: 4px solid #4A90E2; padding: 15px; margin: 20px 0; border-radius: 4px;">
+    <h3 style="margin-top: 0; color: #333;">Offer Details</h3>
+    <table style="width: 100%; border-collapse: collapse;">
+        <tr>
+            <td style="padding: 5px 0; color: #555;"><strong>Position:</strong></td>
+            <td style="padding: 5px 0;">{{ job_title }}</td>
+        </tr>
+        <tr>
+            <td style="padding: 5px 0; color: #555;"><strong>Designation:</strong></td>
+            <td style="padding: 5px 0;">{{ designation }}</td>
+        </tr>
+        <tr>
+            <td style="padding: 5px 0; color: #555;"><strong>Salary:</strong></td>
+            <td style="padding: 5px 0;">{{ salary_offered }}</td>
+        </tr>
+        <tr>
+            <td style="padding: 5px 0; color: #555;"><strong>Joining Date:</strong></td>
+            <td style="padding: 5px 0;">{{ joining_date }}</td>
+        </tr>
+        <tr>
+            <td style="padding: 5px 0; color: #555;"><strong>Response Deadline:</strong></td>
+            <td style="padding: 5px 0; color: #e74c3c;"><strong>{{ response_deadline }}</strong></td>
+        </tr>
+    </table>
+</div>
+
+<p><strong>Next Steps:</strong></p>
+<ol style="color: #555; line-height: 1.6;">
+    <li>Review the full offer details on your candidate dashboard.</li>
+    <li>Accept or decline the offer before the stated deadline.</li>
+    <li>If you have any questions, please reply directly to this email or contact HR.</li>
+</ol>
+
+<div style="text-align: center; margin: 30px 0;">
+    <a href="{{ offer_url }}"
+        style="background-color: #4A90E2; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">View
+        Offer Letter</a>
+</div>
+
+<p>We are excited about the possibility of you joining our team and look forward to your positive response!</p>
+
+<p>Best regards,<br>
+    <strong>The IR Info Tech Team</strong>
+</p>
+{% endblock %}

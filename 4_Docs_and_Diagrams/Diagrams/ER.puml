@@ -1,0 +1,32 @@
+@startuml
+skinparam backgroundColor white
+skinparam class {
+    BackgroundColor white
+    BorderColor black
+}
+entity "User" as U {
+  * id : UUID
+  --
+  name : String
+  email : String
+  role : Enum(Candidate, Recruiter, Admin)
+}
+entity "Job" as J {
+  * id : UUID
+  --
+  title : String
+  description : Text
+  recruiter_id : UUID
+}
+entity "Application" as A {
+  * id : UUID
+  --
+  candidate_id : UUID
+  job_id : UUID
+  ai_score : Float
+}
+
+U ||--o{ J : posts
+U ||--o{ A : submits
+J ||--o{ A : receives
+@enduml

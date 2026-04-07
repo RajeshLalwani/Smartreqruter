@@ -1,0 +1,55 @@
+{% extends 'emails/base_email.html' %}
+
+{% block title %}Interview Invitation - SmartRecruit{% endblock %}
+
+{% block content %}
+<h2>🎯 Interview Invitation</h2>
+
+<p>Dear {{ candidate_name }},</p>
+
+<p>Congratulations on your excellent performance so far! You have been selected for the <strong>{{ interview_type }}</strong> round for the <strong>{{ job_title }}</strong> position.</p>
+
+<div class="info-box">
+    <p><strong>Interview Details:</strong></p>
+    <p>Type: {{ interview_type }}</p>
+    <p>Format: {{ interview_format }}</p>
+    {% if scheduled_time %}
+    <p>Scheduled: {{ scheduled_time }}</p>
+    {% endif %}
+</div>
+
+{% if interview_type == "AI Interview" %}
+<p><strong>About the AI Interview:</strong></p>
+<ul>
+    <li>You will interact with our AI interviewer</li>
+    <li>Questions will be technical and domain-specific</li>
+    <li>Your responses will be analyzed for technical accuracy and communication skills</li>
+    <li>Duration: Approximately 20-30 minutes</li>
+</ul>
+{% elif interview_type == "HR Interview" %}
+<p><strong>About the HR Interview:</strong></p>
+<ul>
+    <li>Focus on cultural fit and behavioral assessment</li>
+    <li>Be prepared to discuss your experience and career goals</li>
+    <li>Duration: Approximately 15-20 minutes</li>
+</ul>
+{% endif %}
+
+<p><strong>Preparation Tips:</strong></p>
+<ul>
+    <li>Ensure you have a stable internet connection</li>
+    <li>Find a quiet environment</li>
+    <li>Be ready to articulate your thoughts clearly</li>
+    <li>Review the job description and your resume</li>
+</ul>
+
+<center>
+    <a href="{{ interview_url }}" class="button">Start Interview</a>
+</center>
+
+<p>We look forward to your interview!</p>
+
+<p>Best regards,<br>
+    <strong>The SmartRecruit Team</strong>
+</p>
+{% endblock %}

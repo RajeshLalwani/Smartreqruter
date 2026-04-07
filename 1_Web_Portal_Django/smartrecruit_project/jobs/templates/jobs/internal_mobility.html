@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Internal Mobility Engine | SmartRecruit Enterprise{% endblock %}
+{% block content %}
+<style>
+    /* Z-INDEX SAFEGUARDS */
+    .modal { z-index: 2000 !important; }
+    .modal-backdrop { z-index: 1050 !important; }
+    .tracking-widest { letter-spacing: 0.15em; }
+    .x-small { font-size: 0.75rem; }
+    .xx-small { font-size: 0.65rem; }
+
+    /* Mobility card hover lift */
+    .mobility-card { transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease; }
+    .mobility-card:hover { transform: translateY(-6px); border-color: rgba(0,200,81,0.35) !important; box-shadow: 0 16px 40px rgba(0,0,0,0.25) !important; }
+
+    /* Skill gap badge */
+    .gap-badge { background: rgba(255,82,82,0.1); border: 1px solid rgba(255,82,82,0.25); color: #ff8a80; }
+
+    /* Intel mini-card */
+    .intel-cell { background: rgba(255,255,255,0.025); border: 1px solid rgba(255,255,255,0.07); border-radius: 0.65rem; padding: 0.6rem; text-align: center; }
+
+    .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+</style>
+
+<div class="container-fluid px-4 mt-4 fade-up">
+
+    <!-- ─── Hero ─── -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-5 gap-3" data-aos="fade-down">
+        <div>
+            <div class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-3 py-2 rounded-pill mb-3 tracking-widest text-uppercase x-small fw-bold">
+                <i class="fas fa-route me-2"></i>AI Career Pathing
+            </div>
+            <h1 class="display-6 fw-bold text-white mb-2" style="font-family: 'Space Grotesk', sans-serif;">Internal Mobility <span style="background: linear-gradient(90deg, #00C851, #2979FF); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">Engine</span></h1>
+            <p class="lead text-secondary mb-0">AI-driven talent matching for promotions and lateral career moves.</p>
+        </div>
+        <span class="badge rounded-pill bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-4 py-3 fw-bold shadow-sm x-small tracking-widest text-uppercase">
+            <i class="fas fa-star me-2"></i>{{ top_match_count }} High-Potential Moves Found
+        </span>
+    </div>
+
+    <!-- ─── Mobility Grid ─── -->
+    <div class="row g-4 mb-5">
+        {% for match in matches %}
+        <div class="col-xl-4 col-md-6" data-aos="zoom-in" data-aos-delay="{{ forloop.counter0 }}00">
+            <div class="glass-panel p-4 h-100 position-relative overflow-hidden mobility-card rounded-4 border-secondary border-opacity-25">
+
+                <!-- Match Score badge -->
+                <div class="position-absolute top-0 end-0 p-3">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center fw-bold xx-small" style="width: 45px; height: 45px; background: {{ match.color }}22; color: {{ match.color }}; border: 1px solid {{ match.color }}44; font-family: 'Space Grotesk', sans-serif;">{{ match.score }}%</div>
+                </div>
+
+                <!-- Employee Header -->
+                <div class="d-flex align-items-center gap-3 mb-4">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center fw-bold text-white flex-shrink-0" style="width: 48px; height: 48px; background: rgba(41,121,255,0.15); border: 1px solid rgba(41,121,255,0.25); font-family: 'Space Grotesk', sans-serif;">{{ match.employee.full_name|first }}</div>
+                    <div>
+                        <h6 class="fw-bold text-white mb-0 x-small">{{ match.employee.full_name }}</h6>
+                        <span class="text-secondary xx-small tracking-widest text-uppercase fw-bold">Current Employee</span>
+                    </div>
+                </div>
+
+                <!-- Target Role -->
+                <div class="p-3 rounded-3 mb-4" style="background: rgba(255,255,255,0.025); border: 1px solid rgba(255,255,255,0.07);">
+                    <div class="text-secondary xx-small tracking-widest text-uppercase fw-bold mb-1">Potential Role</div>
+                    <div class="fw-bold text-primary x-small">{{ match.job.title }}</div>
+                    <div class="text-secondary xx-small mt-1"><i class="fas fa-map-marker-alt me-1"></i>{{ match.job.location }}</div>
+                </div>
+
+                <!-- Intel Mini Cards -->
+                <div class="row g-2 mb-3">
+                    <div class="col-6">
+                        <div class="intel-cell">
+                            <div class="text-secondary xx-small tracking-widest text-uppercase mb-1">Move Type</div>
+                            <div class="fw-bold text-white xx-small">{{ match.intel.mobility_type }}</div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="intel-cell">
+                            <div class="text-secondary xx-small tracking-widest text-uppercase mb-1">Readiness</div>
+                            <div class="fw-bold text-white xx-small">{{ match.intel.readiness }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Business Impact -->
+                <div class="mb-3">
+                    <div class="text-secondary xx-small tracking-widest text-uppercase fw-bold mb-1">Business Impact</div>
+                    <p class="x-small text-secondary fst-italic mb-0 line-clamp-2">{{ match.intel.business_impact }}</p>
+                </div>
+
+                <!-- Growth Areas -->
+                <div class="mb-4">
+                    <div class="text-secondary xx-small tracking-widest text-uppercase fw-bold mb-2">Growth Areas</div>
+                    <div class="d-flex flex-wrap gap-1">
+                        {% for gap in match.intel.skill_delta %}<span class="badge xx-small gap-badge">{{ gap }}</span>{% endfor %}
+                    </div>
+                </div>
+
+                <button class="btn btn-sm btn-success w-100 rounded-pill fw-bold shadow-sm hover-scale"><i class="fas fa-paper-plane me-2"></i>Propose Internal Move</button>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12 text-center py-5">
+            <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3 bg-dark border border-success border-opacity-25" style="width: 64px; height: 64px;"><i class="fas fa-route text-success opacity-25 fa-lg"></i></div>
+            <h5 class="text-secondary fw-bold">No internal candidates found for open roles.</h5>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

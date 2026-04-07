@@ -1,0 +1,129 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}AI Interview Co-Pilot | Live | SmartRecruit{% endblock %}
+
+{% block content %}
+<style>
+    /* Z-INDEX SAFEGUARDS */
+    .modal { z-index: 2000 !important; }
+    .modal-backdrop { z-index: 1050 !important; }
+    .tracking-widest { letter-spacing: 0.15em; }
+    .x-small { font-size: 0.75rem; }
+    .xx-small { font-size: 0.65rem; }
+    .italic { font-style: italic; }
+
+    /* Live blink */
+    @keyframes blinker { 50% { opacity: 0.3; } }
+    .blink { animation: blinker 1.5s linear infinite; }
+
+    /* Dot typing animation */
+    .dot-typing { position: relative; width: 6px; height: 6px; border-radius: 5px; background-color: #00bcd4; animation: dotTyping 1.5s infinite linear; flex-shrink: 0; }
+    @keyframes dotTyping {
+        0% { box-shadow: 10px 0 0 -2px #00bcd4; }
+        50% { box-shadow: 10px 0 0 2px #00bcd4; }
+        100% { box-shadow: 10px 0 0 -2px #00bcd4; }
+    }
+
+    /* Transcript line */
+    .transcript-line { border-radius: 0.75rem; transition: background 0.15s ease; }
+    .transcript-line.is-candidate { background: rgba(41,121,255,0.08); border-left: 3px solid #2979FF; }
+    .transcript-line.is-interviewer { background: rgba(255,255,255,0.025); }
+
+    /* Follow-up question card */
+    .followup-card { background: rgba(41,121,255,0.06); border: 1px solid rgba(41,121,255,0.18); border-radius: 0.75rem; padding: 0.75rem 1rem; transition: all 0.2s ease; cursor: pointer; }
+    .followup-card:hover { background: rgba(0,184,212,0.12); transform: translateX(5px); }
+</style>
+
+<div class="container-fluid px-4 mt-4 fade-up">
+
+    <!-- ─── Hero ─── -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-5 gap-3" data-aos="fade-down">
+        <div class="d-flex align-items-center gap-3">
+            <div class="rounded-circle d-flex align-items-center justify-content-center text-info fw-bold flex-shrink-0" style="width: 56px; height: 56px; background: rgba(0,184,212,0.12); border: 1px solid rgba(0,184,212,0.25); font-size: 1.25rem;">
+                <i class="fas fa-headset"></i>
+            </div>
+            <div>
+                <div class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25 px-3 py-1 rounded-pill tracking-widest text-uppercase x-small fw-bold mb-2">Live Stream Analysis</div>
+                <h1 class="display-6 fw-bold text-white mb-0" style="font-family: 'Space Grotesk', sans-serif;">AI Interview <span style="background: linear-gradient(90deg, #00B8D4, #2979FF); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">Co-Pilot</span></h1>
+                <p class="text-secondary mb-0 small mt-1"><i class="fas fa-satellite-dish me-2 text-success"></i>Analyzing: <strong class="text-white">{{ candidate.full_name }}</strong></p>
+            </div>
+        </div>
+        <span class="badge rounded-pill bg-danger blink px-4 py-3 shadow-sm x-small fw-bold tracking-widest text-uppercase">
+            <i class="fas fa-circle me-1" style="font-size: 0.5rem;"></i>Live AI Stream
+        </span>
+    </div>
+
+    <div class="row g-4 mb-5">
+        <!-- ─── Live Transcript ─── -->
+        <div class="col-lg-7" data-aos="fade-right">
+            <div class="glass-panel p-4 h-100 rounded-4 border-secondary border-opacity-25 position-relative overflow-hidden" style="min-height: 500px;">
+                <h6 class="fw-bold text-white mb-4 x-small tracking-widest text-uppercase border-bottom border-light border-opacity-10 pb-3"><i class="fas fa-closed-captioning text-info me-2"></i>Real-time Transcript Feed</h6>
+                <div class="transcript-feed d-flex flex-column gap-3">
+                    {% for line in transcript %}
+                    <div class="transcript-line p-3 {% if 'Interviewer' in line %}is-interviewer{% else %}is-candidate{% endif %}" data-aos="fade-up">
+                        <p class="x-small text-white mb-0">{{ line }}</p>
+                    </div>
+                    {% endfor %}
+                    <!-- Listening pulse -->
+                    <div class="p-3 d-flex align-items-center gap-3" style="border: 1px solid rgba(255,255,255,0.06); border-radius: 0.75rem;">
+                        <div class="dot-typing"></div>
+                        <span class="text-secondary x-small italic">AI is listening and analyzing voice patterns...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ─── Live Cognitive Intel ─── -->
+        <div class="col-lg-5" data-aos="fade-left">
+            <div class="glass-panel p-4 shadow-lg rounded-4 border-info border-opacity-20">
+                <h5 class="fw-bold text-white mb-4 x-small tracking-widest text-uppercase border-bottom border-light border-opacity-10 pb-3"><i class="fas fa-brain text-info me-2"></i>Live Cognitive Intel</h5>
+
+                <!-- Sentiment Gauge -->
+                <div class="d-flex align-items-center justify-content-between p-3 rounded-4 mb-4" style="background: rgba(255,255,255,0.025); border: 1px solid rgba(255,255,255,0.06);">
+                    <div>
+                        <div class="text-secondary xx-small tracking-widest text-uppercase fw-bold mb-1">Sentiment Score</div>
+                        <div class="fw-bold text-white mb-0" style="font-size: 1.75rem; font-family: 'Space Grotesk', sans-serif;">{{ intel.sentiment_score }}%</div>
+                    </div>
+                    <div class="flex-grow-1 mx-4">
+                        <div class="progress" style="height: 6px; background: rgba(255,255,255,0.05); border-radius: 4px;">
+                            <div class="progress-bar bg-info" style="width: {{ intel.sentiment_score }}%; border-radius: 4px;"></div>
+                        </div>
+                    </div>
+                    <i class="fas fa-smile text-info fa-lg" style="filter: drop-shadow(0 0 6px rgba(0,184,212,0.4));"></i>
+                </div>
+
+                <!-- Live Feedback -->
+                <div class="mb-4">
+                    <h6 class="text-info x-small tracking-widest text-uppercase fw-bold mb-2">Live Feedback</h6>
+                    <p class="text-secondary x-small fst-italic">"{{ intel.realtime_feedback }}"</p>
+                </div>
+
+                <!-- Suggested Follow-ups -->
+                <div class="mb-4">
+                    <h6 class="text-white x-small tracking-widest text-uppercase fw-bold mb-3">Suggested Real-time Follow-ups</h6>
+                    <div class="d-flex flex-column gap-2">
+                        {% for question in intel.suggested_followups %}
+                        <div class="followup-card">
+                            <i class="fas fa-quote-left text-primary opacity-25 me-2 x-small"></i>
+                            <span class="x-small fw-bold text-white">{{ question }}</span>
+                            <i class="fas fa-plus-circle text-primary opacity-50 float-end mt-1 x-small"></i>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Red Flag -->
+                {% if intel.red_flag_check != "None" %}
+                <div class="p-3 rounded-3 x-small text-danger" style="background: rgba(244,67,54,0.07); border: 1px solid rgba(244,67,54,0.2);">
+                    <i class="fas fa-shield-exclamation me-2"></i>AI Warning: {{ intel.red_flag_check }}
+                </div>
+                {% else %}
+                <div class="p-3 rounded-3 x-small text-success" style="background: rgba(0,200,83,0.07); border: 1px solid rgba(0,200,83,0.2);">
+                    <i class="fas fa-shield-check me-2"></i>No linguistic red flags detected.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

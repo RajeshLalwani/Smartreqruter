@@ -1,0 +1,529 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-11">
+            <div class="glass-panel p-4">
+                <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom border-primary border-opacity-15">
+                    <div>
+                        <div class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 px-3 py-1 rounded-pill tracking-widest text-uppercase fw-bold mb-2" style="font-size: 0.7rem;">● Live Analysis Active</div>
+                        <h4 class="mb-0 fw-bold text-white" style="font-family: 'Space Grotesk', sans-serif;"><i class="fas fa-users-cog me-2 text-primary"></i>Final <span style="background: linear-gradient(90deg, #e91e63, #6366f1); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">HR Interview</span></h4>
+                    </div>
+                    <span class="badge bg-danger animate-pulse rounded-pill px-3 py-2" style="font-size: 0.7rem;">● LIVE</span>
+                </div>
+
+                <div class="row">
+                    <!-- Left: To-User Video Feeds (Real) -->
+                    <div class="col-md-8">
+                        <div
+                            class="video-feed-container ratio ratio-16x9 position-relative overflow-hidden rounded-4 border border-primary border-opacity-10 shadow-2xl mb-3">
+                            <video id="webcam" autoplay playsinline muted
+                                class="video-feed w-100 h-100 object-fit-cover"
+                                style="filter: sepia(0.1) contrast(1.05);"></video>
+                            <canvas id="detection-canvas" class="position-absolute top-0 start-0 w-100 h-100" style="pointer-events: none; z-index: 10;"></canvas>
+
+                            <!-- 🔱 SENTINEL AI PROCTORING HUD (HR MODE) 🔱 -->
+                            <div id="ai-sentinel" class="sentinel-bubble">
+                                <div class="sentinel-header">
+                                    <span class="pulse-dot"></span> SENTINEL LIVE MONITOR
+                                </div>
+                                
+                                <div class="stats-grid">
+                                    <div class="stat-item">
+                                        <span class="label">Vibe Match</span>
+                                        <span id="stat-emotion" class="value text-info">SYNCING...</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <span class="label">Empathy %</span>
+                                        <div class="sentinel-progress"><div id="bar-confidence" class="sentinel-bar" style="width: 0%"></div></div>
+                                    </div>
+                                    <div class="stat-item">
+                                        <span class="label">Attention</span>
+                                        <span id="stat-attention" class="value text-success">HIGH</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <span class="label">Stress</span>
+                                        <span id="stat-stress" class="value text-warning">LOW</span>
+                                    </div>
+                                </div>
+
+                                <div id="sentinel-alert" class="sentinel-alert">
+                                    <i class="fas fa-exclamation-triangle me-2"></i><span id="alert-msg">MOBILE DETECTED</span>
+                                </div>
+                            </div>
+
+                            <!-- AI VISION TOGGLE -->
+                            <div class="position-absolute bottom-0 start-50 translate-middle-x mb-4" style="z-index: 100;">
+                                <button id="vision-toggle-btn" class="vision-toggle" onclick="toggleVision()">
+                                    <i id="vision-icon" class="fas fa-video"></i>
+                                    <span id="vision-text">AI VISION: ON</span>
+                                </button>
+                            </div>
+
+                            <!-- Soft Pulse Halo -->
+                            <div class="position-absolute top-50 start-50 translate-middle w-75 h-75 rounded-circle"
+                                style="background: radial-gradient(circle, rgba(233, 30, 99, 0.05) 0%, transparent 70%); border: 1px solid rgba(233, 30, 99, 0.05); pointer-events: none;">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right: AI Avatar (Ishhh) & Instructions -->
+                    <div class="col-md-4">
+                        <div
+                            class="glass-panel p-3 h-100 d-flex flex-column justify-content-center align-items-center text-center">
+                            <div class="ai-avatar-container mb-3 position-relative d-inline-block">
+                                <!-- Final AI Avatar -->
+                                <img src="{% static 'images/ir_logo.png' %}" alt="Sentinel (AI HR)"
+                                    class="rounded-circle mb-3" id="ai-avatar-img"
+                                    style="width: 150px; height: 150px; border: 4px solid #e91e63; object-fit: cover; box-shadow: 0 0 30px rgba(233, 30, 99, 0.4); position: relative; z-index: 2; transition: all 0.3s ease;">
+                                <!-- Tech overlay -->
+                                <div class="position-absolute top-0 start-0 w-100 h-100 rounded-circle animate-spin"
+                                    id="ai-tech-ring"
+                                    style="background: radial-gradient(circle, rgba(233, 30, 99, 0.1) 0%, rgba(0,0,0,0) 70%); border: 2px dashed rgba(233, 30, 99, 0.5); pointer-events: none; transition: all 0.2s ease;">
+                                </div>
+                                <!-- Sparkles Overlay (Static for now, or minimal float) -->
+                                <div class="position-absolute animate-float"
+                                    style="top: -10px; right: 0px; font-size: 24px; filter: drop-shadow(0 0 5px #ffeb3b); z-index: 3;">
+                                    ✨</div>
+                            </div>
+
+                            <h5 class="fw-bold text-white mb-1" style="font-family: 'Space Grotesk', sans-serif;">Sentinel <span class="text-secondary small">(AI HR)</span></h5>
+                            <span class="badge bg-light text-dark mb-3">✨ Empathy Module Active</span>
+
+                            <div id="ai-status" class="alert alert-secondary w-100 p-2 small mb-0">
+                                <i class="fas fa-headphones-alt me-1"></i> listening...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Conversation / Interaction Area -->
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <div class="glass-panel bg-opacity-10 p-4 border border-primary">
+                            <h5 class="text-primary fw-bold mb-3 d-flex align-items-center justify-content-between">
+                                HR Question:
+                                <button type="button" class="btn btn-sm btn-outline-info rounded-pill"
+                                    onclick="document.getElementById('ai-voice-player').play()">
+                                    <i class="fas fa-volume-up"></i> Play Audio
+                                </button>
+                            </h5>
+                            <p class="lead text-white fw-bold fst-italic mb-4" id="question-text">"{{ question.text }}"</p>
+
+                            <form method="POST" id="interview-form">
+                                {% csrf_token %}
+                                <input type="hidden" name="question_topic" value="behavioral">
+
+                                <div class="mb-3">
+                                    <label for="answer"
+                                        class="form-label text-theme d-flex justify-content-between align-items-center">
+                                        <span>Your Response</span>
+                                        <button type="button" id="mic-btn"
+                                            class="btn btn-sm btn-outline-danger rounded-pill"
+                                            onclick="toggleRecording()">
+                                            <i class="fas fa-microphone"></i> <span id="mic-text">Speak Answer</span>
+                                        </button>
+                                    </label>
+                                    <textarea class="form-control glass-input" id="answer" name="answer" rows="4"
+                                        placeholder="Type your answer based on your experience or use the microphone..."
+                                        required></textarea>
+                                </div>
+
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div class="text-muted small">
+                                        <i class="fas fa-stopwatch me-1"></i> Time Remaining: 02:00
+                                    </div>
+                                    <button type="submit" class="btn btn-primary px-5 btn-lg">
+                                        <i class="fas fa-check-circle me-2"></i> Complete Interview
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Load TensorFlow.js and COCO-SSD -->
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"></script>
+<!-- Load Face-API.js -->
+<script src="https://cdn.jsdelivr.net/npm/face-api.js"></script>
+
+<!-- Load Proctoring Script -->
+<script src="{% static 'js/proctoring.js' %}"></script>
+
+<!-- Server-Side Neural TTS Playback -->
+<audio id="ai-voice-player" src="{{ audio_url }}" autoplay></audio>
+
+<script src="{% static 'js/voice_agent.js' %}"></script>
+<script>
+    const sentinelBubble = document.getElementById('ai-sentinel');
+    const statEmotion = document.getElementById('stat-emotion');
+    const barConfidence = document.getElementById('bar-confidence');
+    const statAttention = document.getElementById('stat-attention');
+    const statStress = document.getElementById('stat-stress');
+    const sentinelAlert = document.getElementById('sentinel-alert');
+    const alertMsg = document.getElementById('alert-msg');
+    
+    let isVisionOn = true;
+    let disqualificationTimer = null;
+    let cheatCounter = 0;
+
+    function toggleVision() {
+        isVisionOn = !isVisionOn;
+        const btn = document.getElementById('vision-toggle-btn');
+        const icon = document.getElementById('vision-icon');
+        const text = document.getElementById('vision-text');
+        
+        if (isVisionOn) {
+            btn.classList.remove('off');
+            icon.className = 'fas fa-video';
+            text.innerText = 'AI VISION: ON';
+            canvas.style.display = 'block';
+        } else {
+            btn.classList.add('off');
+            icon.className = 'fas fa-video-slash';
+            text.innerText = 'AI VISION: OFF';
+            canvas.style.display = 'none';
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+    }
+
+    video.addEventListener('play', () => {
+        const displaySize = { width: video.clientWidth, height: video.clientHeight };
+        faceapi.matchDimensions(canvas, displaySize);
+
+        const emotionsMap = {
+            neutral: { label: 'CALM', icon: 'fa-peace', color: 'text-primary' },
+            happy: { label: 'POSITIVE', icon: 'fa-smile', color: 'text-success' },
+            surprised: { label: 'ENGAGED', icon: 'fa-bolt', color: 'text-warning' },
+            sad: { label: 'THOUGHTFUL', icon: 'fa-brain', color: 'text-info' },
+            angry: { label: 'STRESSED', icon: 'fa-fire', color: 'text-danger' },
+            fearful: { label: 'ANXIOUS', icon: 'fa-heartbeat', color: 'text-danger' },
+            disgusted: { label: 'DOUBTFUL', icon: 'fa-eye', color: 'text-warning' }
+        };
+
+        setInterval(async () => {
+            if (!isVisionOn) return;
+
+            const detections = await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions()).withFaceExpressions();
+            const resizedDetections = faceapi.resizeResults(detections, displaySize);
+            
+            // Mobile Phone Detection
+            let phoneDetected = false;
+            if (window.cocoSsdModel) {
+                const predictions = await window.cocoSsdModel.detect(video);
+                phoneDetected = predictions.some(p => p.class === 'cell phone' && p.score > 0.5);
+            }
+
+            if (phoneDetected) {
+                triggerSentinelAlert("MOBILE DETECTED", "CRITICAL");
+                return;
+            } else {
+                clearSentinelAlert();
+            }
+
+            if (!detections || detections.length === 0) {
+                statAttention.innerText = "ABSENT";
+                statAttention.className = "value text-danger";
+                return;
+            }
+
+            if (detections.length > 1) {
+                triggerSentinelAlert("MULTIPLE FACES", "HIGH");
+                return;
+            }
+
+            if (detections && detections.length === 1) {
+                const expressions = detections[0].expressions;
+                const bestEmotion = Object.keys(expressions).reduce((a, b) => expressions[a] > expressions[b] ? a : b);
+                const confidence = Math.round(expressions[bestEmotion] * 100);
+                
+                const meta = emotionsMap[bestEmotion] || emotionsMap['neutral'];
+
+                statEmotion.innerText = meta.label;
+                statEmotion.className = `value ${meta.color}`;
+                barConfidence.style.width = `${confidence}%`;
+                barConfidence.className = `sentinel-bar ${confidence > 70 ? 'bg-success' : 'bg-warning'}`;
+                
+                statAttention.innerText = confidence > 60 ? "HIGH" : "MED";
+                statAttention.className = `value ${confidence > 60 ? 'text-success' : 'text-warning'}`;
+                
+                // Stress proxy from neutral/angry/fearful
+                const stressVal = (expressions.angry + expressions.fearful) * 100;
+                statStress.innerText = stressVal > 40 ? "HIGH" : (stressVal > 15 ? "MED" : "LOW");
+                statStress.className = `value ${stressVal > 40 ? 'text-danger' : (stressVal > 15 ? 'text-warning' : 'text-success')}`;
+            }
+        }, 300);
+    });
+
+    function triggerSentinelAlert(msg, level='HIGH') {
+        sentinelAlert.style.display = 'block';
+        alertMsg.innerText = msg;
+        sentinelBubble.style.borderColor = '#ff3131';
+        
+        if (level === 'CRITICAL') {
+            cheatCounter++;
+            if (cheatCounter > 15) { // ~5 seconds at 300ms interval
+                aiStatusAlert.innerHTML = `<i class="fas fa-skull-crossbones me-1"></i> TERMINATING DUE TO CHEATING...`;
+                setTimeout(() => { document.getElementById('interview-form').submit(); }, 3000);
+            }
+        }
+    }
+
+    function clearSentinelAlert() {
+        sentinelAlert.style.display = 'none';
+        sentinelBubble.style.borderColor = 'rgba(233, 30, 99, 0.4)';
+        cheatCounter = 0;
+    }
+
+    // Start initialization
+    initNeuralSentiment();
+
+    document.addEventListener('DOMContentLoaded', () => {
+        // Initialize Proctoring for HR Interview
+        new ProctoringSystem({ maxWarnings: 5 });
+
+        const audio = document.getElementById('ai-voice-player');
+        const techRing = document.getElementById('ai-tech-ring');
+        const avatarImg = document.getElementById('ai-avatar-img');
+
+        // Advanced Visualizer Logic
+        if (audio) {
+            audio.addEventListener('play', () => {
+                techRing.style.border = '4px dashed rgba(233, 30, 99, 1)';
+                techRing.style.background = 'radial-gradient(circle, rgba(233, 30, 99, 0.4) 0%, rgba(0,0,0,0) 70%)';
+                techRing.style.animationDuration = '2s';
+                avatarImg.style.boxShadow = '0 0 50px rgba(233, 30, 99, 0.8)';
+                avatarImg.style.transform = 'scale(1.05)';
+            });
+
+            audio.addEventListener('pause', () => {
+                techRing.style.border = '2px dashed rgba(233, 30, 99, 0.5)';
+                techRing.style.background = 'radial-gradient(circle, rgba(233, 30, 99, 0.1) 0%, rgba(0,0,0,0) 70%)';
+                techRing.style.animationDuration = '10s';
+                avatarImg.style.boxShadow = '0 0 30px rgba(233, 30, 99, 0.4)';
+                avatarImg.style.transform = 'scale(1)';
+            });
+
+            audio.addEventListener('ended', () => {
+                techRing.style.border = '2px dashed rgba(233, 30, 99, 0.5)';
+                techRing.style.background = 'radial-gradient(circle, rgba(233, 30, 99, 0.1) 0%, rgba(0,0,0,0) 70%)';
+                techRing.style.animationDuration = '10s';
+                avatarImg.style.boxShadow = '0 0 30px rgba(233, 30, 99, 0.4)';
+                avatarImg.style.transform = 'scale(1)';
+            });
+
+            audio.play().catch(error => {
+                console.log("Autoplay blocked by browser. User interaction needed.");
+            });
+        }
+    });
+
+    // Strict Anti-Cheat & Camera Validation
+    let blurWarnings = 0;
+    const MAX_BLUR_WARNINGS = 3;
+
+    window.addEventListener('blur', () => {
+        blurWarnings++;
+        alert(`STRICT WARNING (${blurWarnings}/${MAX_BLUR_WARNINGS}): You have switched tabs or minimized the interview. This violates the proctoring rules.`);
+        if (blurWarnings >= MAX_BLUR_WARNINGS) {
+            alert("Maximum violations reached. Interview session terminated.");
+            document.getElementById('interview-form').submit();
+        }
+    });
+
+    // Forced Camera Validation on Submit
+    document.getElementById('interview-form').addEventListener('submit', function (e) {
+        const videoElement = document.getElementById('webcam');
+        // Check if video is actually playing a stream
+        if (!videoElement.srcObject || !videoElement.srcObject.active) {
+            e.preventDefault();
+            alert("STRICT ERROR: Camera feed is required to submit your answer. Please ensure your camera is active and permissions are granted.");
+            return;
+        }
+    });
+
+    const micBtn = document.getElementById('mic-btn');
+    const micText = document.getElementById('mic-text');
+    const answerBox = document.getElementById('answer');
+    let isRecording = false;
+
+    function toggleRecording() {
+        if (isRecording) {
+            return;
+        }
+
+        aiVoice.listen(
+            (text) => {
+                answerBox.value += (answerBox.value ? ' ' : '') + text;
+                micBtn.classList.remove('btn-danger', 'animate-pulse');
+                micBtn.classList.add('btn-outline-danger');
+                micText.innerText = "Speak Answer";
+                isRecording = false;
+            },
+            () => {
+                isRecording = true;
+                micBtn.classList.remove('btn-outline-danger');
+                micBtn.classList.add('btn-danger', 'animate-pulse');
+                micText.innerText = "Listening...";
+                answerBox.placeholder = "Listening...";
+            },
+            () => {
+                isRecording = false;
+                micBtn.classList.remove('btn-danger', 'animate-pulse');
+                micBtn.classList.add('btn-outline-danger');
+                micText.innerText = "Speak Answer";
+                answerBox.placeholder = "Type your answer based on your experience or use the microphone...";
+            }
+        );
+    }
+</script>
+<style>
+    /* Z-INDEX SAFEGUARDS */
+    .modal { z-index: 2000 !important; }
+    .modal-backdrop { z-index: 1050 !important; }
+
+    /* 🔱 ADVANCED SENTINEL SUITE FOR HR 🔱 */
+    .sentinel-bubble {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        z-index: 1000;
+        width: 250px;
+        background: rgba(10, 11, 20, 0.85);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(233, 30, 99, 0.4);
+        border-radius: 12px;
+        padding: 15px;
+        box-shadow: 0 0 40px rgba(0, 0, 0, 0.8);
+        font-family: 'JetBrains Mono', monospace;
+        transition: all 0.4s ease;
+    }
+
+    .sentinel-header {
+        font-size: 0.65rem;
+        font-weight: 800;
+        color: #e91e63;
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .pulse-dot {
+        width: 6px; height: 6px;
+        background: #e91e63;
+        border-radius: 50%;
+        animation: blink 1s step-end infinite;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+    }
+
+    .stat-item { display: flex; flex-direction: column; gap: 4px; }
+    .stat-item .label { font-size: 0.55rem; color: rgba(255,255,255,0.4); text-transform: uppercase; }
+    .stat-item .value { font-size: 0.8rem; font-weight: 700; color: #fff; }
+
+    .sentinel-progress {
+        height: 4px;
+        background: rgba(255,255,255,0.1);
+        border-radius: 2px;
+        margin-top: 4px;
+    }
+    .sentinel-bar {
+        height: 100%;
+        background: #e91e63;
+        transition: width 0.8s ease;
+    }
+
+    .sentinel-alert {
+        margin-top: 15px;
+        background: rgba(255, 49, 49, 0.15);
+        border: 1px solid #ff3131;
+        color: #ff3131;
+        padding: 8px;
+        border-radius: 6px;
+        font-size: 0.65rem;
+        font-weight: 900;
+        text-align: center;
+        display: none;
+        animation: flash 0.6s infinite;
+    }
+
+    .vision-toggle {
+        background: rgba(0, 0, 0, 0.8);
+        border: 1px solid rgba(0, 242, 255, 0.6);
+        color: #00f2ff;
+        border-radius: 50px;
+        padding: 6px 16px;
+        font-size: 0.7rem;
+        font-weight: 800;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.3s ease;
+        box-shadow: 0 0 15px rgba(0, 242, 255, 0.2);
+    }
+    .vision-toggle.off {
+        border-color: rgba(255, 255, 255, 0.2);
+        color: rgba(255, 255, 255, 0.5);
+    }
+
+    @keyframes flash { 50% { opacity: 0.4; } }
+    @keyframes blink { 50% { opacity: 0; } }
+
+    .shadow-glow { box-shadow: 0 0 20px rgba(233, 30, 99, 0.2); }
+    .extra-small { font-size: 0.65rem; }
+    .tracking-widest { letter-spacing: 0.15em; }
+    .uppercase { text-transform: uppercase; }
+
+    #ai-avatar-img {
+        transition: all 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+        filter: drop-shadow(0 0 15px rgba(233, 30, 99, 0.3));
+    }
+
+    #ai-avatar-img:hover {
+        transform: scale(1.1) rotate(-5deg);
+        filter: drop-shadow(0 0 30px rgba(233, 30, 99, 0.6));
+    }
+
+    .glass-input {
+        background: rgba(255, 255, 255, 0.03) !important;
+        border: 1px solid rgba(255, 255, 255, 0.08) !important;
+        color: white !important;
+        backdrop-filter: blur(10px);
+        border-radius: 12px;
+        padding: 15px;
+    }
+
+    .glass-input:focus {
+        background: rgba(255, 255, 255, 0.05) !important;
+        border-color: rgba(233, 30, 99, 0.4) !important;
+        box-shadow: 0 0 20px rgba(233, 30, 99, 0.1);
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #e91e63, #6366f1) !important;
+        border: none !important;
+        box-shadow: 0 4px 15px rgba(233, 30, 99, 0.3);
+        transition: all 0.3s ease;
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(233, 30, 99, 0.4);
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,130 @@
+{% extends 'base.html' %}{% load static %}
+{% block title %}Offer Acceptance Predictor | SmartRecruit AI{% endblock %}
+{% block content %}
+<div class="container-fluid px-4 mt-4">
+    <!-- Header -->
+    <div class="glass-panel p-4 mb-4"
+        style="background:linear-gradient(135deg,rgba(255,187,51,0.08),rgba(41,121,255,0.08));border:1px solid rgba(255,187,51,0.25);">
+        <div class="d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center gap-3">
+                <div class="bg-warning bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center text-warning fw-bold shadow-sm"
+                    style="width: 56px; height: 56px; font-size: 1.25rem;">
+                    {{ candidate.full_name|first }}
+                </div>
+                <div>
+                    <h2 class="fw-bold text-theme mb-1">Offer Acceptance Predictor</h2>
+                    <p class="text-muted mb-0 small"><i class="fas fa-coins me-2"></i>Predicting closing success for {{                         candidate.full_name }}</p>
+                </div>
+            </div>
+            <div class="text-end">
+                <div class="h3 fw-bold text-warning mb-0">{{ prediction.acceptance_probability }}% Prob.</div>
+                <div class="text-muted small fw-bold text-uppercase">AI Confidence: {{ prediction.confidence_level }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-5">
+        <!-- Negotiation Input Data -->
+        <div class="col-lg-5">
+            <div class="glass-panel p-4 h-100" data-aos="fade-right">
+                <h6 class="fw-bold text-theme mb-4">Closing Parameters</h6>
+
+                <div class="mb-4">
+                    <label class="text-muted small uppercase fw-bold mb-2 d-block">Candidate Salary Expectation</label>
+                    <div class="p-3 rounded bg-light bg-opacity-5 border border-secondary border-opacity-10">
+                        <span class="h5 fw-bold text-theme">{{ current_asking }}</span>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="text-muted small uppercase fw-bold mb-2 d-block">Market Average for Role</label>
+                    <div class="p-3 rounded bg-light bg-opacity-5 border border-secondary border-opacity-10">
+                        <span class="h5 fw-bold text-muted">{{ market_avg }}</span>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="text-muted small uppercase fw-bold mb-2 d-block">Interview Sentiment Audit</label>
+                    <div
+                        class="p-3 rounded-pill bg-success bg-opacity-10 text-success border border-success border-opacity-20 d-flex align-items-center gap-2">
+                        <i class="fas fa-smile-beam"></i>
+                        <span class="small fw-bold">{{ sentiment }}</span>
+                    </div>
+                </div>
+
+                <div class="mt-auto">
+                    <div class="alert alert-info bg-opacity-5 border-info border-opacity-20 small">
+                        <i class="fas fa-info-circle me-2"></i>Prediction is based on semantic analysis of interview
+                        feedback and market parity scores.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI Prediction Results -->
+        <div class="col-lg-7">
+            <div class="glass-panel p-4 h-100 mb-4 shadow" data-aos="fade-left">
+                <h5 class="fw-bold text-theme mb-4"><i class="fas fa-crystal-ball text-warning me-2"></i>AI Closing
+                    Intel</h5>
+
+                <!-- Probability Gauge (Simulated) -->
+                <div class="text-center mb-5">
+                    <div class="d-inline-flex flex-column align-items-center p-4 rounded-circle border border-warning border-opacity-25 shadow-lg"
+                        style="width:180px;height:180px;background:rgba(255,187,51,0.05);">
+                        <div class="text-muted xx-small uppercase fw-bold mt-2">Likelihood</div>
+                        <div class="display-5 fw-bold text-warning">{{ prediction.acceptance_probability }}%</div>
+                        <div class="badge rounded-pill bg-warning text-dark x-small mt-2">ACCEPTABLE</div>
+                    </div>
+                </div>
+
+                <!-- Risk Factors -->
+                <div class="mb-4">
+                    <h6 class="text-muted x-small uppercase fw-bold mb-3">Identified Risk Factors</h6>
+                    <div class="d-flex flex-column gap-2">
+                        {% for risk in prediction.risk_factors %}
+                        <div
+                            class="p-2 border border-danger border-opacity-10 rounded bg-danger bg-opacity-5 text-danger x-small shadow-sm">
+                            <i class="fas fa-exclamation-circle me-2"></i>{{ risk }}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Closing Strategy -->
+                <div class="mb-4 p-3 rounded bg-primary bg-opacity-10 border border-primary border-opacity-20">
+                    <h6 class="text-primary x-small uppercase fw-bold mb-2">AI-Recommended Closing Strategy</h6>
+                    <p class="text-theme small mb-0 font-italic">"{{ prediction.closing_strategy }}"</p>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="p-3 rounded border border-secondary border-opacity-10 text-center">
+                            <div class="text-muted xx-small uppercase">Expected Negotiated Range</div>
+                            <div class="fw-bold text-theme">{{ prediction.expected_negotiation_range }}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <button class="btn btn-warning w-100 h-100 rounded-pill fw-bold shadow">
+                            Generate Official Offer
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<style>
+    .x-small {
+        font-size: 0.7rem;
+    }
+
+    .xx-small {
+        font-size: 0.6rem;
+    }
+
+    .uppercase {
+        text-transform: uppercase;
+    }
+</style>
+{% endblock %}

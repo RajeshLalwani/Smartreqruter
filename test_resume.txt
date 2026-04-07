@@ -1,0 +1,23 @@
+Jane Doe
+jane.doe@example.com | 555-0199 | github.com/janedoe
+
+PROFESSIONAL SUMMARY
+Highly skilled Software Engineer with 5+ years of experience in Python, Django, and React. Proven ability to architect reliable REST APIs and integrate AI models into production environments. Passionate about writing clean, testable code.
+
+EXPERIENCE
+Senior Backend Engineer | Tech Solutions Inc. | 2021 - Present
+- Designed and maintained scalable RESTful APIs using Django Rest Framework, serving 1M+ daily requests.
+- Integrated OpenAI and HuggingFace models for automated resume parsing, reducing HR workload by 40%.
+- Optimized database queries in PostgreSQL, achieving a 30% reduction in response latency.
+
+Software Engineer | WebDev Corp | 2018 - 2021
+- Developed interactive user interfaces with React and Redux.
+- Built automated CI/CD pipelines using GitHub Actions and Docker.
+
+EDUCATION
+B.S. in Computer Science | University of Technology | 2018
+
+SKILLS
+Languages: Python, JavaScript, SQL, HTML, CSS
+Frameworks: Django, React, FastAPI, Node.js
+Tools: Git, Docker, AWS, PostgreSQL, Redis

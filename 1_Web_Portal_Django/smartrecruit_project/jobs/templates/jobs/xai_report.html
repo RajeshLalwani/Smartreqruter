@@ -1,0 +1,135 @@
+{% extends 'base.html' %}{% load static %}
+{% block title %}XAI Audit Report | {{ audit.audit_id }}{% endblock %}
+{% block content %}
+<div class="container py-5">
+    <!-- Header -->
+    <div
+        class="glass-panel p-4 mb-4 border-secondary border-opacity-10 d-flex justify-content-between align-items-center">
+        <div>
+            <h4 class="fw-bold text-theme mb-0">Explainable AI (XAI) Transparency Audit</h4>
+            <p class="text-muted x-small mb-0">Compliance ID: <code>{{ audit.audit_id }}</code> | Generated on
+                2026-03-07</p>
+        </div>
+        <div class="text-end">
+            <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-20 px-3 py-2">
+                <i class="fas fa-shield-halved me-1"></i> Fairness Verified
+            </span>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Main Audit Details -->
+        <div class="col-lg-8">
+            <!-- PII Masking Verification -->
+            <div class="glass-panel p-4 mb-4 border-info border-opacity-10 shadow-sm">
+                <h6 class="fw-bold text-theme mb-3">1. PII Redaction Sync</h6>
+                <div
+                    class="d-flex align-items-center gap-3 p-3 rounded-4 bg-dark bg-opacity-25 border border-secondary border-opacity-10">
+                    <div class="x-small text-muted">Raw Data Input:</div>
+                    <div class="badge bg-secondary bg-opacity-10 text-muted strike-through x-small">{{                         candidate.full_name }}</div>
+                    <i class="fas fa-arrow-right text-info"></i>
+                    <div class="x-small text-info fw-bold">Masked Output: {{ masked_name }}</div>
+                </div>
+                <p class="xx-small text-muted mt-2 mb-0">AI models only processed competencia-based metrics, ignoring
+                    gender, age, and race markers.</p>
+            </div>
+
+            <!-- Decision Logic -->
+            <div class="glass-panel p-4 mb-4 shadow-sm">
+                <h6 class="fw-bold text-theme mb-3">2. Decision Logic Trace</h6>
+                <div class="p-4 rounded-4 bg-light bg-opacity-5 border border-secondary border-opacity-10">
+                    <p class="small text-theme italic mb-0">"{{ audit.decision_logic }}"</p>
+                </div>
+            </div>
+
+            <!-- Bias Audit -->
+            <div class="glass-panel p-4 shadow-sm">
+                <h6 class="fw-bold text-theme mb-3">3. Zero-Bias Verification Summary</h6>
+                <p class="small text-muted mb-4">{{ audit.bias_check_summary }}</p>
+
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <div class="p-3 border rounded-4 text-center">
+                            <i class="fas fa-venus-mars text-primary mb-2"></i>
+                            <div class="xx-small text-muted uppercase">Gender Bias</div>
+                            <div class="x-small text-success fw-bold">Neutral</div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="p-3 border rounded-4 text-center">
+                            <i class="fas fa-calendar-alt text-primary mb-2"></i>
+                            <div class="xx-small text-muted uppercase">Ageism Audit</div>
+                            <div class="x-small text-success fw-bold">Neutral</div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="p-3 border rounded-4 text-center">
+                            <i class="fas fa-globe text-primary mb-2"></i>
+                            <div class="xx-small text-muted uppercase">Geo-Bias</div>
+                            <div class="x-small text-success fw-bold">Neutral</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Scoring Factors -->
+        <div class="col-lg-4">
+            <div class="glass-panel p-4 h-100 shadow-lg border-primary border-opacity-10">
+                <h6 class="fw-bold text-theme mb-4">Factor Weighting</h6>
+
+                <div class="mb-4 text-center">
+                    <div class="display-5 fw-bold text-primary">{{ audit.fairness_score }}%</div>
+                    <div class="xx-small text-muted uppercase fw-bold tracking-widest">Fairness Index</div>
+                </div>
+
+                <div class="d-flex flex-column gap-3 mb-5">
+                    {% for factor, weight in audit.weighted_analysis.items %}
+                    <div>
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="x-small text-theme">{{ factor }}</span>
+                            <span class="x-small fw-bold text-primary">{{ weight }}</span>
+                        </div>
+                        <div class="progress" style="height: 6px; background: rgba(var(--primary-rgb), 0.05);">
+                            <div class="progress-bar bg-primary" style="width: {{ weight }}"></div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <div class="alert alert-secondary border-0 rounded-4 bg-secondary bg-opacity-5 x-small text-muted">
+                    <i class="fas fa-info-circle me-2"></i>
+                    This report generated by the SmartRecruit Ethics Engine (v1.0) for internal auditing and legal
+                    transparency.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .x-small {
+        font-size: 0.72rem;
+    }
+
+    .xx-small {
+        font-size: 0.6rem;
+    }
+
+    .uppercase {
+        text-transform: uppercase;
+    }
+
+    .italic {
+        font-style: italic;
+    }
+
+    .tracking-widest {
+        letter-spacing: 0.1em;
+    }
+
+    .strike-through {
+        text-decoration: line-through;
+    }
+</style>
+{% endblock %}

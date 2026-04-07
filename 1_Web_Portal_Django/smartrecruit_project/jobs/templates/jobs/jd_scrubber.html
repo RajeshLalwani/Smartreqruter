@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Inclusive JD Scrubber | SmartRecruit AI{% endblock %}
+{% block content %}
+<style>
+    /* Z-INDEX SAFEGUARDS */
+    .modal { z-index: 2000 !important; }
+    .modal-backdrop { z-index: 1050 !important; }
+    .tracking-widest { letter-spacing: 0.15em; }
+    .x-small { font-size: 0.75rem; }
+    .xx-small { font-size: 0.65rem; }
+
+    /* Input */
+    .sv-input { background: rgba(255,255,255,0.03) !important; color: var(--text-color, #e2e8f0) !important; border: 1px solid rgba(255,255,255,0.1) !important; border-radius: 0.75rem; }
+    .sv-input:focus { border-color: rgba(0,184,212,0.5) !important; box-shadow: 0 0 0 3px rgba(0,184,212,0.1) !important; outline: none; }
+
+    /* Issue card */
+    .issue-card { background: rgba(244,67,54,0.03); border: 1px solid rgba(244,67,54,0.12); border-radius: 0.75rem; padding: 0.85rem 1rem; }
+
+    /* Vital sign mini-card */
+    .vital-card { background: rgba(255,255,255,0.025); border: 1px solid rgba(255,255,255,0.07); border-radius: 0.75rem; padding: 0.85rem; text-align: center; }
+
+    /* Suggestion row */
+    .suggest-row { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 0.6rem; padding: 0.6rem 0.85rem; font-size: 0.75rem; color: #94a3b8; }
+</style>
+
+<div class="container-fluid px-4 mt-4 fade-up">
+
+    <!-- ─── Hero ─── -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-5 gap-3" data-aos="fade-down">
+        <div>
+            <div class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25 px-3 py-2 rounded-pill mb-3 tracking-widest text-uppercase x-small fw-bold">
+                <i class="fas fa-hand-holding-heart me-2"></i>DEI Language Engine
+            </div>
+            <h1 class="display-6 fw-bold text-white mb-2" style="font-family: 'Space Grotesk', sans-serif;">Inclusive JD <span style="background: linear-gradient(90deg, #00B8D4, #2979FF); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">Scrubber</span></h1>
+            <p class="lead text-secondary mb-0">AI-powered Job Description analysis for bias-free, inclusive hiring.</p>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- ─── Input ─── -->
+        <div class="col-lg-5" data-aos="fade-right">
+            <div class="glass-panel p-4 h-100 rounded-4 border-secondary border-opacity-25">
+                <form method="post">{% csrf_token %}
+                    <h6 class="fw-bold text-white mb-3 x-small tracking-widest text-uppercase border-bottom border-light border-opacity-10 pb-3">Paste Job Description</h6>
+                    <textarea name="jd_text" class="form-control sv-input mb-4" rows="18" placeholder="Paste the job description text here to analyze for bias..." style="resize: none;">{{ request.POST.jd_text }}</textarea>
+                    <button type="submit" class="btn btn-info w-100 rounded-pill fw-bold text-white shadow hover-scale"><i class="fas fa-microscope me-2"></i>Analyze for Inclusivity</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- ─── Results ─── -->
+        <div class="col-lg-7" data-aos="fade-left">
+            {% if result %}
+            <div class="glass-panel p-4 mb-4 rounded-4 border-secondary border-opacity-25">
+                <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom border-secondary border-opacity-10">
+                    <h5 class="fw-bold text-white mb-0" style="font-family: 'Space Grotesk', sans-serif;">Inclusivity Audit Report</h5>
+                    <div class="text-end">
+                        <div class="fw-bold mb-0 {% if result.overall_score > 80 %}text-success{% elif result.overall_score > 60 %}text-warning{% else %}text-danger{% endif %}" style="font-size: 1.75rem; font-family: 'Space Grotesk', sans-serif;">{{ result.overall_score }}%</div>
+                        <div class="text-secondary xx-small tracking-widest text-uppercase fw-bold">Overall Score</div>
+                    </div>
+                </div>
+
+                <!-- Vital Signs -->
+                <div class="row g-3 mb-4">
+                    <div class="col-md-4">
+                        <div class="vital-card">
+                            <div class="text-secondary xx-small tracking-widest text-uppercase mb-1">Gender Bias</div>
+                            <div class="fw-bold text-white x-small">{{ result.gender_bias }}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="vital-card">
+                            <div class="text-secondary xx-small tracking-widest text-uppercase mb-1">Cultural Inclusivity</div>
+                            <div class="fw-bold text-white x-small">{{ result.cultural_exclusion }}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="vital-card">
+                            <div class="text-secondary xx-small tracking-widest text-uppercase mb-1">Readability</div>
+                            <div class="fw-bold text-white x-small">{{ result.readability_index }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Detected Issues -->
+                <h6 class="fw-bold text-white mb-3 x-small tracking-widest text-uppercase">Detected Issues &amp; Improvements</h6>
+                <div class="mb-4">
+                    {% for item in result.problematic_phrases %}
+                    <div class="issue-card mb-2">
+                        <div class="d-flex gap-3">
+                            <div class="text-danger flex-shrink-0"><i class="fas fa-exclamation-circle mt-1 x-small"></i></div>
+                            <div>
+                                <div class="x-small text-white mb-1"><span class="text-danger text-decoration-line-through me-2">{{ item.phrase }}</span><span class="text-success fw-bold">→ {{ item.suggestion }}</span></div>
+                                <div class="text-secondary xx-small opacity-75">{{ item.reason }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="p-3 rounded-3 x-small text-success" style="background: rgba(0,200,83,0.06); border: 1px solid rgba(0,200,83,0.2);">
+                        <i class="fas fa-check-circle me-2"></i>No biased or exclusionary language detected!
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Structural Suggestions -->
+                <h6 class="fw-bold text-white mb-3 x-small tracking-widest text-uppercase">Structural Recommendations</h6>
+                <div class="row g-2">
+                    {% for suggest in result.structural_suggestions %}
+                    <div class="col-md-6">
+                        <div class="suggest-row"><i class="fas fa-lightbulb text-info me-2 x-small"></i>{{ suggest }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% else %}
+            <div class="glass-panel p-5 text-center h-100 d-flex flex-column justify-content-center rounded-4 border-secondary border-opacity-25">
+                <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto mb-4" style="width: 72px; height: 72px; background: rgba(0,184,212,0.08); border: 1px solid rgba(0,184,212,0.2);">
+                    <i class="fas fa-microscope text-info fa-2x" style="opacity: 0.45;"></i>
+                </div>
+                <h4 class="text-white fw-bold mb-2" style="font-family: 'Space Grotesk', sans-serif;">Ready to Audit</h4>
+                <p class="text-secondary x-small px-4">Paste a job description on the left to start the AI inclusivity analysis. We'll check for hidden biases that might discourage top talent from applying.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

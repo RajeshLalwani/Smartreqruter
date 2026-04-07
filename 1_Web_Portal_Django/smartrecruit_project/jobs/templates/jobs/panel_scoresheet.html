@@ -1,0 +1,108 @@
+{% extends 'base.html' %}{% load static %}
+{% block title %}Panel Scoresheet | {{ candidate.full_name }} | SmartRecruit{% endblock %}
+{% block content %}
+<div class="container-fluid px-4 mt-4">
+    <!-- Header -->
+    <div class="glass-panel p-4 mb-4"
+        style="background:linear-gradient(135deg,rgba(124,77,255,0.08),rgba(41,121,255,0.08));border:1px solid rgba(124,77,255,0.25);">
+        <div class="d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center gap-3">
+                <div class="bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center text-primary fw-bold shadow-sm"
+                    style="width: 56px; height: 56px; font-size: 1.25rem;">
+                    {{ candidate.full_name|first }}
+                </div>
+                <div>
+                    <h2 class="fw-bold text-theme mb-0">{{ candidate.full_name }}</h2>
+                    <p class="text-muted mb-0 small"><i class="fas fa-briefcase me-2"></i>{{ application.job.title }}
+                        Panel Consensus</p>
+                </div>
+            </div>
+            <div class="text-end">
+                <div class="h2 fw-bold text-primary mb-0">{{ avg_score }} / 10</div>
+                <div class="text-muted small fw-bold text-uppercase">Aggregated Panel Score</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Panel Feedbacks -->
+        <div class="col-lg-8">
+            <div class="glass-panel p-4 mb-4">
+                <h5 class="fw-bold text-theme mb-4"><i class="fas fa-users-class me-2 text-warning"></i>Interviewer
+                    Feedbacks</h5>
+                <div class="row g-3">
+                    {% for member in panel_members %}
+                    <div class="col-12" data-aos="fade-right" data-aos-delay="{{ forloop.counter0 }}00">
+                        <div class="p-3 rounded-3 border border-secondary border-opacity-10"
+                            style="background:rgba(255,255,255,0.02);">
+                            <div class="d-flex justify-content-between mb-2">
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="fw-bold text-theme">{{ member.name }}</div>
+                                    <span
+                                        class="badge rounded-pill bg-light bg-opacity-10 text-muted x-small uppercase px-2">{{                                         member.role }}</span>
+                                </div>
+                                <div class="fw-bold text-primary">{{ member.score }}/10</div>
+                            </div>
+                            <p class="text-muted small mb-0">{{ member.feedback }}</p>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- AI Consensus & Summary -->
+        <div class="col-lg-4">
+            <div class="glass-panel p-4 mb-4 border-primary border-opacity-25 shadow-lg" data-aos="fade-left">
+                <h5 class="fw-bold text-theme mb-3"><i class="fas fa-sparkles text-info me-2"></i>AI Panel Consensus
+                </h5>
+
+                <!-- Recommendation Badge -->
+                <div class="alert bg-primary bg-opacity-10 border-primary border-opacity-20 text-center mb-4">
+                    <div class="text-muted x-small uppercase fw-bold mb-1">AI Recommendation</div>
+                    <div class="h5 fw-bold text-primary mb-0">{{ analysis.panel_recommendation }}</div>
+                </div>
+
+                <!-- Consistency -->
+                <div class="mb-4">
+                    <label class="text-muted x-small uppercase fw-bold mb-2">Rating Consistency</label>
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="progress flex-grow-1" style="height:6px;background:rgba(255,255,255,0.05);">
+                            <div class="progress-bar bg-info" style="width: 90%;"></div>
+                        </div>
+                        <span class="text-info small fw-bold">{{ analysis.rating_consistency }}</span>
+                    </div>
+                </div>
+
+                <!-- Summary Text -->
+                <div class="mb-4">
+                    <label class="text-muted x-small uppercase fw-bold mb-2">Consensus Summary</label>
+                    <p class="text-theme small fst-italic line-height-relaxed">{{ analysis.consensus_summary }}</p>
+                </div>
+
+                <!-- Next Steps / Questions -->
+                <div class="mb-2">
+                    <label class="text-muted x-small uppercase fw-bold mb-2">Recommended Follow-up Questions</label>
+                    <div class="d-flex flex-column gap-2">
+                        {% for question in analysis.critical_questions_for_followup %}
+                        <div
+                            class="p-2 rounded bg-light bg-opacity-5 border border-light border-opacity-10 x-small text-muted">
+                            <i class="fas fa-question-circle text-info me-2"></i>{{ question }}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<style>
+    .x-small {
+        font-size: 0.68rem;
+    }
+
+    .line-height-relaxed {
+        line-height: 1.6;
+    }
+</style>
+{% endblock %}

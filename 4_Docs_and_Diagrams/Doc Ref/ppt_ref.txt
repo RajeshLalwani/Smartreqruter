@@ -1,0 +1,89 @@
+
+--- PPTX CONTENT ---
+FACE ATTENDANCE SYSTEM
+NAME : PAL ABHISHEK MAHESHBHAI
+PID: MS23101
+PROJECT GUIDE: TULSI M. SHAH
+
+                         INDEX
+Project profile
+Introduction To Organization
+Introduction to project
+Objective of the system
+ Automate Attendance Marking
+ Ensure Accuracy and Reliability
+ Enhance Security and Prevent Proxy Attendance
+ Improve Efficiency and Save Time
+ Enable Real-Time Monitoring and Reporting
+ Integrate with Other Systems
+ Promote Contactless and Hygienic Solutions
+ Improve Data Management and Accessibility
+Reduce Operational Costs
+
+Functional and Non-Functional Requirements
+Hardware and Software Requirements
+System Modules and Functionalities
+system design diagrams
+Entity-Relationship Diagram (ERD)
+
+2. Class Diagram (UML)
+
+3. Activity Diagram
+ Attendance Marking Process 
+
+3. Activity Diagram
+ Employee Registration Process
+
+3. Activity Diagram
+ Face Recognition Flow
+
+
+3. Activity Diagram
+ Report Generation Process
+
+
+3. Activity Diagram
+ System Initialization Process
+
+
+4. Sequence Diagram 
+Face Attendance Marking Sequence
+
+4. Sequence Diagram
+ Employee Registration Sequence
+
+ 
+
+4. Sequence Diagram
+ Report Generation Sequence
+ 
+
+4. Sequence Diagram
+ Face Recognition Sequence
+ 
+
+4. Sequence Diagram
+ System Initialization Sequence 
+
+Use Case Diagram
+Attendance Marking Use Case
+
+ Employee Management Use Case
+ Face Recognition Use Case
+
+
+ Report Management Use Case
+  System Initialization Use Case
+
+
+Data Dictionary
+1. Employee Table
+2. Department Table
+
+
+3. Attendance Table
+
+4. Attendance Report Table
+
+Conclusion
+The Face Recognition Attendance System offers an efficient, secure, and automated way to mark attendance using face recognition technology. It eliminates the need for traditional manual methods, reduces human errors, and enhances the overall accuracy and speed of attendance tracking. With features like real-time face detection, automatic attendance marking, and detailed reporting, the system significantly improves workplace management. Its integration with databases ensures secure storage and easy retrieval of attendance records. Additionally, the use of face recognition minimizes proxy attendance and enhances overall security.

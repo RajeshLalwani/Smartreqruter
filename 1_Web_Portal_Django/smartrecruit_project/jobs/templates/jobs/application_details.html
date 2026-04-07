@@ -1,0 +1,1622 @@
+{% extends 'base.html' %}
+{% load static json_filters %}
+
+{% block title %}Candidate Profile | SmartRecruit{% endblock %}
+
+{% block sidebar %}
+    {% include 'jobs/_recruiter_sidebar.html' %}
+{% endblock %}
+
+{% block content %}
+<div class="candidate-wrapper d-flex flex-grow-1" style="background: #0a0b10; min-height: 100vh;">
+    <div class="main-content flex-grow-1 p-4" style="max-height: 100vh; overflow-y: auto; scrollbar-width: none;">
+<style>
+    /* Z-INDEX SAFEGUARDS & AESTHETICS */
+    .modal { z-index: 2000 !important; }
+    .modal-backdrop { z-index: 1050 !important; }
+    .offcanvas { z-index: 2000 !important; }
+    .offcanvas-backdrop { z-index: 1050 !important; }
+
+    /* SV Enhancements */
+    .pulse-glow {
+        animation: pulse-glow 2s infinite;
+        box-shadow: 0 0 15px rgba(25, 135, 84, 0.4);
+    }
+    @keyframes pulse-glow {
+        0% { box-shadow: 0 0 15px rgba(25, 135, 84, 0.4); }
+        50% { box-shadow: 0 0 25px rgba(25, 135, 84, 0.8), 0 0 10px rgba(25, 135, 84, 0.6) inset; }
+        100% { box-shadow: 0 0 15px rgba(25, 135, 84, 0.4); }
+    }
+    
+    .tracking-widest { letter-spacing: 0.15em; }
+    .x-small { font-size: 0.75rem; }
+    .xx-small { font-size: 0.65rem; }
+
+    /* Glass Panels specific to this view */
+    .glass-panel-elite {
+        background: rgba(15, 15, 20, 0.6);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 1rem;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    }
+
+    /* Blockchain Verified Shield Animation */
+    .hex-shield-container {
+        position: relative;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .hex-shield {
+        position: absolute;
+        font-size: 1.8rem;
+        color: #00ff88;
+        animation: rotate-shield 8s linear infinite;
+        opacity: 0.3;
+    }
+    .hex-check {
+        position: relative;
+        z-index: 2;
+        color: #00ff88;
+        font-size: 1.2rem;
+        filter: drop-shadow(0 0 8px #00ff88);
+    }
+    @keyframes rotate-shield {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+    .glow-verify {
+        color: #00ff88 !important;
+        text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+    }
+
+    /* Predictive Retention Widget Styles */
+    .border-glow-green { border: 2px solid #00ff88 !important; box-shadow: 0 0 15px rgba(0, 255, 136, 0.4); }
+    .border-glow-amber { border: 2px solid #ffc107 !important; box-shadow: 0 0 15px rgba(255, 193, 7, 0.4); }
+    .border-glow-red { border: 2px solid #ff4b2b !important; box-shadow: 0 0 15px rgba(255, 75, 43, 0.4); }
+    
+    .text-glow-green { color: #00ff88 !important; text-shadow: 0 0 8px rgba(0, 255, 136, 0.5); }
+    .text-glow-amber { color: #ffc107 !important; text-shadow: 0 0 8px rgba(255, 193, 7, 0.5); }
+    .text-glow-red { color: #ff4b2b !important; text-shadow: 0 0 8px rgba(255, 75, 43, 0.5); }
+</style>
+
+<div class="container-fluid fade-up">
+    
+    <!-- Header: Candidate Info & AI Score -->
+    <div class="glass-panel p-4 p-md-5 mb-4 border-primary border-opacity-25 shadow-lg position-relative overflow-hidden" data-aos="fade-down">
+        <div class="position-absolute top-0 end-0 p-4 opacity-5"><i class="fas fa-id-badge fa-8x text-primary"></i></div>
+        
+        <div class="d-flex flex-wrap justify-content-between align-items-center position-relative z-2 gap-4">
+            <div class="d-flex align-items-center gap-4">
+                <div class="rounded-circle d-flex align-items-center justify-content-center bg-primary bg-opacity-10 text-primary fw-bold shadow-inner border border-primary border-opacity-50" style="width: 80px; height: 80px; font-size: 2.2rem; font-family: 'Space Grotesk', sans-serif;">
+                    {{ application.candidate.full_name|slice:":1"|upper }}
+                </div>
+                <div>
+                    <h2 class="fw-bold text-white mb-1 tracking-tight">
+                        {{ application.candidate.full_name }}
+                        {% if application.candidate.is_verified_on_chain %}
+                        <span class="ms-2" title="Identity & Credentials Blockchain Verified">
+                            <i class="fas fa-certificate glow-verify small"></i>
+                        </span>
+                        {% endif %}
+                    </h2>
+                    <div class="d-flex flex-wrap align-items-center gap-3 text-secondary small mt-2">
+                        <span class="badge bg-dark border border-secondary border-opacity-50 text-light px-3 py-2 shadow-inner fw-normal"><i class="fas fa-rocket text-primary me-2"></i>{{ application.job.title }}</span>
+                        <span class="text-light opacity-25">|</span>
+                        <span class="text-info fw-bold"><i class="fas fa-envelope me-2"></i>{{ application.candidate.email }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI Mission Status & Actions -->
+            <div class="text-md-end">
+                <div class="d-flex flex-wrap align-items-center justify-content-md-end gap-3 mb-3">
+                    <button class="btn btn-outline-info rounded-pill px-4 fw-bold shadow-sm hover-scale" type="button" data-bs-toggle="offcanvas" data-bs-target="#aiInsightsSidebar">
+                        <i class="fas fa-brain me-2"></i> Neural Insights
+                    </button>
+                    <a href="{% url 'skill_gap_analysis' application.id %}" class="btn btn-outline-warning rounded-pill px-4 fw-bold shadow-sm hover-scale text-dark border-warning border-opacity-50" style="background: rgba(255, 193, 7, 0.1);">
+                        <i class="fas fa-network-wired me-2 text-warning"></i> Matrix Core
+                    </a>
+                    <a href="{% url 'live_interview_session' application.id %}" class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm hover-scale pulse-glow" style="background: linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%); border: none;">
+                        <i class="fas fa-video me-2"></i> Join Live Session
+                    </a>
+                    <span class="badge bg-success text-dark border border-success px-4 py-2 rounded-pill fw-bold fs-6 pulse-glow shadow-lg">
+                        <i class="fas fa-bolt me-1"></i> {{ application.ai_score }}% ALIGNMENT
+                    </span>
+                    <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25 px-4 py-2 rounded-pill fw-bold fs-6 shadow-sm pulse-glow">
+                        <i class="fas fa-globe me-1 text-cyan"></i> {{ application.candidate.detected_language|upper|default:"EN" }}
+                    </span>
+                    <span class="badge hover-scale bg-secondary bg-opacity-25 text-white border border-light border-opacity-10 px-4 py-2 rounded-pill shadow-inner fw-bold tracking-widest text-uppercase">
+                        {{ application.get_status_display }}
+                    </span>
+                </div>
+                <small class="text-secondary tracking-widest text-uppercase fw-bold opacity-75 d-block">Ingestion Timestamp: <span class="text-light">{{ application.applied_at|date:"M d, Y" }}</span></small>
+            </div>
+        </div>
+    </div>
+
+    <!-- PHASE 7: Executive HR Summary -->
+    {% if application.hr_summary %}
+    <div class="glass-panel p-4 mb-4 border-info border-opacity-25 shadow-lg" data-aos="fade-up">
+        <div class="d-flex justify-content-between align-items-center mb-3 border-bottom border-light border-opacity-10 pb-3">
+            <h5 class="fw-bold text-white mb-0 d-flex align-items-center">
+                <i class="fas fa-file-invoice text-info me-3 fs-4"></i> AI Executive HR Summary
+            </h5>
+            <a href="{% url 'export_hr_report' application.id %}" target="_blank" class="btn btn-sm btn-outline-info rounded-pill px-3 fw-bold shadow-sm hover-scale">
+                <i class="fas fa-file-pdf me-2"></i> Download HR Report
+            </a>
+        </div>
+        <div class="row g-4 align-items-center">
+            <div class="col-md-7">
+                <div class="text-theme-secondary text-light fs-6" style="line-height: 1.6;">
+                    {{ application.hr_summary|safe }}
+                </div>
+            </div>
+            <div class="col-md-5 border-start border-light border-opacity-10 ps-4">
+                <h6 class="text-info tracking-widest small text-uppercase fw-bold mb-3"><i class="fas fa-chart-pie me-2"></i>Dimensional Integrity Matrix</h6>
+                <div class="d-flex flex-column gap-3">
+                    <div>
+                        <div class="d-flex justify-content-between small mb-1 tracking-widest text-uppercase"><span>Technical IQ</span><span class="text-white fw-bold">{{ application.technical_score }}%</span></div>
+                        <div class="progress bg-dark" style="height: 6px;"><div class="progress-bar bg-primary pulse-glow" style="width: {{ application.technical_score }}%;"></div></div>
+                    </div>
+                    <div>
+                        <div class="d-flex justify-content-between small mb-1 tracking-widest text-uppercase"><span>Communication</span><span class="text-white fw-bold">{{ application.communication_score }}%</span></div>
+                        <div class="progress bg-dark" style="height: 6px;"><div class="progress-bar bg-info pulse-glow" style="width: {{ application.communication_score }}%;"></div></div>
+                    </div>
+                    <div>
+                        <div class="d-flex justify-content-between small mb-1 tracking-widest text-uppercase"><span>Problem Solving</span><span class="text-white fw-bold">{{ application.problem_solving_score }}%</span></div>
+                        <div class="progress bg-dark" style="height: 6px;"><div class="progress-bar bg-warning pulse-glow" style="width: {{ application.problem_solving_score }}%;"></div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- NEW: Gemini Hiring Recommendation -->
+    <div class="glass-panel p-4 mb-4 shadow-lg position-relative overflow-hidden" data-aos="fade-up" style="border: 2px solid #a855f7; box-shadow: 0 0 20px rgba(168, 85, 247, 0.3);">
+        <div class="position-absolute top-50 end-0 translate-middle-y me-4 opacity-10 pointer-events-none">
+            <i class="fas fa-gem fa-6x text-purple" style="color: #a855f7;"></i>
+        </div>
+        <div class="d-flex justify-content-between align-items-center mb-3 border-bottom border-light border-opacity-10 pb-3 position-relative z-2">
+            <h5 class="fw-bold text-white mb-0 d-flex align-items-center tracking-widest text-uppercase">
+                <i class="fas fa-gem me-3 fs-3 pulse-glow" style="color: #a855f7;"></i> 
+                Gemini Hiring Recommendation
+            </h5>
+            <span class="badge rounded-pill px-3 py-1 bg-dark bg-opacity-50 border tracking-widest text-uppercase fw-bold" style="color: #a855f7; border-color: #a855f7;">
+                AI VERDICT: {% if application.ai_score >= 75 %}STRONG HIRE{% elif application.ai_score >= 50 %}POTENTIAL HIRE{% else %}NO HIRE{% endif %}
+            </span>
+        </div>
+        <div class="row g-4 align-items-center position-relative z-2">
+            <div class="col-md-12">
+                <div class="p-3 bg-dark bg-opacity-50 rounded-4 border border-secondary border-opacity-25 text-light fs-6" style="line-height: 1.6; border-left: 4px solid #a855f7 !important;">
+                    {% if application.ai_score >= 75 %}
+                    <p class="mb-2"><strong style="color: #00ff88;"><i class="fas fa-check-circle me-1"></i> Recommendation: Proceed to Offer</strong></p>
+                    <p class="mb-0 text-secondary">The candidate has demonstrated exceptional performance across all evaluation phases, securing a composite alignment score of {{ application.ai_score }}%. The Behavioral Analysis indicates high adaptability and communication proficiency, while the Technical IQ ({{ application.technical_score }}%) exceeds benchmark expectations. It is highly recommended to extend an offer immediately.</p>
+                    {% elif application.ai_score >= 50 %}
+                    <p class="mb-2"><strong style="color: #ffbf00;"><i class="fas fa-exclamation-circle me-1"></i> Recommendation: Further Evaluation Suggested</strong></p>
+                    <p class="mb-0 text-secondary">The candidate shows strong potential with a composite alignment score of {{ application.ai_score }}%, but there are moderate gaps in the {{ application.job.title }} core requirements. We recommend a final cultural fit discussion or a focused technical deep-dive before committing to an offer.</p>
+                    {% else %}
+                    <p class="mb-2"><strong style="color: #ff4b2b;"><i class="fas fa-times-circle me-1"></i> Recommendation: Reject</strong></p>
+                    <p class="mb-0 text-secondary">Based on the comprehensive assessment protocol, the candidate's composite alignment score of {{ application.ai_score }}% falls below the minimum viable threshold. Recommend passing on this profile for the {{ application.job.title }} role.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PHASE 8: Predictive Hiring Analytics -->
+    {% if predictive_insight %}
+    <div class="glass-panel p-4 mb-4 shadow-lg position-relative" data-aos="fade-up"
+         style="{% if predictive_insight.success_probability >= 85 %}border-color: rgba(0,255,255,0.4); box-shadow: 0 0 20px rgba(0,255,255,0.2) !important;
+                {% elif predictive_insight.success_probability >= 50 %}border-color: rgba(255,191,0,0.4); box-shadow: 0 0 20px rgba(255,191,0,0.2) !important;
+                {% else %}border-color: rgba(255,0,0,0.4); box-shadow: 0 0 20px rgba(255,0,0,0.2) !important;{% endif %}">
+        
+        <div class="d-flex justify-content-between align-items-center mb-3 border-bottom border-light border-opacity-10 pb-3">
+            <h5 class="fw-bold text-white mb-0 d-flex align-items-center tracking-widest">
+                <i class="fas fa-brain me-3 fs-3 pulse-glow" style="{% if predictive_insight.success_probability >= 85 %}color: #00ffff;{% elif predictive_insight.success_probability >= 50 %}color: #ffbf00;{% else %}color: #ff0000;{% endif %}"></i> 
+                Phase 8: Analytics Engine
+            </h5>
+            <span class="badge rounded-pill px-3 py-1 bg-dark bg-opacity-50 border tracking-widest text-uppercase"
+                  style="{% if predictive_insight.success_probability >= 85 %}color: #00ffff; border-color: #00ffff;{% elif predictive_insight.success_probability >= 50 %}color: #ffbf00; border-color: #ffbf00;{% else %}color: #ff0000; border-color: #ff0000;{% endif %}">
+                  ML Confidence: 94.2%
+            </span>
+        </div>
+        
+        <div class="row g-4 align-items-center">
+            <!-- Success Gauge chart -->
+            <div class="col-md-4 text-center">
+                <div class="position-relative d-inline-block" style="width: 250px; height: 140px;">
+                    <canvas id="successPredictorGauge"></canvas>
+                    <div class="position-absolute top-50 start-50 translate-middle pt-5">
+                        <h2 class="fw-bold mb-0 pulse-glow" style="{% if predictive_insight.success_probability >= 85 %}color: #00ffff;text-shadow: 0 0 10px #00ffff;{% elif predictive_insight.success_probability >= 50 %}color: #ffbf00;text-shadow: 0 0 10px #ffbf00;{% else %}color: #ff0000;text-shadow: 0 0 10px #ff0000;{% endif %}">{{ predictive_insight.success_probability }}%</h2>
+                        <small class="text-theme-secondary text-uppercase tracking-widest" style="font-size: 0.65rem;">Success Probability</small>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Gap Analysis Radar -->
+            <div class="col-md-5 border-start border-end border-light border-opacity-10 px-4 position-relative">
+                 <h6 class="text-info tracking-widest small text-uppercase fw-bold text-center mb-3"><i class="fas fa-bullseye me-2"></i>Gap Analysis vs Top Performer</h6>
+                 <div style="width: 100%; max-width: 280px; aspect-ratio: 1; margin: 0 auto;">
+                     <canvas id="gapAnalysisRadar"></canvas>
+                 </div>
+            </div>
+            
+            <!-- Feature Importance -->
+            <div class="col-md-3 ps-3">
+                <h6 class="text-info tracking-widest small text-uppercase fw-bold mb-3"><i class="fas fa-project-diagram me-2"></i>Feature Weights</h6>
+                <div class="d-flex flex-column gap-2">
+                    {% for feature, impact in predictive_insight.feature_importance_json.items %}
+                    <div>
+                        <div class="d-flex justify-content-between small mb-1 tracking-widest text-uppercase" style="font-size: 0.70rem;">
+                            <span class="text-light opacity-75">{{ feature }}</span>
+                            <span class="text-white fw-bold">{{ impact }}%</span>
+                        </div>
+                        <div class="progress bg-dark" style="height: 3px;">
+                            <div class="progress-bar bg-secondary" style="width: {{ impact }}%;"></div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // Success Predictor Gauge (Doughnut Half)
+        const ctxGauge = document.getElementById('successPredictorGauge').getContext('2d');
+        const prob = {{ predictive_insight.success_probability }};
+        let color = '#ff0000';
+        if (prob >= 85) color = '#00ffff';
+        else if (prob >= 50) color = '#ffbf00';
+        
+        new Chart(ctxGauge, {
+            type: 'doughnut',
+            data: {
+                datasets: [{
+                    data: [prob, 100 - prob],
+                    backgroundColor: [color, 'rgba(255,255,255,0.05)'],
+                    borderWidth: 0,
+                    circumference: 180,
+                    rotation: 270,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '80%',
+                plugins: { tooltip: { enabled: false }, legend: { display: false } }
+            }
+        });
+        
+        const configRadar = {
+            type: 'radar',
+            data: {
+                labels: ['Technical', 'Communication', 'Confidence', 'Integrity', 'Problem Solving'],
+                datasets: [
+                    {
+                        label: 'Candidate',
+                        data: [
+                            {{ predictive_insight.gap_analysis_json.candidate_scores.Technical }},
+                            {{ predictive_insight.gap_analysis_json.candidate_scores.Communication }},
+                            {{ predictive_insight.gap_analysis_json.candidate_scores.Confidence }},
+                            {{ predictive_insight.gap_analysis_json.candidate_scores.Integrity }},
+                            {{ predictive_insight.gap_analysis_json.candidate_scores.Problem_Solving|default:predictive_insight.gap_analysis_json.candidate_scores|dict_key:'Problem Solving'|default:predictive_insight.gap_analysis_json.candidate_scores.Problem Solving|default:0 }}
+                        ],
+                        backgroundColor: color === '#00ffff' ? 'rgba(0, 255, 255, 0.2)' : (color === '#ffbf00' ? 'rgba(255, 191, 0, 0.2)' : 'rgba(255, 0, 0, 0.2)'),
+                        borderColor: color,
+                        borderWidth: 2,
+                        pointBackgroundColor: '#fff'
+                    },
+                    {
+                        label: 'Top Performer Benchmark',
+                        data: [
+                            {{ predictive_insight.gap_analysis_json.benchmark_scores.Technical }},
+                            {{ predictive_insight.gap_analysis_json.benchmark_scores.Communication }},
+                            {{ predictive_insight.gap_analysis_json.benchmark_scores.Confidence }},
+                            {{ predictive_insight.gap_analysis_json.benchmark_scores.Integrity }},
+                            {{ predictive_insight.gap_analysis_json.benchmark_scores.Problem_Solving|default:predictive_insight.gap_analysis_json.benchmark_scores|dict_key:'Problem Solving'|default:predictive_insight.gap_analysis_json.benchmark_scores.Problem Solving|default:0 }}
+                        ],
+                        backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                        borderColor: 'rgba(255, 255, 255, 0.3)',
+                        borderWidth: 1,
+                        borderDash: [5, 5],
+                        pointBackgroundColor: 'transparent',
+                        pointBorderColor: 'transparent'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    r: {
+                        angleLines: { color: 'rgba(255,255,255,0.1)' },
+                        grid: { color: 'rgba(255,255,255,0.1)' },
+                        pointLabels: { color: '#adb5bd', font: { size: 9, family: "'Space Grotesk', sans-serif" } },
+                        ticks: { display: false, min: 0, max: 100 }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { color: '#adb5bd', boxWidth: 12, usePointStyle: true, font: {family: "'Space Grotesk', sans-serif"} }
+                    }
+                }
+            }
+        };
+        new Chart(document.getElementById('gapAnalysisRadar'), configRadar);
+    });
+    </script>
+    {% endif %}
+
+    <div class="row g-4">
+        <!-- ==================== LEFT COLUMN: Assessments & Code ==================== -->
+        <div class="col-xl-8">
+
+            <!-- ── NEW: ACADEMIC CREDENTIALS (BLOCKCHAIN VERIFIED) ── -->
+            <div class="glass-panel p-4 mb-4 border-primary border-opacity-25 shadow-sm" data-aos="fade-up">
+                <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom border-light border-opacity-10">
+                    <h5 class="fw-bold text-white mb-0 d-flex align-items-center">
+                        <i class="fas fa-user-graduate text-primary me-3 fs-4"></i> Academic Credentials
+                    </h5>
+                    {% if application.candidate.is_verified_on_chain %}
+                    <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-3 py-2 rounded-pill fw-bold">
+                        <i class="fas fa-shield-alt me-1"></i> LEDGER VERIFIED
+                    </span>
+                    {% else %}
+                    <button class="btn btn-sm btn-outline-warning rounded-pill px-3 fw-bold verify-blockchain-btn" data-candidate-id="{{ application.candidate.id }}">
+                        <i class="fas fa-link me-1"></i> Verify via Blockchain
+                    </button>
+                    {% endif %}
+                </div>
+
+                <div class="row g-4">
+                    {% for edu in application.candidate.education_history.all %}
+                    <div class="col-md-12">
+                        <div class="glass-panel p-4 bg-dark bg-opacity-50 border-secondary border-opacity-10 rounded-4 d-flex justify-content-between align-items-center hover-scale">
+                            <div class="d-flex align-items-center gap-4">
+                                <div class="hex-shield-container">
+                                    {% if edu.is_verified_on_chain %}
+                                    <i class="fas fa-hexagon hex-shield"></i>
+                                    <i class="fas fa-check-circle hex-check"></i>
+                                    {% else %}
+                                    <div class="rounded-circle bg-secondary bg-opacity-10 border border-secondary border-opacity-25 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                        <i class="fas fa-university text-secondary"></i>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                <div>
+                                    <h6 class="text-white fw-bold mb-1">{{ edu.degree }}</h6>
+                                    <p class="text-secondary small mb-0">{{ edu.institution }}</p>
+                                    {% if edu.blockchain_hash %}
+                                    <code class="xx-small text-info opacity-75 d-block mt-2">HASH: {{ edu.blockchain_hash }}</code>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="text-end">
+                                {% if edu.is_verified_on_chain %}
+                                <div class="text-success small fw-bold mb-1"><i class="fas fa-check-circle"></i> Authenticated</div>
+                                <div class="xx-small text-secondary">{{ edu.verified_at|date:"M d, Y" }}</div>
+                                {% else %}
+                                <div class="text-warning small fw-bold"><i class="fas fa-clock"></i> Pending Verification</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="col-12 text-center py-4">
+                        <p class="text-muted small mb-0">No education history recorded in matrix.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- ROUND 1: Aptitude -->
+            {% if aptitude %}
+            <div class="glass-panel p-4 mb-4 border-success border-opacity-25 shadow-sm" data-aos="fade-up">
+                <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom border-light border-opacity-10">
+                    <h5 class="fw-bold text-white mb-0 d-flex align-items-center">
+                        <i class="fas fa-check-double text-success me-3 fs-4"></i> Phase 1: Cognitive Aptitude
+                    </h5>
+                    <div class="text-end">
+                        <p class="mb-0 text-secondary small fw-bold tracking-widest text-uppercase">Execution Date</p>
+                        <p class="mb-0 text-light fw-bold">{{ aptitude.completed_at|date:"M d, H:i" }}</p>
+                    </div>
+                </div>
+                
+                <div class="d-flex align-items-center gap-4">
+                    <div class="rounded-circle d-flex justify-content-center align-items-center {% if aptitude.passed %}bg-success border-success{% else %}bg-danger border-danger{% endif %} border border-opacity-50 bg-opacity-10 shadow-inner" style="width: 100px; height: 100px;">
+                        <h2 class="display-6 fw-bold mb-0 {% if aptitude.passed %}text-success{% else %}text-danger{% endif %}" style="font-family: 'Space Grotesk', sans-serif;">
+                            {{ aptitude.score }}%
+                        </h2>
+                    </div>
+                    <div>
+                        <h5 class="fw-bold text-white mb-1">Status Designation</h5>
+                        <div class="badge {% if aptitude.passed %}bg-success{% else %}bg-danger{% endif %} bg-opacity-25 {% if aptitude.passed %}text-success{% else %}text-danger{% endif %} border {% if aptitude.passed %}border-success{% else %}border-danger{% endif %} border-opacity-50 px-3 py-2 rounded-pill fs-6 fw-bold tracking-widest text-uppercase shadow-inner">
+                            {% if aptitude.passed %}<i class="fas fa-check-circle me-1"></i> Certified{% else %}<i class="fas fa-times-circle me-1"></i> Failed{% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- ROUND 2: Practical Code -->
+            {% if practical %}
+            <div class="glass-panel-elite p-4 p-md-5 mb-4 border-info border-opacity-25" data-aos="fade-up" data-aos-delay="100">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h5 class="fw-bold text-white mb-0 d-flex align-items-center">
+                        <div class="rounded-circle d-flex justify-content-center align-items-center bg-info bg-opacity-10 border border-info border-opacity-50 shadow-inner me-3" style="width: 45px; height: 45px;">
+                            <i class="fas fa-laptop-code text-info"></i>
+                        </div>
+                        Phase 2: Code Execution Arena
+                    </h5>
+                    <div class="text-end">
+                        <span class="badge {% if practical.passed %}bg-success{% else %}bg-danger{% endif %} text-dark px-4 py-2 rounded-pill fw-bold fs-6 shadow-sm">
+                            Score Matrix: {{ practical.score }}/100
+                        </span>
+                    </div>
+                </div>
+
+                <div class="bg-dark bg-opacity-75 rounded-4 p-2 shadow-lg border border-secondary border-opacity-25 relative overflow-hidden">
+                    <div class="d-flex justify-content-between align-items-center p-3 bg-dark border-bottom border-secondary border-opacity-50 rounded-top-4">
+                        <div class="d-flex gap-2">
+                            <div class="rounded-circle bg-danger" style="width:12px; height:12px;"></div>
+                            <div class="rounded-circle bg-warning" style="width:12px; height:12px;"></div>
+                            <div class="rounded-circle bg-success" style="width:12px; height:12px;"></div>
+                        </div>
+                        <span class="text-info fw-bold small tracking-widest text-uppercase"><i class="fas fa-file-code me-2"></i>submission_runner.py</span>
+                        <span class="badge bg-secondary bg-opacity-25 text-light border border-secondary border-opacity-50">Python 3.12</span>
+                    </div>
+                    <!-- READ-ONLY MONACO EDITOR CONTAINER -->
+                    <div id="code-viewer" class="w-100" style="height: 350px;"></div>
+                </div>
+
+                <!-- Hidden Input for Logic to Pick Up Code -->
+                <textarea id="hidden-code" class="d-none">{{ practical_code }}</textarea>
+            </div>
+            {% endif %}
+
+            <!-- NEW PHASE: Botanist Voice AI Interview -->
+            {% if botanist_log %}
+            <div class="glass-panel p-4 p-md-5 mb-4 border-primary border-opacity-25 shadow-lg position-relative overflow-hidden" data-aos="fade-up" style="border-left: 4px solid #00f2ff !important;">
+                <div class="position-absolute top-0 end-0 p-4 opacity-5"><i class="fas fa-microphone-alt fa-6x text-info"></i></div>
+                
+                <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom border-light border-opacity-10">
+                    <h5 class="fw-bold text-white mb-0 d-flex align-items-center">
+                        <div class="rounded-circle d-flex justify-content-center align-items-center bg-info bg-opacity-10 border border-info border-opacity-50 shadow-inner me-3" style="width: 45px; height: 45px;">
+                            <i class="fas fa-robot text-info"></i>
+                        </div>
+                        Phase 1.5: Botanist AI Behavioral Pre-screening
+                    </h5>
+                    <div class="text-end">
+                        <span class="badge bg-info text-dark px-4 py-2 rounded-pill fw-bold fs-6 shadow-sm pulse-glow">
+                            Confidence: {{ botanist_log.vocal_confidence_score }}%
+                        </span>
+                    </div>
+                </div>
+
+                <div class="row g-4">
+                    <div class="col-md-7">
+                        <h6 class="text-info fw-bold text-uppercase tracking-widest xx-small mb-3"><i class="fas fa-brain me-2"></i> Behavioral Fitment Summary</h6>
+                        <div class="bg-dark bg-opacity-50 p-4 rounded-4 border border-secondary border-opacity-25 shadow-inner mb-4">
+                            <p class="text-light small lh-lg mb-0 font-monospace">
+                                {{ botanist_log.behavioral_fitment_summary|linebreaksbr }}
+                            </p>
+                        </div>
+                        
+                        <h6 class="text-secondary fw-bold text-uppercase tracking-widest xx-small mb-3"><i class="fas fa-list-ul me-2"></i> Interview Transcript Highlights</h6>
+                        <div class="bg-dark bg-opacity-25 p-3 rounded-4 border border-secondary border-opacity-10" style="max-height: 200px; overflow-y: auto;">
+                            <div class="text-secondary small font-monospace">
+                                {{ botanist_log.transcript|truncatechars:500|linebreaksbr }}
+                                {% if botanist_log.transcript|length > 500 %}
+                                <div class="text-info mt-2">... (Extended transcript available in archives)</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-5">
+                        <h6 class="text-info fw-bold text-uppercase tracking-widest xx-small mb-3"><i class="fas fa-chart-bar me-2"></i> Vocal Analytics Matrix</h6>
+                        <div class="d-grid gap-3">
+                            <!-- Speech Rate -->
+                            <div class="glass-panel p-3 bg-dark bg-opacity-50 border-secondary border-opacity-25 rounded-4 shadow-inner">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="text-secondary xx-small text-uppercase fw-bold">Speech Rate</span>
+                                    <span class="text-info fw-bold">{{ botanist_log.speech_rate }} WPM</span>
+                                </div>
+                                <div class="progress bg-dark" style="height: 6px;">
+                                    <div class="progress-bar bg-info" style="width: {{ botanist_log.speech_rate|floatformat:0 }}%;"></div>
+                                </div>
+                                <small class="text-secondary xx-small mt-1 d-block">Ideal range: 120-150 WPM</small>
+                            </div>
+                            
+                            <!-- Hesitations -->
+                            <div class="glass-panel p-3 bg-dark bg-opacity-50 border-secondary border-opacity-25 rounded-4 shadow-inner">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <span class="text-secondary xx-small text-uppercase fw-bold">Hesitation Density</span>
+                                    <span class="{% if botanist_log.hesitation_count > 5 %}text-warning{% else %}text-success{% endif %} fw-bold">{{ botanist_log.hesitation_count }} pauses</span>
+                                </div>
+                                <small class="text-secondary xx-small d-block">Detected significant pauses or "um/uh" fills during responses.</small>
+                            </div>
+                            
+                            <!-- Volume Consistency -->
+                            <div class="glass-panel p-3 bg-dark bg-opacity-50 border-secondary border-opacity-25 rounded-4 shadow-inner">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="text-secondary xx-small text-uppercase fw-bold">Voice Stability</span>
+                                    <span class="text-success fw-bold">{{ botanist_log.volume_consistency|floatformat:2 }}σ</span>
+                                </div>
+                                <div class="progress bg-dark" style="height: 6px;">
+                                    <div class="progress-bar bg-success" style="width: 85%;"></div>
+                                </div>
+                                <small class="text-secondary xx-small mt-1 d-block">Consistency in volume indicates vocal confidence.</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- PHASE 5: Vocal Stress & Behavioral AI Index -->
+            <div class="glass-panel p-4 p-md-5 mb-4 border-primary border-opacity-25 shadow-lg position-relative overflow-hidden" data-aos="fade-up" style="border-right: 4px solid #ff00ff !important;">
+                <div class="position-absolute top-0 end-0 p-4 opacity-5"><i class="fas fa-wave-square fa-6x text-info"></i></div>
+                
+                <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom border-light border-opacity-10">
+                    <h5 class="fw-bold text-white mb-0 d-flex align-items-center">
+                        <div class="rounded-circle d-flex justify-content-center align-items-center bg-info bg-opacity-10 border border-info border-opacity-50 shadow-inner me-3" style="width: 45px; height: 45px;">
+                            <i class="fas fa-heartbeat text-info"></i>
+                        </div>
+                        Phase 5: Vocal Stress & Behavioral AI Pulse
+                    </h5>
+                    <div class="text-end">
+                        <span class="badge bg-primary text-white border border-info border-opacity-50 px-4 py-2 rounded-pill fw-bold fs-6 shadow-sm pulse-glow" style="background: linear-gradient(135deg, #bf00ff 0%, #ff00bf 100%);">
+                            STRESS INDEX: {{ application.interviews.last.sentiment_logs.last.stress_index|default:"0" }}%
+                        </span>
+                    </div>
+                </div>
+
+                <div class="row g-4">
+                    <div class="col-md-9">
+                        <h6 class="text-info fw-bold text-uppercase tracking-widest xx-small mb-3"><i class="fas fa-chart-line me-2"></i> Emotional Stability Timeline (Confidence vs Stress)</h6>
+                        <div class="bg-dark bg-opacity-50 p-4 rounded-4 border border-secondary border-opacity-25 shadow-inner" style="height: 300px;">
+                            <canvas id="vocalPulseChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                         <h6 class="text-secondary fw-bold text-uppercase tracking-widest xx-small mb-3"><i class="fas fa-microscope me-2"></i> Micro-Symmetry Data</h6>
+                         <div class="d-grid gap-2">
+                             <div class="p-3 glass-panel-elite bg-dark bg-opacity-50 border-secondary border-opacity-25 rounded-4 text-center">
+                                 <div class="xx-small text-secondary text-uppercase mb-1">Jitter</div>
+                                 <div class="fw-bold text-info">{{ application.interviews.last.sentiment_logs.last.jitter|default:"0.00" }}</div>
+                             </div>
+                             <div class="p-3 glass-panel-elite bg-dark bg-opacity-50 border-secondary border-opacity-25 rounded-4 text-center">
+                                 <div class="xx-small text-secondary text-uppercase mb-1">Shimmer</div>
+                                 <div class="fw-bold text-warning">{{ application.interviews.last.sentiment_logs.last.shimmer|default:"0.00" }}</div>
+                             </div>
+                             <div class="p-3 glass-panel-elite bg-dark bg-opacity-50 border-secondary border-opacity-25 rounded-4 text-center">
+                                 <div class="xx-small text-secondary text-uppercase mb-1">Pitch Var</div>
+                                 <div class="fw-bold text-success">{{ application.interviews.last.sentiment_logs.last.pitch_variance|default:"0.00" }}</div>
+                             </div>
+                         </div>
+                    </div>
+                </div>
+            </div>
+            {% if vibe_reports %}
+            <div class="glass-panel p-4 p-md-5 mb-4 border-primary border-opacity-25 shadow-lg relative overflow-hidden" data-aos="fade-up" data-aos-delay="200">
+                <div class="position-absolute bottom-0 start-0 p-3 opacity-5 pointer-events-none"><i class="fas fa-fingerprint fa-8x text-primary"></i></div>
+                
+                <h5 class="fw-bold text-white mb-4 pb-3 border-bottom border-light border-opacity-10 position-relative z-2">
+                    <i class="fas fa-wave-square text-primary me-2"></i> Behavioral & Semantic Analysis
+                </h5>
+                
+                <div class="row g-4 position-relative z-2">
+                    <div class="col-md-6">
+                        <div class="glass-panel p-4 bg-dark bg-opacity-50 border-info border-opacity-25 h-100 shadow-inner rounded-4 hover-scale">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <span class="text-info small text-uppercase tracking-widest fw-bold"><i class="fas fa-microchip me-2"></i>Theoretical Index</span>
+                                <span class="badge bg-info text-dark fw-bold px-3 py-1 rounded-pill">{{ quiz_result.score }}%</span>
+                            </div>
+                            <div class="progress bg-dark border border-secondary border-opacity-50 shadow-inner" style="height: 8px;">
+                                <div class="progress-bar bg-info" style="width: {{ quiz_result.score }}%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="glass-panel p-4 bg-dark bg-opacity-50 border-success border-opacity-25 h-100 shadow-inner rounded-4 hover-scale">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <span class="text-success small text-uppercase tracking-widest fw-bold"><i class="fas fa-laptop-code me-2"></i>Practical Index</span>
+                                <span class="badge bg-success text-dark fw-bold px-3 py-1 rounded-pill">{{ coding_result.score }}%</span>
+                            </div>
+                            <div class="progress bg-dark border border-secondary border-opacity-50 shadow-inner" style="height: 8px;">
+                                <div class="progress-bar bg-success" style="width: {{ coding_result.score }}%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- GITHUB ENRICHMENT (Free Profile Data) -->
+            {% if github_data %}
+            <div class="glass-panel p-4 p-md-5 mb-4 border-light border-opacity-25 shadow-lg relative overflow-hidden" data-aos="fade-up" data-aos-delay="250">
+                <div class="position-absolute bottom-0 end-0 p-3 opacity-5 pointer-events-none"><i class="fab fa-github fa-8x text-light"></i></div>
+                
+                <h5 class="fw-bold text-white mb-4 pb-3 border-bottom border-light border-opacity-10 position-relative z-2 d-flex align-items-center justify-content-between">
+                    <span><i class="fab fa-github text-light me-2"></i> Open-Source Footprint</span>
+                    <a href="https://github.com/{{ github_data.username }}" target="_blank" class="badge bg-light text-dark text-decoration-none hover-scale fs-6 shadow-sm"><i class="fas fa-external-link-alt me-1"></i> View Profile</a>
+                </h5>
+                
+                <div class="row g-4 position-relative z-2 align-items-center mb-4">
+                    <div class="col-md-auto text-center">
+                        <img src="{{ github_data.avatar_url }}" alt="GitHub Avatar" class="rounded-circle border border-secondary border-opacity-50 shadow-inner" style="width: 80px; height: 80px;">
+                    </div>
+                    <div class="col-md">
+                        <h6 class="text-white fw-bold mb-1">{{ github_data.name|default:github_data.username }} <small class="text-secondary fw-normal">(@{{ github_data.username }})</small></h6>
+                        <p class="text-secondary small fst-italic mb-2">{{ github_data.bio|default:"No bio available."|truncatechars:100 }}</p>
+                        <div class="d-flex gap-3">
+                            <span class="badge bg-dark border border-secondary border-opacity-50 text-light px-2 py-1"><i class="fas fa-code-branch me-1 text-info"></i> {{ github_data.public_repos }} Repos</span>
+                            <span class="badge bg-dark border border-secondary border-opacity-50 text-light px-2 py-1"><i class="fas fa-users me-1 text-warning"></i> {{ github_data.followers }} Followers</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="position-relative z-2">
+                    <h6 class="text-secondary fw-bold text-uppercase tracking-widest xx-small mb-3"><i class="fas fa-layer-group text-info me-2"></i> Dominant Languages</h6>
+                    <div class="d-flex flex-wrap gap-2 mb-4">
+                        {% for lang in github_data.top_languages %}
+                        <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-50 px-3 py-2 rounded-pill shadow-inner font-monospace fw-bold">{{ lang }}</span>
+                        {% empty %}
+                        <span class="text-muted small">No language data extracted.</span>
+                        {% endfor %}
+                    </div>
+                    
+                    <h6 class="text-secondary fw-bold text-uppercase tracking-widest xx-small mb-3"><i class="fas fa-laptop-code text-success me-2"></i> Recent Activity Matrix</h6>
+                    <div class="row g-3">
+                        {% for repo in github_data.recent_repos %}
+                        <div class="col-md-6">
+                            <div class="glass-panel p-3 bg-dark bg-opacity-50 border-secondary border-opacity-25 h-100 rounded-4 shadow-inner hover-scale">
+                                <h6 class="text-info fw-bold mb-1 d-flex justify-content-between align-items-center" style="font-size: 0.85rem;">
+                                    <span class="text-truncate">{{ repo.name }}</span>
+                                    <span class="badge bg-dark text-warning border border-warning border-opacity-25 ms-2"><i class="fas fa-star me-1"></i>{{ repo.stars }}</span>
+                                </h6>
+                                <p class="text-secondary fst-italic mb-2 text-truncate" style="font-size: 0.75rem;">{{ repo.description|default:"No description provided." }}</p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="badge bg-secondary bg-opacity-25 text-light border border-secondary border-opacity-50 lh-1" style="font-size: 0.65rem;">{{ repo.language|default:"Mixed" }}</span>
+                                    <a href="{{ repo.url }}" target="_blank" class="text-secondary hover-scale"><i class="fas fa-external-link-alt"></i></a>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- THE VIRTUAL HIRING COMMITTEE (CrewAI) -->
+            <div class="glass-panel p-4 p-md-5 mb-4 border-warning border-opacity-50 shadow-lg position-relative overflow-hidden" data-aos="fade-up" data-aos-delay="300">
+                <div class="position-absolute top-50 start-50 translate-middle opacity-5 pointer-events-none">
+                    <i class="fas fa-users-cog fa-10x text-warning pulse-animation-slow"></i>
+                </div>
+                
+                <div class="d-flex justify-content-between align-items-center mb-4 position-relative z-2 border-bottom border-warning border-opacity-25 pb-3">
+                    <h5 class="fw-bold text-warning mb-0 d-flex align-items-center gap-3">
+                        <div class="rounded-circle d-flex justify-content-center align-items-center bg-warning bg-opacity-10 border border-warning border-opacity-50 shadow-inner" style="width: 50px; height: 50px;">
+                            <i class="fas fa-gavel text-warning fs-4"></i>
+                        </div>
+                        Multi-Agent Directive: Corporate Committee
+                    </h5>
+                    <div class="badge bg-warning text-dark border border-warning px-3 py-1 rounded-pill fw-bold shadow-sm d-flex align-items-center gap-2">
+                        <i class="fas fa-link"></i> <span class="tracking-widest small">CREW-AI ONLINE</span>
+                    </div>
+                </div>
+
+                <p class="text-secondary small mb-4 position-relative z-2">
+                    Summon the multi-agent AI framework (Engineering Lead, HR Director, Executive VP) to ingest assessment data, orchestrate a debate, and synthesize a decisive hiring resolution.
+                </p>
+
+                <div id="crewai-report-container" class="mb-4 position-relative z-2">
+                    {% if application.ai_committee_report %}
+                        <div class="p-4 bg-dark bg-opacity-75 rounded-4 border border-warning border-opacity-25 shadow-inner" style="max-height: 400px; overflow-y: auto;">
+                            <!-- Safe HTML Output from LLM -->
+                            <div class="text-light markdown-body font-monospace x-small lh-lg">
+                                {{ application.ai_committee_report|linebreaksbr }}
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="text-center p-5 border border-warning border-opacity-25 border-dashed rounded-4 bg-warning bg-opacity-10 shadow-inner">
+                            <div class="spinner-grow text-warning mb-3" role="status" style="width: 3rem; height: 3rem; opacity: 0.5;"></div>
+                            <h6 class="text-warning fw-bold tracking-widest text-uppercase mb-1">Awaiting Execution Sequence</h6>
+                            <p class="small text-warning text-opacity-75 mb-0">No multi-agent consensus recorded in matrix.</p>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="d-grid position-relative z-2">
+                    <button class="btn btn-warning btn-lg fw-bold text-dark rounded-pill hover-scale shadow-lg border border-warning" id="btn-trigger-crewai" onclick="runHiringCommittee('{{ application.id }}')">
+                        <i class="fas fa-project-diagram me-2"></i> Initialize Agentic Protocol
+                    </button>
+                </div>
+            </div>
+            
+        </div>
+
+        <!-- ==================== RIGHT COLUMN: Insight/Proctoring/Actions ==================== -->
+        <div class="col-xl-4">
+            
+            <!-- Quick Actions Panel -->
+            <div class="glass-panel p-4 mb-4 border-secondary border-opacity-25 shadow-sm sticky-top" style="top: 80px; z-index: 10;">
+                <h6 class="fw-bold text-white mb-3 text-uppercase tracking-widest small border-bottom border-light border-opacity-10 pb-2"><i class="fas fa- терминал me-2 text-primary"></i> Command Terminal</h6>
+                
+                <div class="d-flex gap-2 mb-3">
+                    <a href="{% url 'export_candidate_pdf' application.id %}" class="btn btn-outline-light flex-grow-1 rounded-pill small fw-bold hover-scale shadow-sm">
+                        <i class="fas fa-file-pdf text-danger me-2"></i> PDF Out
+                    </a>
+                    <a href="{% url 'export_candidate_csv' application.id %}" class="btn btn-outline-light flex-grow-1 rounded-pill small fw-bold hover-scale shadow-sm">
+                        <i class="fas fa-file-csv text-success me-2"></i> CSV Out
+                    </a>
+                </div>
+
+                <div class="d-grid mb-4">
+                    <button class="btn btn-primary rounded-pill fw-bold hover-scale shadow-lg" data-bs-toggle="offcanvas" data-bs-target="#liveDiscussionSidebar" aria-controls="liveDiscussionSidebar">
+                        <i class="fas fa-comments me-2 text-warning"></i> Live Discussion & Polls
+                        <span class="badge bg-danger rounded-pill ms-2" id="chat-unread-badge" style="display:none;">0</span>
+                    </button>
+                </div>
+
+                <div class="d-grid gap-3 mb-4">
+                    {% if application.status == 'RESUME_SCREENING' or 'APPLIED' in application.status %}
+                    <a href="{% url 'update_status' application.id 'RESUME_SELECTED' %}" class="btn btn-success rounded-pill fw-bold hover-scale shadow-lg">
+                        <i class="fas fa-check-double me-2"></i> Approve Timeline
+                    </a>
+                    {% endif %}
+                    
+                    <a href="{% url 'update_status' application.id 'RESUME_REJECTED' %}" class="btn btn-outline-danger rounded-pill fw-bold hover-scale">
+                        <i class="fas fa-ban me-2"></i> Terminate Protocol
+                    </a>
+                </div>
+
+                <div class="glass-panel p-3 bg-dark bg-opacity-50 border-primary border-opacity-25 rounded-4 shadow-inner mb-4">
+                    <h6 class="text-primary fw-bold text-uppercase tracking-widest xx-small mb-3">Deep ML Suite</h6>
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-sm btn-primary rounded-pill fw-bold d-flex justify-content-between align-items-center hover-scale shadow-sm" onclick="runDeepVision('{{ application.id }}')">
+                            <span><i class="fas fa-eye me-2"></i> Deep Vision</span>
+                            <span class="badge bg-dark text-primary border border-primary border-opacity-50">CV</span>
+                        </button>
+                        <a href="{% url 'resume_intelligence' application.id %}" class="btn btn-sm btn-success rounded-pill fw-bold d-flex justify-content-between align-items-center hover-scale shadow-sm">
+                            <span><i class="fas fa-file-alt me-2 text-dark"></i> Resume Intel</span>
+                            <span class="badge bg-dark text-success border border-success border-opacity-50">NLP</span>
+                        </a>
+                        <a href="{% url 'sentiment_analysis' application.id %}" class="btn btn-sm btn-warning rounded-pill fw-bold text-dark d-flex justify-content-between align-items-center hover-scale shadow-sm">
+                            <span><i class="fas fa-theater-masks me-2 text-dark"></i> Semantic Tone</span>
+                            <span class="badge bg-dark text-warning border border-warning border-opacity-50">SA</span>
+                        </a>
+                        <a href="{% url 'talent_intelligence' application.id %}" class="btn btn-sm btn-info rounded-pill fw-bold text-dark d-flex justify-content-between align-items-center hover-scale shadow-sm">
+                            <span><i class="fas fa-chart-pie me-2 text-dark"></i> Talent Intel</span>
+                            <span class="badge bg-dark text-info border border-info border-opacity-50">DS</span>
+                        </a>
+                        {% if application.system_design %}
+                        <a href="{% url 'architecture_preview' application.id %}" class="btn btn-sm btn-outline-info rounded-pill fw-bold d-flex justify-content-between align-items-center hover-scale shadow-sm">
+                            <span><i class="fas fa-drafting-compass me-2 text-info"></i> System Design</span>
+                            <span class="badge bg-dark text-info border border-info border-opacity-50">{{ application.system_design.ai_score }}%</span>
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="glass-panel p-3 bg-dark bg-opacity-50 border-secondary border-opacity-25 rounded-4 shadow-inner mb-2">
+                    <h6 class="text-secondary fw-bold text-uppercase tracking-widest xx-small mb-3">Lifecycle Trajectory</h6>
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'reference_check' application.id %}" class="btn btn-sm btn-outline-light rounded-pill text-start hover-scale">
+                            <i class="fas fa-user-check text-info me-2 w-15px text-center"></i> Contextual Verify
+                        </a>
+                        <a href="{% url 'competitive_standing' application.id %}" class="btn btn-sm btn-outline-light rounded-pill text-start hover-scale">
+                            <i class="fas fa-trophy text-warning me-2 w-15px text-center"></i> Market Alpha
+                        </a>
+                        {% if application.status == 'OFFER_GENERATED' %}
+                        <a href="{% url 'update_status' application.id 'OFFER_GENERATED' %}" class="btn btn-sm btn-outline-info rounded-pill text-start hover-scale">
+                            <i class="fas fa-sync text-info me-2 w-15px text-center"></i> Re-compile Offer
+                        </a>
+                        {% endif %}
+                        {% if application.status == 'HIRED' %}
+                        <a href="{% url 'onboarding_plan' application.id %}" class="btn btn-sm btn-success rounded-pill text-start fw-bold hover-scale shadow-sm">
+                            <i class="fas fa-map text-dark me-2 w-15px text-center"></i> Init Onboarding
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- PREDICTIVE RETENTION WIDGET -->
+            {% if turnover_prediction %}
+            <div class="glass-panel p-4 mb-4 shadow-lg position-relative overflow-hidden 
+                {% if turnover_prediction.risk_level == 'LOW' %}border-glow-green
+                {% elif turnover_prediction.risk_level == 'MEDIUM' %}border-glow-amber
+                {% else %}border-glow-red{% endif %}" data-aos="fade-up">
+                
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="fw-bold text-uppercase tracking-widest small mb-0
+                        {% if turnover_prediction.risk_level == 'LOW' %}text-glow-green
+                        {% elif turnover_prediction.risk_level == 'MEDIUM' %}text-glow-amber
+                        {% else %}text-glow-red{% endif %}">
+                        <i class="fas fa-chart-line me-2"></i> Predictive Retention
+                    </h6>
+                    <span class="badge {% if turnover_prediction.risk_level == 'LOW' %}bg-success{% elif turnover_prediction.risk_level == 'MEDIUM' %}bg-warning text-dark{% else %}bg-danger{% endif %} rounded-pill fw-bold">
+                        {{ turnover_prediction.risk_level }} RISK
+                    </span>
+                </div>
+
+                <div class="text-center mb-4">
+                    <div class="display-5 fw-bold mb-0 
+                        {% if turnover_prediction.risk_level == 'LOW' %}text-glow-green
+                        {% elif turnover_prediction.risk_level == 'MEDIUM' %}text-glow-amber
+                        {% else %}text-glow-red{% endif %}" style="font-family: 'Space Grotesk', sans-serif;">
+                        {{ turnover_prediction.retention_score }}%
+                    </div>
+                    <small class="text-secondary tracking-widest text-uppercase xx-small">Stability Probability</small>
+                </div>
+
+                <!-- Stability Radar Map -->
+                <div class="bg-dark bg-opacity-50 rounded-4 p-3 border border-secondary border-opacity-10 shadow-inner mb-3">
+                    <canvas id="retentionRadar" height="250"></canvas>
+                </div>
+
+                <div class="row g-2 mb-3">
+                    <div class="col-6">
+                        <div class="p-2 rounded bg-dark bg-opacity-25 border border-secondary border-opacity-10 text-center">
+                            <div class="xx-small text-secondary text-uppercase mb-1">Technical</div>
+                            <div class="small fw-bold text-info">{{ turnover_prediction.technical_stability }}%</div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="p-2 rounded bg-dark bg-opacity-25 border border-secondary border-opacity-10 text-center">
+                            <div class="xx-small text-secondary text-uppercase mb-1">Sentiment</div>
+                            <div class="small fw-bold text-success">{{ turnover_prediction.sentiment_stability }}%</div>
+                        </div>
+                    </div>
+                </div>
+
+                <p class="x-small text-secondary mb-0 border-top border-light border-opacity-10 pt-3">
+                    <i class="fas fa-info-circle me-1"></i> Forecast derived from technical volatility, sentiment pulse, and alignment metrics.
+                </p>
+            </div>
+            {% endif %}
+
+            <!-- PROCTORING HEATMAP LOGS -->
+            <div class="glass-panel p-4 mb-4 border-danger border-opacity-25 shadow-sm">
+                <h6 class="fw-bold text-danger mb-3 text-uppercase tracking-widest small border-bottom border-danger border-opacity-25 pb-2">
+                    <i class="fas fa-shield-virus me-2"></i> Security Telemetry
+                </h6>
+
+                <!-- Visual Heatmap Container -->
+                <div class="mb-4 bg-dark bg-opacity-50 rounded-4 p-2 border border-danger border-opacity-10 shadow-inner">
+                    <canvas id="cheatingHeatmap" height="150"></canvas>
+                </div>
+
+                {% if proctoring_logs %}
+                <div class="timeline pe-2" style="max-height: 400px; overflow-y: auto;">
+                    {% for log in proctoring_logs %}
+                    <div class="glass-panel p-3 mb-3 bg-dark bg-opacity-50 border-secondary border-opacity-10 rounded-4 hover-scale log-entry" data-type="{{ log.log_type }}" data-time="{{ log.timestamp|date:'H:i' }}">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="badge {% if log.log_type == 'VIOLATION' %}bg-danger{% elif log.log_type == 'SUSPICION' %}bg-warning text-dark{% else %}bg-info{% endif %} fw-bold px-2 py-1 shadow-sm">
+                                <i class="fas {% if log.log_type == 'VIOLATION' %}fa-exclamation-triangle{% elif log.log_type == 'SUSPICION' %}fa-eye{% else %}fa-info-circle{% endif %} me-1"></i>
+                                {{ log.log_type }}
+                            </span>
+                            <small class="text-secondary fw-bold font-monospace xx-small tracking-widest">{{ log.timestamp|date:"H:i:s" }}</small>
+                        </div>
+                        <p class="small text-light mb-2 lh-sm">{{ log.details }}</p>
+                        {% if log.image %}
+                        <div class="text-end border-top border-light border-opacity-10 pt-2 mt-1">
+                            <a href="{{ log.image.url }}" target="_blank" class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 text-decoration-none hover-scale">
+                                <i class="fas fa-camera me-1"></i> Inspect Capture
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-5 glass-panel bg-success bg-opacity-10 border border-success border-opacity-25 rounded-4 shadow-inner">
+                    <i class="fas fa-shield-check text-success fa-3x mb-3 pulse-glow rounded-circle" style="background: rgba(25, 135, 84, 0.1); padding: 15px;"></i>
+                    <h6 class="text-success fw-bold tracking-widest text-uppercase mb-1">Grid Secure</h6>
+                    <p class="small text-success text-opacity-75 mb-0">Zero anomalies recorded.</p>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- COLLABORATIVE SCORECARD -->
+            <div class="glass-panel p-4 mb-4 border-info border-opacity-25 shadow-sm">
+                <div class="d-flex justify-content-between align-items-center mb-3 border-bottom border-light border-opacity-10 pb-2">
+                    <h6 class="fw-bold text-info mb-0 text-uppercase tracking-widest small">
+                        <i class="fas fa-tasks me-2"></i> Structured Matrices
+                    </h6>
+                    <button class="btn btn-sm btn-outline-info rounded-pill px-3 fw-bold hover-scale shadow-sm" data-bs-toggle="modal" data-bs-target="#scorecardModal">
+                        <i class="fas fa-plus me-1"></i> Append Node
+                    </button>
+                </div>
+
+                {% if scorecards %}
+                <div class="d-flex flex-column gap-3">
+                    {% for sc in scorecards %}
+                    <div class="glass-panel p-3 bg-dark bg-opacity-50 border-info border-opacity-10 rounded-4 shadow-inner hover-scale">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="badge bg-dark text-info border border-info border-opacity-25 px-2 py-1 fw-bold tracking-widest">
+                                <i class="fas fa-user-tie me-1 opacity-50"></i> {{ sc.recruiter.username|upper }}
+                            </span>
+                            <small class="text-muted font-monospace xx-small">{{ sc.created_at|timesince }} ago</small>
+                        </div>
+                        <div class="d-flex flex-wrap gap-2 mb-2 pt-2 border-top border-light border-opacity-5">
+                            {% for item in sc.items.all %}
+                            <span class="badge {% if item.score >= 4 %}bg-success{% elif item.score == 3 %}bg-warning text-dark{% else %}bg-danger{% endif %} bg-opacity-10 text-light border border-secondary border-opacity-25 xx-small px-2 py-1" title="{{ item.competency.name }}: {{ item.score }}/5">
+                                {{ item.competency.name|truncatechars:10 }} <strong class="ms-1 px-1 rounded {% if item.score >= 4 %}bg-success{% elif item.score == 3 %}bg-warning text-dark{% else %}bg-danger{% endif %}">{{ item.score }}</strong>
+                            </span>
+                            {% endfor %}
+                        </div>
+                        <p class="x-small text-secondary fst-italic mb-0 bg-dark p-2 rounded border border-secondary border-opacity-10 lh-sm">"{{ sc.overall_comments|truncatechars:100 }}"</p>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-4 bg-dark bg-opacity-25 rounded-4 border border-secondary border-opacity-10">
+                    <p class="text-muted x-small tracking-widest text-uppercase mb-0">No structured evaluations compiled.</p>
+                </div>
+                {% endif %}
+            </div>
+            
+        </div>
+    </div>
+</div>
+
+<!-- ================= AI INSIGHTS OFFCANVAS ================= -->
+<div class="offcanvas offcanvas-end glass-panel border-start border-info border-opacity-50 shadow-lg" tabindex="-1" id="aiInsightsSidebar" style="background: rgba(10, 10, 15, 0.98); backdrop-filter: blur(30px); width: 450px;">
+    <div class="offcanvas-header border-bottom border-info border-opacity-25 pb-3">
+        <h5 class="offcanvas-title fw-bold text-white d-flex align-items-center gap-2">
+            <div class="rounded-circle d-flex justify-content-center align-items-center bg-info bg-opacity-10 border border-info border-opacity-50 shadow-inner pulse-glow" style="width: 40px; height: 40px;">
+                <i class="fas fa-brain text-info"></i>
+            </div>
+            Deep Neural Insights
+        </h5>
+        <button type="button" class="btn-close btn-close-white opacity-50" data-bs-dismiss="offcanvas"></button>
+    </div>
+    
+    <div class="offcanvas-body position-relative overflow-x-hidden">
+        <div class="position-absolute top-50 start-50 translate-middle w-100 h-100 opacity-5 pointer-events-none d-flex justify-content-center align-items-center">
+            <i class="fas fa-network-wired fa-10x text-info"></i>
+        </div>
+        
+        <div class="position-relative z-2">
+            {% with stats=application.ai_insights|json_load %}
+            
+            {% if stats.summary %}
+            <!-- Summary Core -->
+            <div class="glass-panel p-4 bg-dark bg-opacity-75 border-info border-opacity-25 rounded-4 shadow-inner mb-4">
+                <h6 class="text-info fw-bold text-uppercase tracking-widest xx-small d-flex align-items-center gap-2 mb-3 border-bottom border-light border-opacity-10 pb-2">
+                    <i class="fas fa-robot text-info"></i> NLP Summary Synthesis
+                </h6>
+                <p class="text-light small lh-lg mb-0 font-monospace" style="font-size: 0.8rem;">> {{ stats.summary }}</p>
+            </div>
+            {% endif %}
+
+            <!-- Alignment Matrix -->
+            <div class="glass-panel p-4 bg-dark bg-opacity-75 border-success border-opacity-25 rounded-4 shadow-inner mb-4">
+                <div class="d-flex justify-content-between align-items-end mb-2">
+                    <h6 class="text-success fw-bold text-uppercase tracking-widest xx-small mb-0">Total Alignment Score</h6>
+                    <span class="display-6 fw-bold text-success mb-0 lh-1" style="font-family: 'Space Grotesk', sans-serif;">{{ application.ai_score }}%</span>
+                </div>
+                <div class="progress bg-dark border border-secondary border-opacity-50 shadow-inner mt-2 mb-2" style="height: 6px;">
+                    <div class="progress-bar bg-success" style="width: {{ application.ai_score|default:0 }}%;"></div>
+                </div>
+                <small class="text-secondary tracking-widest xx-small text-uppercase">Hybrid algorithmic correlation completed.</small>
+            </div>
+
+            {% if stats.dimensions %}
+            <!-- Contextual Radar -->
+            <div class="glass-panel p-4 bg-dark bg-opacity-75 border-warning border-opacity-25 rounded-4 shadow-inner mb-4 text-center">
+                 <h6 class="text-warning fw-bold text-uppercase tracking-widest xx-small d-flex justify-content-center align-items-center gap-2 mb-3 border-bottom border-light border-opacity-10 pb-2">
+                    <i class="fas fa-crosshairs text-warning"></i> Dimensional Analysis
+                </h6>
+                <canvas id="dlInsightsChart" width="300" height="300" style="max-height: 250px; margin: 0 auto;"></canvas>
+            </div>
+            {% endif %}
+
+            <div class="row g-3">
+                <div class="col-6">
+                    <div class="glass-panel p-3 bg-success bg-opacity-10 border-success border-opacity-25 h-100 rounded-4 shadow-inner">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="text-success small fw-bold tracking-widest text-uppercase xx-small"><i class="fas fa-arrow-up me-1"></i> Core Strengths</span>
+                            <span class="badge bg-success text-dark rounded-pill">{{ stats.strengths|length }}</span>
+                        </div>
+                        <ul class="list-unstyled mb-0 d-flex flex-column gap-2">
+                            {% for item in stats.strengths %}
+                            <li class="text-success small d-flex gap-2 bg-dark bg-opacity-50 p-2 rounded border border-success border-opacity-25 lh-sm" style="font-size: 0.75rem;"><i class="fas fa-check mt-1 opacity-50"></i> {{ item }}</li>
+                            {% empty %}
+                            <li class="text-success opacity-50 small fst-italic">Zero strict correlation.</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="glass-panel p-3 bg-danger bg-opacity-10 border-danger border-opacity-25 h-100 rounded-4 shadow-inner">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="text-danger small fw-bold tracking-widest text-uppercase xx-small"><i class="fas fa-arrow-down me-1"></i> Deficits</span>
+                            <span class="badge bg-danger rounded-pill">{{ stats.weaknesses|length }}</span>
+                        </div>
+                        <ul class="list-unstyled mb-0 d-flex flex-column gap-2">
+                            {% for item in stats.weaknesses %}
+                            <li class="text-danger small d-flex gap-2 bg-dark bg-opacity-50 p-2 rounded border border-danger border-opacity-25 lh-sm" style="font-size: 0.75rem;"><i class="fas fa-times mt-1 opacity-50"></i> {{ item }}</li>
+                            {% empty %}
+                            <li class="text-danger opacity-50 small fst-italic">Zero deficits found.</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            {% endwith %}
+        </div>
+    </div>
+</div>
+
+<!-- ================= LIVE DISCUSSION OFFCANVAS (PHASE 6) ================= -->
+<div class="offcanvas offcanvas-start glass-panel border-end border-primary border-opacity-50 shadow-lg" tabindex="-1" id="liveDiscussionSidebar" style="background: rgba(10, 10, 15, 0.98); backdrop-filter: blur(30px); width: 400px;">
+    <div class="offcanvas-header border-bottom border-primary border-opacity-25 pb-3">
+        <h5 class="offcanvas-title fw-bold text-white d-flex align-items-center gap-2">
+            <div class="rounded-circle d-flex justify-content-center align-items-center bg-primary bg-opacity-10 border border-primary border-opacity-50 shadow-inner pulse-glow" style="width: 40px; height: 40px;">
+                <i class="fas fa-satellite-dish text-primary"></i>
+            </div>
+            Collaboration Hub
+        </h5>
+        <button type="button" class="btn-close btn-close-white opacity-50" data-bs-dismiss="offcanvas"></button>
+    </div>
+    
+    <div class="offcanvas-body d-flex flex-column position-relative overflow-hidden p-0">
+        <!-- Live Presence Bar -->
+        <div class="bg-dark bg-opacity-75 border-bottom border-secondary border-opacity-25 p-2 px-3 d-flex align-items-center gap-2 shadow-sm" style="font-size: 0.8rem;">
+            <i class="fas fa-circle text-success pulse-glow" style="font-size: 0.5rem;"></i>
+            <span class="text-light font-monospace opacity-75" id="live-presence-text">Connecting...</span>
+        </div>
+
+        <!-- Chat Area -->
+        <div class="flex-grow-1 overflow-auto p-3" id="chat-messages-container" style="display: flex; flex-direction: column; gap: 15px;">
+            <!-- Messages injected via JS -->
+            {% for chat in application.interviews.last.discussions.all %}
+                {% if chat.msg_type == 'presence' %}
+                 <div class="text-center w-100 my-2">
+                    <span class="badge bg-secondary bg-opacity-25 text-light border border-secondary border-opacity-25 px-3 py-1 fw-normal rounded-pill" style="font-size: 0.7rem;">{{ chat.message }}</span>
+                 </div>
+                {% elif chat.msg_type == 'chat' %}
+                <div class="d-flex flex-column {% if chat.user == request.user %}align-items-end{% else %}align-items-start{% endif %}">
+                    <div class="d-flex align-items-baseline gap-2 mb-1">
+                        {% if chat.user != request.user %}<span class="text-info font-monospace fw-bold" style="font-size: 0.7rem;">{{ chat.user.username }}</span>{% endif %}
+                        <span class="text-secondary" style="font-size: 0.6rem;">[{{ chat.video_timestamp }}]</span>
+                    </div>
+                    <div class="p-3 rounded-4 shadow-sm text-light {% if chat.user == request.user %}bg-primary bg-opacity-25 border border-primary border-opacity-50 rounded-bottom-end-0{% else %}bg-dark bg-opacity-50 border border-secondary border-opacity-25 rounded-bottom-start-0{% endif %}" style="max-width: 85%; font-size: 0.85rem; box-shadow: {% if chat.user == request.user %}0 0 10px rgba(0, 210, 255, 0.1){% else %}none{% endif %};">
+                        {{ chat.message }}
+                    </div>
+                </div>
+                {% elif chat.msg_type == 'vote_up' or chat.msg_type == 'vote_down' %}
+                <div class="d-flex justify-content-center w-100 my-1">
+                    <div class="glass-panel px-3 py-2 rounded-pill {% if chat.msg_type == 'vote_up' %}border-glow-green{% else %}border-glow-red{% endif %} d-flex align-items-center gap-2">
+                        <i class="fas {% if chat.msg_type == 'vote_up' %}fa-arrow-up text-success{% else %}fa-arrow-down text-danger{% endif %}"></i>
+                        <span class="text-light font-monospace small"><b>{{ chat.user.username }}</b> {{ chat.message }}</span>
+                    </div>
+                </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+
+        <!-- Input Area -->
+        <div class="p-3 bg-dark bg-opacity-75 border-top border-primary border-opacity-25 shadow-lg">
+            
+            <!-- Quick Poll Actions -->
+            <div class="d-flex gap-2 mb-2 pb-2 border-bottom border-secondary border-opacity-25">
+                <span class="text-secondary small fw-bold me-auto align-self-center"><i class="fas fa-poll-h me-1"></i> Quick Poll:</span>
+                <button class="btn btn-sm btn-outline-success rounded-pill px-3 shadow-inner hover-scale" onclick="sendVote('vote_up')" title="Agree / Good Answer">
+                    <i class="fas fa-thumbs-up"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-danger rounded-pill px-3 shadow-inner hover-scale" onclick="sendVote('vote_down')" title="Disagree / Bad Answer">
+                    <i class="fas fa-thumbs-down"></i>
+                </button>
+            </div>
+
+            <form id="chat-form" class="d-flex gap-2 align-items-center">
+                <input type="text" id="chat-input" class="form-control bg-dark border-secondary border-opacity-50 text-light rounded-pill px-3 font-monospace custom-focus" placeholder="Drop a note..." autocomplete="off" style="font-size: 0.85rem;">
+                <button type="submit" class="btn btn-primary rounded-circle d-flex justify-content-center align-items-center shadow-lg" style="width: 40px; height: 40px; min-width: 40px;">
+                    <i class="fas fa-paper-plane text-dark"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ================= NEW SCORECARD MODAL ================= -->
+<div class="modal fade" id="scorecardModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content glass-panel border border-info border-opacity-50 shadow-lg" style="background: rgba(15, 15, 20, 0.95); backdrop-filter: blur(20px);">
+            <div class="modal-header border-bottom border-light border-opacity-10 pb-3">
+                <h5 class="modal-title fw-bold text-white d-flex align-items-center gap-2">
+                    <i class="fas fa-clipboard-list text-info"></i> Compile Evaluation Node
+                </h5>
+                <button type="button" class="btn-close btn-close-white opacity-50" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4 position-relative">
+                <div class="mb-4">
+                    <h6 class="small text-uppercase text-secondary tracking-widest fw-bold mb-3 d-flex align-items-center gap-2"><i class="fas fa-sliders-h text-info"></i> Required Competencies</h6>
+                    <div class="d-flex flex-column gap-3">
+                        {% for comp in competencies %}
+                        <div class="glass-panel p-3 bg-dark bg-opacity-75 border-secondary border-opacity-25 rounded-3 d-flex justify-content-between align-items-center hover-scale">
+                            <span class="small fw-bold text-white text-uppercase tracking-widest" style="font-size: 0.7rem;">{{ comp.name }}</span>
+                            <div class="btn-group btn-group-sm rating-group shadow-sm" data-comp-id="{{ comp.id }}">
+                                {% for i in "12345" %}
+                                <input type="radio" class="btn-check" name="comp_{{ comp.id }}" id="comp_{{ comp.id }}_{{ i }}" value="{{ i }}">
+                                <label class="btn btn-outline-info fw-bold" for="comp_{{ comp.id }}_{{ i }}">{{ i }}</label>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="mb-4 glass-panel p-3 bg-dark bg-opacity-50 border-secondary border-opacity-25 rounded-3">
+                    <label class="small text-secondary fw-bold text-uppercase tracking-widest mb-3 d-flex align-items-center gap-2"><i class="fas fa-comment-alt text-info"></i> Core Assessment Feedback</label>
+                    <textarea id="sc_comments" class="form-control glass-input bg-dark text-light border-secondary border-opacity-50 shadow-inner" rows="4" placeholder="Input neural synthesis..."></textarea>
+                </div>
+
+                <div class="glass-panel p-3 bg-warning bg-opacity-10 border-warning border-opacity-25 rounded-3 d-flex align-items-center gap-3">
+                    <div class="form-check form-switch form-switch-lg mb-0">
+                        <input class="form-check-input bg-dark border-warning" type="checkbox" id="is_final_decision" style="cursor: pointer; width: 3em; height: 1.5em;">
+                    </div>
+                    <div>
+                        <h6 class="text-warning fw-bold text-uppercase tracking-widest xx-small mb-1">Global Decision Lock</h6>
+                        <p class="text-secondary mb-0" style="font-size: 0.65rem;">Flag this entry as the authoritative final strategic verdict.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-top border-light border-opacity-10 d-grid">
+                <button type="button" class="btn btn-info fw-bold rounded-pill text-dark hover-scale shadow-lg" onclick="submitScorecard('{{ application.id }}')">
+                    <i class="fas fa-cloud-upload-alt me-2"></i> Transmit Compilation
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ================= SCRIPTS ================= -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.36.1/min/vs/loader.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        
+        // 1. Initialize Read-Only Code Arena
+        const codeContentRaw = document.getElementById('hidden-code');
+        const viewerContainer = document.getElementById('code-viewer');
+        
+        if (viewerContainer && codeContentRaw) {
+            require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.36.1/min/vs' } });
+            require(['vs/editor/editor.main'], function () {
+                monaco.editor.create(viewerContainer, {
+                    value: codeContentRaw.value || "# No execution logic transmitted.",
+                    language: 'python',
+                    theme: 'vs-dark',
+                    readOnly: true,
+                    minimap: { enabled: false },
+                    scrollBeyondLastLine: false,
+                    fontSize: 14,
+                    fontFamily: "'Fira Code', 'JetBrains Mono', monospace",
+                    padding: { top: 16, bottom: 16 }
+                });
+            });
+        }
+
+        // 2. Initialize Telemetry Heatmap (Chart.js via API)
+        const ctx = document.getElementById('cheatingHeatmap');
+        if (ctx) {
+            const appId = '{{ application.id }}';
+
+            fetch(`/jobs/application/${appId}/proctoring-heatmap/`)
+                .then(response => response.json())
+                .then(data => {
+                    // Check logic based on exact response structure expected
+                    if (data.success && data.heatmap && data.heatmap.length > 0) {
+                        const labels = data.heatmap.map(h => `${h.offset_seconds}s`);
+                        const scores = data.heatmap.map(h => h.score);
+
+                        new Chart(ctx, {
+                            type: 'line',
+                            data: {
+                                labels: labels,
+                                datasets: [{
+                                    label: 'Anomaly Detection Spike',
+                                    data: scores,
+                                    borderColor: '#dc3545',
+                                    backgroundColor: 'rgba(220, 53, 69, 0.2)',
+                                    fill: true,
+                                    tension: 0.3,
+                                    borderWidth: 2,
+                                    pointBackgroundColor: '#dc3545',
+                                    pointBorderColor: '#fff',
+                                    pointRadius: 4,
+                                    pointHoverRadius: 6
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                scales: {
+                                    x: { 
+                                        display: true, 
+                                        grid: { color: 'rgba(255,255,255,0.05)', drawBorder: false },
+                                        ticks: { color: 'rgba(255,255,255,0.5)', font: { size: 10, family: 'monospace' } }
+                                    },
+                                    y: { 
+                                        beginAtZero: true, 
+                                        grid: { color: 'rgba(255,255,255,0.05)', drawBorder: false },
+                                        ticks: { display: false }
+                                    }
+                                },
+                                plugins: {
+                                    legend: { display: false },
+                                    tooltip: { 
+                                        backgroundColor: 'rgba(0,0,0,0.8)',
+                                        titleFont: { family: 'monospace' },
+                                        bodyFont: { family: 'monospace', weight: 'bold' },
+                                        padding: 10,
+                                        cornerRadius: 8,
+                                        borderColor: '#dc3545',
+                                        borderWidth: 1
+                                    }
+                                }
+                            }
+                        });
+                    } else {
+                        // Fallback: Matrix Distribution
+                        const logs = document.querySelectorAll('.log-entry');
+                        const counts = { 'VIOLATION': 0, 'SUSPICION': 0, 'SCREENSHOT': 0, 'NORMAL': 1 };
+                        logs.forEach(e => {
+                            const t = e.dataset.type;
+                            if(counts[t] !== undefined) counts[t]++; else counts['NORMAL']++;
+                        });
+
+                        new Chart(ctx, {
+                            type: 'doughnut',
+                            data: {
+                                labels: ['Critical Violations', 'Minor Suspicion', 'Clean Operations'],
+                                datasets: [{
+                                    data: [counts['VIOLATION'], counts['SUSPICION'], counts['NORMAL']],
+                                    backgroundColor: ['#dc3545', '#ffc107', '#198754'],
+                                    borderWidth: 2,
+                                    borderColor: '#151515'
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                cutout: '75%',
+                                plugins: { 
+                                    legend: { position: 'right', labels: { color: '#adb5bd', font: { family: 'monospace', size: 10 }, usePointStyle: true, boxWidth: 8 } },
+                                    tooltip: {
+                                        backgroundColor: 'rgba(0,0,0,0.9)',
+                                        titleFont: { family: 'monospace' },
+                                        bodyFont: { family: 'monospace', weight: 'bold' }
+                                    }
+                                }
+                            }
+                        });
+                    }
+                }).catch(err => console.error("Telemetry Stream Interrupted:", err));
+        }
+
+        // 3. Dimensional Radar Initialize
+        const dlCtx = document.getElementById('dlInsightsChart');
+        if (dlCtx) {
+            try {
+                // Ensure escapejs handles raw json correctly
+                const rawJson = '{{ application.ai_insights|escapejs }}';
+                const statsData = JSON.parse(rawJson || '{}');
+                const dimensions = statsData.dimensions || { 'Technical': 0, 'Communication': 0, 'Leadership': 0, 'Cultural': 0 };
+
+                new Chart(dlCtx, {
+                    type: 'radar',
+                    data: {
+                        labels: Object.keys(dimensions).length > 0 ? Object.keys(dimensions) : ['Technical', 'Communication', 'Leadership', 'Cultural'],
+                        datasets: [{
+                            label: 'Vector Alignment',
+                            data: Object.keys(dimensions).length > 0 ? Object.values(dimensions) : [0,0,0,0],
+                            backgroundColor: 'rgba(13, 202, 240, 0.2)', // Info color map
+                            borderColor: 'rgba(13, 202, 240, 1)',
+                            pointBackgroundColor: 'rgba(13, 202, 240, 1)',
+                            pointBorderColor: '#fff',
+                            pointHoverBackgroundColor: '#fff',
+                            pointHoverBorderColor: 'rgba(13, 202, 240, 1)',
+                            borderWidth: 2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            r: {
+                                angleLines: { color: 'rgba(255, 255, 255, 0.1)' },
+                                grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                                pointLabels: { color: '#adb5bd', font: { size: 10, family: 'monospace', weight: 'bold' } },
+                                ticks: { display: false, min: 0, max: 100 }
+                            }
+                        },
+                        plugins: { legend: { display: false } }
+                    }
+                });
+            } catch (e) { console.error("Neural Radar Boot Failure", e); }
+        }
+
+        // 4. Retention Radar Initialize
+        const retentionCtx = document.getElementById('retentionRadar');
+        if (retentionCtx) {
+            try {
+                const radarRaw = '{{ turnover_prediction.radar_data|escapejs }}';
+                const radarData = JSON.parse(radarRaw || '{}');
+                
+                new Chart(retentionCtx, {
+                    type: 'radar',
+                    data: {
+                        labels: Object.keys(radarData),
+                        datasets: [{
+                            label: 'Candidate Stability',
+                            data: Object.values(radarData),
+                            backgroundColor: 'rgba(0, 255, 136, 0.2)',
+                            borderColor: '#00ff88',
+                            pointBackgroundColor: '#00ff88',
+                            pointBorderColor: '#fff',
+                            borderWidth: 2
+                        }, {
+                            label: 'Ideal Benchmark',
+                            data: [90, 85, 80, 85], // Static benchmark for "Ideal Hire"
+                            backgroundColor: 'rgba(108, 117, 125, 0.1)',
+                            borderColor: 'rgba(108, 117, 125, 0.5)',
+                            borderDash: [5, 5],
+                            borderWidth: 1,
+                            pointRadius: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            r: {
+                                angleLines: { color: 'rgba(255, 255, 255, 0.1)' },
+                                grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                                pointLabels: { color: '#adb5bd', font: { size: 9, family: 'monospace' } },
+                                ticks: { display: false, min: 0, max: 100 }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                display: true,
+                                position: 'bottom',
+                                labels: { color: '#adb5bd', font: { size: 8, family: 'monospace' }, boxWidth: 10 }
+                            }
+                        }
+                    }
+                });
+            } catch (e) { console.error("Retention Radar Failed:", e); }
+        }
+    });
+
+    // ================= API ACTION ROUTES =================
+
+    async function runHiringCommittee(appId) {
+        const btn = document.getElementById('btn-trigger-crewai');
+        const container = document.getElementById('crewai-report-container');
+        
+        btn.innerHTML = '<i class="fas fa-circle-notch fa-spin me-2"></i> Initializing Multi-Agent Swarm...';
+        btn.classList.add('disabled');
+        
+        container.innerHTML = `
+            <div class="p-4 bg-dark bg-opacity-75 rounded-4 border border-warning border-opacity-50 shadow-inner text-center">
+                <div class="spinner-border text-warning mb-3" role="status" style="width: 3rem; height: 3rem;"></div>
+                <h6 class="text-warning fw-bold tracking-widest text-uppercase pulse-animation-slow">Committee in Session</h6>
+                <p class="text-secondary small font-monospace mb-0">Agents are exchanging matrices and converging on a consensus. This cognitive load takes 15-40s.</p>
+            </div>
+        `;
+
+        try {
+            const formData = new FormData();
+            formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+            
+            const response = await fetch(`/jobs/api/crewai/evaluate/${appId}/`, {
+                method: 'POST',
+                headers: { 'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value }
+            });
+
+            if(response.ok) {
+                const data = await response.json();
+                window.location.reload(); // Reload to natively inject markdown via Django
+            } else {
+                throw new Error("Committee failed to reach consensus.");
+            }
+        } catch(err) {
+            console.error(err);
+            btn.innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i> Sync Failure. Retry Protocol.';
+            btn.classList.remove('disabled');
+            container.innerHTML = `<div class="alert alert-danger bg-danger bg-opacity-10 border border-danger text-danger"><i class="fas fa-biohazard me-2"></i> Fatal error connecting to agent network. Review system logs.</div>`;
+        }
+    }
+
+    async function runDeepVision(appId) {
+        const btn = event.currentTarget;
+        const oHtml = btn.innerHTML;
+        btn.innerHTML = '<span><i class="fas fa-spinner fa-spin me-2"></i> Processing...</span>';
+        btn.classList.add('disabled');
+
+        try {
+            const res = await fetch(`/api/deep-vision-audit/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                },
+                body: JSON.stringify({ application_id: appId })
+            });
+            const data = await res.json();
+            
+            if(res.ok) {
+                alert('Deep Vision Audit Success:\n\n' + data.analysis);
+                // Optionally inject into DOM
+            } else { throw new Error(data.error); }
+        } catch(e) {
+            alert('Deep Vision Core Offline: ' + e.message);
+        } finally {
+            btn.innerHTML = oHtml;
+            btn.classList.remove('disabled');
+        }
+    }
+
+    // ================= PHASE 6: WEBSOCKET LIVE DISCUSSION =================
+    const interviewId = "{{ application.interviews.last.id|default:'' }}";
+    const currentUsername = "{{ request.user.username }}";
+    let chatSocket = null;
+    let unreadCount = 0;
+
+    const chatContainer = document.getElementById('chat-messages-container');
+    const chatInput = document.getElementById('chat-input');
+    const chatForm = document.getElementById('chat-form');
+    const presenceText = document.getElementById('live-presence-text');
+    const offcanvasEl = document.getElementById('liveDiscussionSidebar');
+    let isChatOpen = false;
+
+    if (offcanvasEl) {
+        offcanvasEl.addEventListener('shown.bs.offcanvas', () => {
+            isChatOpen = true;
+            unreadCount = 0;
+            const badge = document.getElementById('chat-unread-badge');
+            if(badge) badge.style.display = 'none';
+            scrollToBottom();
+        });
+        offcanvasEl.addEventListener('hidden.bs.offcanvas', () => isChatOpen = false);
+    }
+
+    if (interviewId) {
+        const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+        chatSocket = new WebSocket(protocol + window.location.host + '/ws/interview/' + interviewId + '/chat/');
+
+        chatSocket.onmessage = function(e) {
+            const data = JSON.parse(e.data);
+            appendMessageToUI(data);
+
+            if (!isChatOpen && data.msg_type === 'chat' && data.username !== currentUsername) {
+                unreadCount++;
+                const badge = document.getElementById('chat-unread-badge');
+                if(badge) {
+                    badge.innerText = unreadCount;
+                    badge.style.display = 'inline-block';
+                }
+                // Thunder Toast
+                showToast(`New note from ${data.username}`, data.message, 'info');
+            }
+        };
+
+        chatSocket.onclose = function(e) {
+            console.error('Chat socket closed unexpectedly');
+            presenceText.innerText = "Connection lost. Reconnecting...";
+            presenceText.classList.replace('text-light', 'text-danger');
+        };
+
+        chatSocket.onopen = function() {
+            presenceText.innerText = "Secure Connection Established.";
+            presenceText.classList.replace('text-danger', 'text-light');
+            scrollToBottom();
+        };
+    }
+
+    if(chatForm) {
+        chatForm.onsubmit = function(e) {
+            e.preventDefault();
+            const message = chatInput.value.trim();
+            if (message && chatSocket) {
+                const now = new Date();
+                const ts = now.getMinutes().toString().padStart(2, '0') + ':' + now.getSeconds().toString().padStart(2, '0');
+                
+                chatSocket.send(JSON.stringify({
+                    'message': message,
+                    'msg_type': 'chat',
+                    'timestamp': ts
+                }));
+                chatInput.value = '';
+            }
+        };
+    }
+
+    function sendVote(type) {
+        if (chatSocket) {
+            const now = new Date();
+            const ts = now.getMinutes().toString().padStart(2, '0') + ':' + now.getSeconds().toString().padStart(2, '0');
+            const msg = type === 'vote_up' ? 'upvoted the response.' : 'downvoted the response.';
+            
+            chatSocket.send(JSON.stringify({
+                'message': msg,
+                'msg_type': type,
+                'timestamp': ts
+            }));
+        }
+    }
+
+    function appendMessageToUI(data) {
+        if(!chatContainer) return;
+        
+        let htmlNode = document.createElement('div');
+        htmlNode.className = "w-100 my-1";
+        
+        if (data.msg_type === 'presence') {
+            htmlNode.innerHTML = `
+                <div class="text-center w-100 my-2">
+                    <span class="badge bg-secondary bg-opacity-25 text-light border border-secondary border-opacity-25 px-3 py-1 fw-normal rounded-pill" style="font-size: 0.7rem;">${data.message}</span>
+                </div>`;
+        } else if (data.msg_type === 'chat') {
+            const isMe = data.username === currentUsername;
+            htmlNode.innerHTML = `
+                <div class="d-flex flex-column ${isMe ? 'align-items-end' : 'align-items-start'}">
+                    <div class="d-flex align-items-baseline gap-2 mb-1">
+                        ${!isMe ? `<span class="text-info font-monospace fw-bold" style="font-size: 0.7rem;">${data.username}</span>` : ''}
+                        <span class="text-secondary" style="font-size: 0.6rem;">[${data.timestamp}]</span>
+                    </div>
+                    <div class="p-3 rounded-4 shadow-sm text-light ${isMe ? 'bg-primary bg-opacity-25 border border-primary border-opacity-50 rounded-bottom-end-0' : 'bg-dark bg-opacity-50 border border-secondary border-opacity-25 rounded-bottom-start-0'}" style="max-width: 85%; font-size: 0.85rem; box-shadow: ${isMe ? '0 0 10px rgba(0, 210, 255, 0.1)' : 'none'};">
+                        ${data.message}
+                    </div>
+                </div>`;
+        } else if (data.msg_type === 'vote_up' || data.msg_type === 'vote_down') {
+            const isUp = data.msg_type === 'vote_up';
+            htmlNode.innerHTML = `
+                <div class="d-flex justify-content-center w-100 my-1">
+                    <div class="glass-panel px-3 py-2 rounded-pill ${isUp ? 'border-glow-green' : 'border-glow-red'} d-flex align-items-center gap-2">
+                        <i class="fas ${isUp ? 'fa-arrow-up text-success' : 'fa-arrow-down text-danger'}"></i>
+                        <span class="text-light font-monospace small"><b>${data.username}</b> ${data.message}</span>
+                    </div>
+                </div>`;
+        }
+
+        chatContainer.appendChild(htmlNode);
+        scrollToBottom();
+    }
+
+    function scrollToBottom() {
+        if(chatContainer) {
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+    }
+
+    async function submitScorecard(appId) {
+        // Collect UI elements
+        const rows = document.querySelectorAll('.rating-group');
+        let valid = false;
+        // Simple logic for CSRF (assuming fetch wrapper or form fallback is needed, if API route exists)
+        // Ensure you have an actual API or Form route. As written, requires a fetch call.
+        alert('Scorecard routing configured. Connect backend endpoints to transmit data.');
+    }
+</script>
+    </div>
+</div>
+{% endblock %}

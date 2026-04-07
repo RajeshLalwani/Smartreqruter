@@ -1,0 +1,129 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}The Hunter | Autonomous Outreach | SmartRecruit{% endblock %}
+
+{% block content %}
+<style>
+    /* Z-INDEX SAFEGUARDS */
+    .modal { z-index: 2000 !important; }
+    .modal-backdrop { z-index: 1050 !important; }
+    .tracking-widest { letter-spacing: 0.2em; }
+    .x-small { font-size: 0.75rem; }
+    .xx-small { font-size: 0.65rem; }
+    .italic { font-style: italic; }
+
+    /* Lead card */
+    .lead-card { background: rgba(255,255,255,0.025); border: 1px solid rgba(255,255,255,0.08); border-radius: 1rem; transition: all 0.2s ease; }
+    .lead-card:hover { border-color: rgba(41,121,255,0.3) !important; background: rgba(41,121,255,0.04) !important; }
+
+    /* Hunter status dot */
+    @keyframes hunter-blink { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
+    .hunter-status-dot { width: 8px; height: 8px; background: #2979FF; border-radius: 50%; box-shadow: 0 0 10px #2979FF; animation: hunter-blink 1.5s infinite; }
+
+    /* Terminal */
+    .font-monospace { font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace !important; }
+    #terminal-output { scrollbar-width: thin; scrollbar-color: rgba(41,121,255,0.3) transparent; }
+    #terminal-output::-webkit-scrollbar { width: 4px; }
+    #terminal-output::-webkit-scrollbar-thumb { background: rgba(41,121,255,0.3); border-radius: 4px; }
+</style>
+
+<div class="container-fluid py-4 px-5 fade-up">
+
+    <!-- ─── Hero ─── -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-5 gap-3" data-aos="fade-down">
+        <div>
+            <div class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-3 py-2 rounded-pill mb-3 tracking-widest text-uppercase x-small fw-bold">
+                <i class="fas fa-crosshairs me-2"></i>Autonomous Talent Acquisition
+            </div>
+            <h1 class="display-6 fw-bold text-white mb-2" style="font-family: 'Space Grotesk', sans-serif;">The <span style="background: linear-gradient(90deg, #2979FF, #00B8D4); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">Hunter</span></h1>
+            <p class="lead text-secondary mb-0">AI-driven talent hunting &amp; personalized outreach sequences.</p>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- ─── Lead Queue ─── -->
+        <div class="col-lg-4" data-aos="fade-right">
+            <div class="glass-panel p-4 h-100 shadow rounded-4 border-secondary border-opacity-25">
+                <h6 class="fw-bold text-white mb-4 x-small tracking-widest text-uppercase border-bottom border-light border-opacity-10 pb-3"><i class="fas fa-list-ul text-primary me-2"></i>Target Acquisition Queue</h6>
+
+                <div class="d-flex flex-column gap-3">
+                    {% for lead in leads %}
+                    <div class="lead-card p-3">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                                <h6 class="fw-bold text-white mb-0 x-small">{{ lead.name }}</h6>
+                                <span class="xx-small text-secondary">{{ lead.profile }}</span>
+                            </div>
+                            <span class="badge bg-primary bg-opacity-10 text-primary xx-small fw-bold">SCOUTED</span>
+                        </div>
+                        <button class="btn btn-primary btn-sm w-100 rounded-pill mt-2 x-small fw-bold hover-scale" onclick="huntLead('{{ lead.name }}', '{{ lead.profile }}', this)">Initiate Engagement</button>
+                    </div>
+                    {% empty %}
+                    <div class="text-center py-4 text-secondary x-small italic">No leads in queue. Targets will appear here.</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- ─── Outreach Terminal ─── -->
+        <div class="col-lg-8" data-aos="fade-up">
+            <div class="glass-panel p-0 h-100 shadow-lg rounded-4 border-primary border-opacity-10 d-flex flex-column overflow-hidden">
+                <!-- Terminal header bar -->
+                <div class="bg-dark bg-opacity-40 p-3 border-bottom border-secondary border-opacity-10 d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="hunter-status-dot"></div>
+                        <span class="x-small text-white tracking-widest text-uppercase fw-bold font-monospace">Hunter Protocol: v8.2.0</span>
+                    </div>
+                    <div class="x-small text-secondary font-monospace">SEQ_STATUS: IDLE</div>
+                </div>
+
+                <!-- Terminal body -->
+                <div id="terminal-output" class="flex-grow-1 p-4 overflow-auto font-monospace" style="height: 500px; background: rgba(0,0,0,0.12);">
+                    <div class="text-secondary xx-small mb-3">&gt;&gt; SYSTEM READY. AWAITING TARGET SELECTION...</div>
+                </div>
+
+                <!-- Agent thought panel -->
+                <div id="agent-thought-panel" class="p-3 border-top border-secondary border-opacity-10 bg-dark bg-opacity-20 d-none">
+                    <h6 class="xx-small tracking-widest text-uppercase text-info fw-bold mb-2"><i class="fas fa-brain me-2"></i>Agent Strategic Thought:</h6>
+                    <p class="x-small text-secondary mb-0 italic" id="thought-text"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+async function huntLead(name, profile, btn) {
+    const terminal = document.getElementById('terminal-output');
+    const thoughtPanel = document.getElementById('agent-thought-panel');
+    const thoughtText = document.getElementById('thought-text');
+
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Engaged';
+
+    terminal.innerHTML += `<div class="text-primary mb-2">>> INITIATING HEURISTIC PROFILE SCAN: ${name}...</div>`;
+
+    try {
+        const response = await fetch("{% url 'initiate_autonomous_engagement' %}", {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+            body: JSON.stringify({ lead_name: name, lead_profile: profile })
+        });
+        const data = await response.json();
+        terminal.innerHTML += `
+            <div class="text-success mb-2">>> PERSONALIZED HOOK GENERATED.</div>
+            <div class="text-secondary mb-3 p-3 bg-dark bg-opacity-25 rounded border border-secondary border-opacity-10">
+                <strong class="d-block mb-1 text-info">Subject: ${data.subject}</strong>
+                ${data.body.replace(/\n/g, '<br>')}
+            </div>
+            <div class="text-warning mb-4">>> SEQUENCE STEP 1 SENT. MONITORING FOR RESPONSE...</div>
+        `;
+        thoughtPanel.classList.remove('d-none');
+        thoughtText.innerText = data.thought;
+        terminal.scrollTop = terminal.scrollHeight;
+    } catch (e) {
+        terminal.innerHTML += `<div class="text-danger">>> ERROR: ENGAGEMENT PROTOCOL FAILED.</div>`;
+    }
+}
+</script>
+{% endblock %}

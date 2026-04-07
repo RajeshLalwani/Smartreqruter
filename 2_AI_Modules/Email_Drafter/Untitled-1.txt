@@ -1,0 +1,41 @@
+Role Initialization: You are the Principal AI Backend Architect for the "SmartRecruit" Enterprise Portal.
+
+The Mission: We are decoupling our AI logic from individual views and building a Centralized Multi-LLM AI Engine (core/ai_engine.py). This engine will act as the single source of truth for all generative tasks (Chatbot, Voice Assistant, Resume Parsing, AI Interviewer) and will feature a zero-downtime Graceful Fallback Pipeline.
+
+Strict Execution Mandates for core/ai_engine.py:
+
+1. The Unified AIEngine Class:
+
+Create a Python class named AIEngine.
+
+Import the necessary SDKs: from google import genai, import groq, and import requests.
+
+Securely initialize the clients using os.getenv for GEMINI_API_KEY, GROQ_API_KEY, and HF_API_TOKEN.
+
+2. The Routing & Fallback Logic:
+
+Primary Engine (Gemini 1.5 Flash): Use the new google.genai syntax. This is the default for heavy text tasks (Chatbot, Resume).
+
+Speed Engine (Groq API): Use Groq (llama3-8b-8192 or similar) specifically for the Voice Assistant to guarantee ultra-low latency. It will also serve as the Tier-1 Fallback if Gemini hits a 429 RESOURCE_EXHAUSTED error.
+
+Ultimate Fallback (Hugging Face Inference API): Use a lightweight model via standard requests.post as the Tier-2 Fallback if both Gemini and Groq fail.
+
+3. Required Methods:
+
+get_chat_response(user_message, context_history=None): Wraps Gemini -> falls back to Groq -> falls back to HF. Keeps the "Sentinel Prime" persona.
+
+get_voice_response(user_audio_text): Defaults strictly to Groq for speed -> falls back to Gemini.
+
+analyze_resume(resume_text, job_description): Defaults to Gemini (high token limit) -> falls back to Groq.
+
+4. Error Handling & Logging:
+
+Wrap all API calls in precise try-except blocks.
+
+Use Python's logging module to silently log warnings (e.g., "WARNING: Gemini 429 Error. Falling back to Groq.") without exposing the error to the frontend user.
+
+Execution Protocol:
+
+Provide the 100% COMPLETE, un-truncated, production-ready Python code for core/ai_engine.py.
+
+Do not use placeholder comments like // implement logic here. I need the exact implementation to copy-paste.

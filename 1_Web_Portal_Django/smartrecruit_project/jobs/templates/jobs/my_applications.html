@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}My Applications | SmartRecruit{% endblock %}
+
+{% block body_class %}has-sidebar{% endblock %}
+
+{% block sidebar %}
+    {% include 'jobs/_candidate_sidebar.html' %}
+{% endblock %}
+
+{% block content %}
+<div class="d-flex" id="candidate-wrapper" style="min-height:calc(100vh - 72px)">
+    <!-- Sidebar is handled by block sidebar in app-shell -->
+    
+    <main class="flex-grow-1 p-4 p-lg-5 overflow-auto">
+        <div class="container fade-up">
+    
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-theme mb-1" style="font-family: 'Space Grotesk', sans-serif;">My Applications</h2>
+            <p class="text-secondary mb-0 tracking-widest text-uppercase x-small">Track your active pipeline</p>
+        </div>
+        <a href="{% url 'dashboard' %}" class="btn btn-outline-info rounded-pill px-4 btn-sm fw-bold btn-glass"><i class="fas fa-chart-line me-2"></i>Dashboard</a>
+    </div>
+
+    <div class="row">
+        {% if applications %}
+            {% for app in applications %}
+            <div class="col-md-6 col-lg-4 mb-4" data-aos="fade-up" data-aos-delay="{{ forloop.counter|add:1 }}00">
+                <div class="glass-panel p-4 h-100 position-relative rounded-4 border border-secondary border-opacity-25 hover-scale">
+                    
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div class="rounded-circle bg-primary bg-opacity-20 d-flex align-items-center justify-content-center border border-primary border-opacity-50 shadow" style="width: 45px; height: 45px;">
+                            <i class="fas fa-briefcase text-info"></i>
+                        </div>
+                        <span class="badge bg-{% if app.status == 'REJECTED' %}danger{% elif app.status == 'HIRED' %}success{% else %}warning{% endif %} text-{% if app.status == 'REJECTED' %}white{% elif app.status == 'HIRED' %}white{% else %}dark{% endif %} px-3 py-2 rounded-pill x-small fw-bold shadow-sm">
+                            {{ app.get_status_display }}
+                        </span>
+                    </div>
+
+                    <h5 class="fw-bold text-theme mb-2" style="font-family: 'Space Grotesk', sans-serif;">{{ app.job.title }}</h5>
+                    <p class="text-secondary small mb-3"><i class="fas fa-map-marker-alt text-danger me-2"></i>{{ app.job.location }} · {{ app.job.job_type }}</p>
+
+                    <div class="bg-dark bg-opacity-50 p-2 rounded-3 mb-3 d-flex justify-content-between text-secondary x-small">
+                        <span><i class="fas fa-calendar-alt text-primary me-1"></i> Applied:</span>
+                        <span class="fw-bold text-theme">{{ app.applied_at|date:"M d, Y" }}</span>
+                    </div>
+                    
+                    {% if app.get_status_display != 'Rejected' and app.get_status_display != 'Hired' %}
+                        <a href="{% url 'interview_prep_for_job' app.id %}" class="btn btn-sm btn-outline-info w-100 btn-glass mt-auto shadow-sm">
+                            <i class="fas fa-brain me-1"></i> AI Prep Guide
+                        </a>
+                        {% if app.status == 'RESUME_SELECTED' %}
+                            <a href="{% url 'take_assessment' app.id 'aptitude' %}" class="btn btn-sm btn-primary w-100 mt-2 shadow-sm rounded-pill fw-bold">
+                                <i class="fas fa-laptop-code me-1"></i> Start Round 1 (Aptitude)
+                            </a>
+                        {% elif app.status == 'ROUND_1_PASSED' %}
+                            <a href="{% url 'take_assessment' app.id 'practical' %}" class="btn btn-sm btn-primary w-100 mt-2 shadow-sm rounded-pill fw-bold">
+                                <i class="fas fa-code me-1"></i> Start Round 2 (Practical)
+                            </a>
+                        {% elif app.status == 'ROUND_2_PASSED' %}
+                            <a href="{% url 'ai_interview' app.id %}" class="btn btn-sm btn-warning w-100 mt-2 shadow-sm rounded-pill fw-bold text-dark">
+                                <i class="fas fa-robot me-1"></i> Start Round 3 (AI Interview)
+                            </a>
+                        {% elif app.status == 'ROUND_3_PASSED' %}
+                            <a href="{% url 'ai_hr_interview' app.id %}" class="btn btn-sm btn-success w-100 mt-2 shadow-sm rounded-pill fw-bold text-white">
+                                <i class="fas fa-user-tie me-1"></i> Join HR Interview (Round 4)
+                            </a>
+                        {% elif app.status == 'OFFER_EXTENDED' %}
+                            <a href="{% url 'view_offer' app.id %}" class="btn btn-sm btn-info w-100 mt-2 shadow-sm rounded-pill fw-bold text-dark">
+                                <i class="fas fa-file-contract me-1"></i> View Offer Letter
+                            </a>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="col-12 text-center py-5">
+                <div class="glass-panel p-5 rounded-4 border-secondary border-opacity-10 d-inline-block">
+                    <i class="fas fa-folder-open fa-3x text-muted mb-3 opacity-50"></i>
+                    <h5 class="text-theme fw-bold">No Active Applications</h5>
+                    <p class="text-theme-secondary mb-4">You haven't applied to any roles yet.</p>
+                    <a href="{% url 'job_list' %}" class="btn btn-primary btn-neon rounded-pill px-4 shadow">Explore Opportunities</a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+        </div>
+    </main>
+</div>
+{% endblock %}

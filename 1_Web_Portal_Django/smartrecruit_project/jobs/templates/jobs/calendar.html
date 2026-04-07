@@ -1,0 +1,219 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Interview Calendar | SmartRecruit{% endblock %}
+
+{% block extra_head %}
+<style>
+    /* ──── FullCalendar Dark/Glass Override ──── */
+    .fc {
+        --fc-border-color: rgba(0, 229, 255, 0.1);
+        --fc-page-bg-color: transparent;
+        --fc-neutral-bg-color: rgba(0, 229, 255, 0.03);
+        --fc-today-bg-color: rgba(0, 229, 255, 0.07);
+        --fc-event-bg-color: rgba(0, 229, 255, 0.7);
+        --fc-event-border-color: rgba(0, 229, 255, 0.5);
+        --fc-event-text-color: #000;
+        --fc-highlight-color: rgba(124, 77, 255, 0.08);
+        --fc-list-event-hover-bg-color: rgba(0, 229, 255, 0.06);
+    }
+
+    .fc-theme-standard .fc-scrollgrid {
+        border-color: rgba(0, 229, 255, 0.12);
+    }
+
+    .fc-col-header-cell {
+        background: rgba(0, 229, 255, 0.03);
+        font-size: 0.7rem;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        padding: 8px !important;
+    }
+
+    .fc-col-header-cell a { color: rgba(255,255,255,0.45) !important; text-decoration: none; }
+
+    .fc-daygrid-day-number { color: rgba(255,255,255,0.6); text-decoration: none; font-size: 0.82rem; }
+    .fc-daygrid-day.fc-day-today .fc-daygrid-day-number {
+        color: #00e5ff;
+        font-weight: 800;
+    }
+    .fc-day-today {
+        border: 1px solid rgba(0, 229, 255, 0.3) !important;
+        border-radius: 4px;
+    }
+
+    .fc-button-primary {
+        background: rgba(0, 229, 255, 0.1) !important;
+        border: 1px solid rgba(0, 229, 255, 0.3) !important;
+        color: #00e5ff !important;
+        font-size: 0.75rem !important;
+        border-radius: 8px !important;
+        font-weight: 700 !important;
+        transition: all 0.2s ease !important;
+        backdrop-filter: blur(10px);
+    }
+    .fc-button-primary:hover, .fc-button-active {
+        background: rgba(0, 229, 255, 0.2) !important;
+        box-shadow: 0 0 15px rgba(0, 229, 255, 0.25) !important;
+    }
+    .fc-toolbar-title {
+        font-size: 1.1rem !important;
+        font-weight: 800 !important;
+        color: #ffffff !important;
+        letter-spacing: -0.3px;
+    }
+    .fc-event {
+        border-radius: 6px !important;
+        font-size: 0.75rem !important;
+        font-weight: 600 !important;
+        padding: 2px 6px !important;
+        box-shadow: 0 0 8px rgba(0,229,255,0.25) !important;
+        transition: filter 0.15s ease, transform 0.15s ease !important;
+    }
+    .fc-event:hover { filter: brightness(1.25); transform: scale(1.02); }
+
+    .calendar-glass-wrapper {
+        background: rgba(10, 11, 16, 0.65);
+        backdrop-filter: blur(15px);
+        -webkit-backdrop-filter: blur(15px);
+        border-radius: 16px;
+        border: 1px solid rgba(0, 229, 255, 0.18);
+        box-shadow: 0 0 40px rgba(0, 229, 255, 0.06), inset 0 1px 0 rgba(255,255,255,0.05);
+        padding: 30px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .calendar-glass-wrapper::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 2px;
+        background: linear-gradient(90deg, transparent, #00e5ff, transparent);
+    }
+
+    .tz-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(0,229,255,0.08);
+        border: 1px solid rgba(0,229,255,0.2);
+        color: #00e5ff;
+        padding: 4px 12px;
+        border-radius: 50px;
+        font-size: 0.78rem;
+        font-weight: 600;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid" data-aos="fade-up">
+
+    <!-- ─── Hero ─── -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <div class="hero-badge mb-2"><i class="fa-solid fa-calendar-days me-2"></i>Interview Scheduler</div>
+            <h1 class="fw-bold text-theme m-0">Interview <span style="background: linear-gradient(90deg, #00e5ff, #7c4dff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">Calendar</span></h1>
+            <p class="text-theme-secondary small mt-1 mb-0">Manage and track all scheduled interviews. Click any event to view candidate details.</p>
+        </div>
+        <div class="d-flex gap-2 align-items-center">
+            <span class="tz-badge"><i class="fa-solid fa-globe"></i><span id="tz-display">IST (UTC+5:30)</span></span>
+            <a href="{% url 'manage_availability' %}" class="btn thunder-btn-ghost btn-sm">
+                <i class="fa-solid fa-plus me-2"></i>Add Slots
+            </a>
+            <a href="{% url 'interview_list' %}" class="btn thunder-btn-ghost btn-sm">
+                <i class="fa-solid fa-list me-2"></i>List View
+            </a>
+        </div>
+    </div>
+
+    <!-- ─── Legend ─── -->
+    <div class="d-flex gap-2 mb-4 flex-wrap">
+        <span class="badge rounded-pill" style="background: rgba(0,229,255,0.12); border: 1px solid rgba(0,229,255,0.3); color: #00e5ff; padding: 5px 14px;">
+            <i class="fa-solid fa-robot me-1"></i>AI Interview
+        </span>
+        <span class="badge rounded-pill" style="background: rgba(0,255,128,0.1); border: 1px solid rgba(0,255,128,0.3); color: #00ff80; padding: 5px 14px;">
+            <i class="fa-solid fa-user-tie me-1"></i>HR Interview
+        </span>
+        <span class="badge rounded-pill" style="background: rgba(255,200,0,0.1); border: 1px solid rgba(255,200,0,0.3); color: #ffc800; padding: 5px 14px;">
+            <i class="fa-solid fa-code me-1"></i>Technical
+        </span>
+        <span class="badge rounded-pill" style="background: rgba(255,70,70,0.1); border: 1px solid rgba(255,70,70,0.3); color: #ff4646; padding: 5px 14px; cursor:pointer;" onclick="checkConflicts()">
+            <i class="fa-solid fa-triangle-exclamation me-1"></i>Check Conflicts
+        </span>
+    </div>
+
+    <!-- ─── Calendar Panel ─── -->
+    <div class="calendar-glass-wrapper">
+        <div id="calendar"></div>
+    </div>
+
+</div>
+
+<!-- FullCalendar JS -->
+<script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js'></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    // Display local timezone in the badge
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const offset = -new Date().getTimezoneOffset() / 60;
+    const offsetStr = (offset >= 0 ? '+' : '') + offset + ':00';
+    document.getElementById('tz-display').textContent = `${tz} (UTC${offsetStr})`;
+
+    const calendarEl = document.getElementById('calendar');
+    const calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        headerToolbar: {
+            left: 'prev,next today',
+            center: 'title',
+            right: 'dayGridMonth,timeGridWeek,timeGridDay'
+        },
+        events: '{% url "calendar_api" %}',
+        timeZone: 'local', // Respect local browser timezone
+        eventClick: function (info) {
+            if (info.event.url) {
+                window.location.href = info.event.url;
+                info.jsEvent.preventDefault();
+            }
+        },
+        eventDidMount: function (info) {
+            info.el.title = info.event.title + ' (' + (info.event.extendedProps.status || '') + ')';
+        },
+        dayMaxEvents: 3,
+        moreLinkContent: function(args) { return '+' + args.num + ' more'; },
+        loading: function(isLoading) {
+            if (!isLoading) {
+                detectConflicts(calendar);
+            }
+        }
+    });
+    calendar.render();
+    window._calendar = calendar;
+});
+
+function detectConflicts(cal) {
+    const events = cal.getEvents();
+    const seen = {};
+    let conflictCount = 0;
+    events.forEach(ev => {
+        const key = ev.startStr;
+        if (seen[key]) {
+            conflictCount++;
+            ev.setProp('backgroundColor', '#ff4646');
+            ev.setProp('borderColor', '#ff4646');
+        }
+        seen[key] = true;
+    });
+    if (conflictCount > 0) {
+        Swal.fire({ icon: 'warning', title: `⚠️ ${conflictCount} Slot Conflict(s)`, text: 'Some time slots appear to overlap. Highlighted in red.', background: 'rgba(10,11,16,0.95)', color: '#fff', confirmButtonColor: '#00e5ff' });
+    } else {
+        Swal.fire({ icon: 'success', title: 'No Conflicts', text: 'All slots are clear.', background: 'rgba(10,11,16,0.95)', color: '#fff', confirmButtonColor: '#00e5ff' });
+    }
+}
+
+function checkConflicts() {
+    if (window._calendar) detectConflicts(window._calendar);
+}
+</script>
+{% endblock %}

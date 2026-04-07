@@ -1,0 +1,21 @@
+@startuml
+skinparam backgroundColor white
+skinparam participant {
+    BackgroundColor white
+    BorderColor black
+}
+actor Candidate
+participant "Frontend" as F
+participant "AI Controller" as C
+participant "Resume Parser" as R
+database "PostgreSQL" as DB
+
+Candidate -> F : Upload Resume
+F -> C : POST /upload/
+C -> R : Extract text & skills
+R --> C : Parsed JSON
+C -> DB : Save Candidate Profile
+DB --> C : Status 200
+C --> F : Application Successful
+F --> Candidate : Show Success Dialog
+@enduml

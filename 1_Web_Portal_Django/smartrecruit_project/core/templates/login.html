@@ -1,0 +1,111 @@
+{% extends 'auth_base.html' %}
+{% load socialaccount %}
+
+{% block title %}Sign In | SmartRecruit{% endblock %}
+
+{% block auth_content %}
+<div class="mb-5" data-entrance="fade-up">
+    <div class="d-flex align-items-center gap-2 mb-3">
+        <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-3 py-1 rounded-pill small fw-bold">SECURE LOGIN</span>
+    </div>
+    <h2 class="fw-bold mb-2 text-theme" style="font-family: 'Manrope', sans-serif; letter-spacing: -0.02em;">Welcome Back</h2>
+    <p class="text-theme-secondary mb-0 small">Enter your details to log in to your account.</p>
+</div>
+
+<form method="post" class="d-grid gap-4">
+    {% csrf_token %}
+    <input type="hidden" name="next" value="{{ next }}">
+    
+    <div class="form-floating">
+        <input type="text" id="username" name="username" class="form-control glass-input" placeholder="Username" required autocomplete="username">
+        <label for="username">Username or email</label>
+    </div>
+
+    <div class="form-floating position-relative">
+        <input type="password" id="password" name="password" class="form-control glass-input" placeholder="Password" required autocomplete="current-password" style="padding-right: 45px;">
+        <label for="password">Password</label>
+        <button type="button" onclick="togglePasswordVisibility()" class="btn p-0 position-absolute top-50 end-0 translate-middle-y me-3 z-3 text-secondary border-0 bg-transparent hover-glow" tabindex="-1">
+            <i class="fas fa-eye" id="togglePasswordIcon"></i>
+        </button>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mb-2 mt-2">
+        <div class="form-check">
+            <input class="form-check-input bg-transparent border-theme border-opacity-25" type="checkbox" name="remember" id="remember" checked>
+            <label class="form-check-label text-theme-secondary small" for="remember">Remember me</label>
+        </div>
+        <a href="{% url 'forgot_password' %}" class="small text-info text-decoration-none hover-glow" style="font-size: 0.8rem;">Forgot password?</a>
+    </div>
+
+    <button type="submit" class="btn btn-primary btn-lg rounded-pill btn-ripple fw-bold py-3 shadow-glow" style="letter-spacing: 0.05em;">
+        SIGN IN <i class="fa-solid fa-arrow-right ms-2 scale-90"></i>
+    </button>
+
+</form>
+
+<script>
+    function togglePasswordVisibility() {
+        const passwordInput = document.getElementById('password');
+        const icon = document.getElementById('togglePasswordIcon');
+        if (passwordInput.type === 'password') {
+            passwordInput.type = 'text';
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+            icon.classList.add('text-primary');
+        } else {
+            passwordInput.type = 'password';
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.remove('text-primary');
+            icon.classList.add('fa-eye');
+        }
+    }
+</script>
+
+<script>
+    document.querySelector('form').addEventListener('submit', function(e) {
+        // We do not prevent default here so the form submits natively
+        const btn = this.querySelector('button[type="submit"]');
+        btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> SIGNING IN...';
+        // Do not disable the button or else it won't submit the form if it was the submit trigger.
+        // Instead, we just let it submit. We can prevent multiple clicks by adding a class.
+        if (this.classList.contains('submitting')) {
+            e.preventDefault();
+        } else {
+            this.classList.add('submitting');
+        }
+    });
+</script>
+
+<style>
+    .btn-glass-sso {
+        background: rgba(255, 255, 255, 0.02);
+        color: var(--theme-secondary);
+        transition: all 0.3s cubic-bezier(0.4, 0, 1, 1);
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .hover-glow-azure:hover {
+        background: rgba(0, 210, 255, 0.15);
+        border-color: #00d2ff !important;
+        box-shadow: 0 0 25px rgba(0, 210, 255, 0.4);
+        color: #00d2ff !important;
+        transform: scale(1.05);
+    }
+    .hover-glow-okta:hover {
+        background: rgba(59, 130, 246, 0.15);
+        border-color: #3b82f6 !important;
+        box-shadow: 0 0 25px rgba(59, 130, 246, 0.4);
+        color: #3b82f6 !important;
+        transform: scale(1.05);
+    }
+</style>
+
+<div class="pt-5 mt-4 border-top border-theme border-opacity-5">
+    <div class="d-flex align-items-center justify-content-center gap-2">
+        <span class="text-theme-secondary small">New to SmartRecruit?</span>
+        <a href="{% url 'register' %}{% if next %}?next={{ next|urlencode }}{% endif %}" class="fw-bold text-primary text-decoration-none small hover-scale">Create Account</a>
+    </div>
+</div>
+{% endblock %}

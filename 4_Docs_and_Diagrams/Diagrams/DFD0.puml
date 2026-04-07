@@ -1,0 +1,23 @@
+@startuml
+skinparam backgroundColor white
+skinparam rectangle {
+    BackgroundColor white
+    BorderColor black
+}
+skinparam circle {
+    BackgroundColor white
+    BorderColor black
+}
+rectangle "Candidate" as Can
+rectangle "Recruiter" as Rec
+rectangle "Admin" as Adm
+
+circle "SmartRecruit System" as Sys
+
+Can --> Sys : Resume, Application, Answers
+Sys --> Can : Job Matches, AI Feedback
+Rec --> Sys : Job Posts, Feedback
+Sys --> Rec : Ranked Applications
+Adm --> Sys : Settings, Approvals
+Sys --> Adm : Reports
+@enduml

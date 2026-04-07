@@ -1,0 +1,95 @@
+{% load static %}
+<div id="thunder-preloader" style="
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #0a0b10;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.4s;
+">
+    <!-- Geometric Hexagon Spinner Base -->
+    <div class="geometric-spinner" style="
+        position: relative;
+        width: 100px;
+        height: 115px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        animation: geo-spin 4s linear infinite;
+    ">
+        <!-- Outer Hexagon shape -->
+        <svg viewBox="0 0 100 115" style="position: absolute; width: 100%; height: 100%; overflow: visible;">
+            <polygon points="50,5 95,27.5 95,72.5 50,95 5,72.5 5,27.5" 
+                     fill="none" stroke="#00E5FF" stroke-width="2" 
+                     stroke-dasharray="300" stroke-dashoffset="0"
+                     style="animation: dash 2s ease-in-out infinite alternate; filter: drop-shadow(0 0 8px rgba(0, 229, 255, 0.6));"
+            />
+        </svg>
+
+        <!-- Inner Bolt -->
+        <div class="preloader-logo" style="
+            position: relative;
+            animation: geo-counter-spin 4s linear infinite;
+        ">
+            <i class="fas fa-bolt" style="
+                font-size: 2.5rem;
+                color: #00E5FF;
+                filter: drop-shadow(0 0 12px rgba(0, 229, 255, 0.9));
+                animation: thunder-flicker 1.5s infinite;
+            "></i>
+        </div>
+    </div>
+
+    <!-- Text Status -->
+    <div style="margin-top: 40px; font-family: 'Inter', sans-serif; text-align: center;">
+        <h3 style="color: #fff; font-weight: 700; letter-spacing: 2px; margin: 0; text-transform: uppercase; font-size: 0.9rem;">
+            SmartRecruit <span style="color: #00E5FF;">OS</span>
+        </h3>
+        <p id="preloader-status" style="color: rgba(255,255,255,0.6); font-size: 0.75rem; margin-top: 10px; letter-spacing: 2px; text-transform: uppercase; animation: pulse-text 2s infinite;">
+            Initializing System...
+        </p>
+    </div>
+
+    <style>
+        @keyframes geo-spin {
+            100% { transform: rotate(360deg); }
+        }
+        @keyframes geo-counter-spin {
+            100% { transform: rotate(-360deg); }
+        }
+        @keyframes dash {
+            0% { stroke-dasharray: 0 300; stroke-dashoffset: 0; }
+            50% { stroke-dasharray: 300 0; stroke-dashoffset: 0; }
+            100% { stroke-dasharray: 300 300; stroke-dashoffset: -300; }
+        }
+        @keyframes thunder-flicker {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.8; transform: scale(0.92); }
+            80% { opacity: 1; transform: scale(1.08); }
+        }
+        @keyframes pulse-text {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; text-shadow: 0 0 8px rgba(0,229,255,0.4); }
+        }
+    </style>
+
+    <script>
+        window.addEventListener('load', function() {
+            const preloader = document.getElementById('thunder-preloader');
+            const statusText = document.getElementById('preloader-status');
+            
+            statusText.innerText = "SYNCHRONIZATION COMPLETE";
+            
+            setTimeout(() => {
+                preloader.style.opacity = '0';
+                preloader.style.visibility = 'hidden';
+            }, 300);
+        });
+    </script>
+</div>

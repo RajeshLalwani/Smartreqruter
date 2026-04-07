@@ -1,0 +1,220 @@
+{% extends 'base.html' %}{% load static %}
+{% block title %}Negotiation War Room | {{ application.job.title }}{% endblock %}
+{% block content %}
+<div class="container-fluid py-4 px-5">
+    <div class="row g-4">
+        <!-- Sidebar: Offer Overview -->
+        <div class="col-lg-4">
+            <div class="glass-panel p-4 h-100 shadow-lg border-primary border-opacity-10" data-aos="fade-right">
+                <div class="text-center mb-4">
+                    <div class="closing-bot-avatar mb-3">
+                        <i class="fas fa-handshake text-primary fs-2"></i>
+                    </div>
+                    <h5 class="fw-bold text-theme">The Closer Agent</h5>
+                    <span
+                        class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-20 px-3">Official
+                        Closer</span>
+                </div>
+
+                <div
+                    class="offer-card p-3 rounded-4 bg-dark bg-opacity-25 border border-secondary border-opacity-10 mb-4">
+                    <h6 class="xx-small uppercase text-muted tracking-widest mb-3">Live Offer Statement</h6>
+                    <div class="d-flex justify-content-between align-items-end">
+                        <div>
+                            <h2 class="fw-bold text-theme mb-0 font-monospace">₹<span id="live-salary">{{                                     session.current_salary_offer }}</span></h2>
+                            <small class="text-muted">Annual CTC (INR)</small>
+                        </div>
+                        <div class="text-end">
+                            <span class="badge bg-success bg-opacity-10 text-success x-small">+ Perks</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="perks-list">
+                    <h6 class="xx-small uppercase text-muted tracking-widest mb-3">Standard Benefits</h6>
+                    <div class="d-flex flex-column gap-2">
+                        <div class="d-flex align-items-center gap-3 p-2 rounded bg-light bg-opacity-5 x-small">
+                            <i class="fas fa-home text-info"></i> Flexible Remote Work
+                        </div>
+                        <div class="d-flex align-items-center gap-3 p-2 rounded bg-light bg-opacity-5 x-small">
+                            <i class="fas fa-heartbeat text-danger"></i> Premium Health Cover
+                        </div>
+                        <div class="d-flex align-items-center gap-3 p-2 rounded bg-light bg-opacity-5 x-small">
+                            <i class="fas fa-graduation-cap text-warning"></i> ₹50K L&D Budget
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4 pt-4 border-top border-secondary border-opacity-10">
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-success rounded-pill fw-bold py-3 shadow" onclick="finalize('ACCEPTED')">
+                            Accept Final Offer
+                        </button>
+                        <button class="btn btn-outline-danger rounded-pill fw-bold" onclick="finalize('REJECTED')">
+                            Withdraw Application
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chat Area -->
+        <div class="col-lg-8">
+            <div class="glass-panel p-0 h-100 shadow-lg border-secondary border-opacity-10 d-flex flex-column overflow-hidden"
+                data-aos="fade-up">
+                <div
+                    class="p-3 border-bottom border-secondary border-opacity-10 d-flex justify-content-between align-items-center bg-dark bg-opacity-20">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="status-indicator"></div>
+                        <span class="fw-bold text-theme x-small uppercase tracking-wider">Secured Channel: 256-bit
+                            AES</span>
+                    </div>
+                    <div class="x-small text-muted fst-italic">Agent is typing...</div>
+                </div>
+
+                <div id="chat-box" class="flex-grow-1 p-4 overflow-auto"
+                    style="height: 500px; scroll-behavior: smooth;">
+                    {% for chat in session.chat_history %}
+                    <div class="mb-4 d-flex {% if chat.role == 'candidate' %}justify-content-end{% endif %}">
+                        <div
+                            class="chat-bubble p-3 {% if chat.role == 'candidate' %}candidate-bubble shadow-primary{% else %}agent-bubble shadow-lg{% endif %}">
+                            {{ chat.text }}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <div class="p-3 border-top border-secondary border-opacity-10 bg-dark bg-opacity-20">
+                    <div class="input-group">
+                        <input type="text" id="user-input" class="form-control bg-transparent border-0 text-white p-3"
+                            placeholder="Counter-offer or discuss perks..."
+                            onkeypress="if(event.key==='Enter') sendMessage()">
+                        <button class="btn btn-primary px-4 rounded-pill" onclick="sendMessage()" id="send-btn">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .closing-bot-avatar {
+        width: 60px;
+        height: 60px;
+        background: rgba(var(--bs-primary-rgb), 0.1);
+        border: 1px solid rgba(var(--bs-primary-rgb), 0.2);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto;
+    }
+
+    .chat-bubble {
+        max-width: 80%;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        line-height: 1.5;
+    }
+
+    .agent-bubble {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: #e9ecef;
+        border-bottom-left-radius: 50;
+    }
+
+    .candidate-bubble {
+        background: linear-gradient(135deg, #00d2ff, #3a7bd5);
+        color: white;
+        border-bottom-right-radius: 0;
+    }
+
+    .status-indicator {
+        width: 8px;
+        height: 8px;
+        background: #27c93f;
+        border-radius: 50%;
+        box-shadow: 0 0 10px #27c93f;
+    }
+
+    .xx-small {
+        font-size: 0.6rem;
+    }
+
+    .x-small {
+        font-size: 0.75rem;
+    }
+
+    .uppercase {
+        text-transform: uppercase;
+    }
+
+    .tracking-widest {
+        letter-spacing: 0.2em;
+    }
+
+    #live-salary {
+        color: #fff;
+        text-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
+    }
+</style>
+
+<script>
+    async function sendMessage() {
+        const input = document.getElementById('user-input');
+        const box = document.getElementById('chat-box');
+        const btn = document.getElementById('send-btn');
+        const msg = input.value.trim();
+
+        if (!msg) return;
+
+        // Append user bubble
+        box.innerHTML += `
+            <div class="mb-4 d-flex justify-content-end">
+                <div class="chat-bubble candidate-bubble shadow-primary">${msg}</div>
+            </div>
+        `;
+        input.value = '';
+        box.scrollTop = box.scrollHeight;
+
+        btn.disabled = true;
+
+        try {
+            const response = await fetch("{% url 'process_negotiation_msg' application.id %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({ message: msg })
+            });
+
+            const data = await response.json();
+
+            // Append agent bubble
+            box.innerHTML += `
+                <div class="mb-4 d-flex">
+                    <div class="chat-bubble agent-bubble shadow-lg">${data.agent_response}</div>
+                </div>
+            `;
+            box.scrollTop = box.scrollHeight;
+
+            // Update Salary Display
+            document.getElementById('live-salary').innerText = data.current_offer;
+
+        } catch (e) {
+            console.error(e);
+        } finally {
+            btn.disabled = false;
+        }
+    }
+
+    function finalize(status) {
+        alert("Final Decision (" + status + ") sent to HR. Our team will contact you shortly.");
+        window.location.href = "{% url 'dashboard' %}";
+    }
+</script>
+{% endblock %}

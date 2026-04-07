@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { background-color: #0a0b10; color: #ffffff; font-family: 'Inter', Arial, sans-serif; margin: 0; padding: 20px; }
+        .container { max-width: 600px; margin: 0 auto; background: rgba(17, 25, 40, 0.7); border: 1px solid rgba(0, 210, 255, 0.2); border-radius: 12px; padding: 40px; box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5); }
+        .header { border-bottom: 2px solid #00d2ff; padding-bottom: 20px; margin-bottom: 30px; text-align: center; }
+        .header h1 { color: #00d2ff; margin: 0; font-size: 24px; text-transform: uppercase; letter-spacing: 2px; }
+        .content { line-height: 1.6; }
+        .alert-box { background: rgba(255, 51, 102, 0.1); border-left: 4px solid #ff3366; padding: 15px; margin: 20px 0; border-radius: 4px; }
+        .label { color: #00d2ff; font-weight: bold; text-transform: uppercase; font-size: 12px; display: block; margin-top: 10px; }
+        .value { font-size: 18px; margin-bottom: 5px; }
+        .btn { display: inline-block; padding: 12px 30px; background-color: #00d2ff; color: #0a0b10; text-decoration: none; border-radius: 30px; font-weight: bold; margin-top: 30px; transition: all 0.3s ease; }
+        .footer { margin-top: 40px; text-align: center; font-size: 12px; color: #718096; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Integrity Protocol Breach</h1>
+        </div>
+        <div class="content">
+            <p>Admin, the Neural Proctoring system has detected a high-probability integrity breach during a live session.</p>
+            
+            <div class="alert-box">
+                <strong>CRITICAL THRESHOLD REACHED</strong><br>
+                Multiple violations detected during neural sync.
+            </div>
+
+            <span class="label">Candidate Name</span>
+            <div class="value">{{ candidate_name }}</div>
+
+            <span class="label">Job Title</span>
+            <div class="value">{{ job_title }}</div>
+
+            <span class="label">Violation Type</span>
+            <div class="value" style="color: #ff3366;">{{ violation_type }}</div>
+
+            <span class="label">Total Violations</span>
+            <div class="value">{{ violation_count }} Flags</div>
+
+            <span class="label">Timestamp</span>
+            <div class="value">{{ timestamp }}</div>
+
+            <a href="{{ log_url }}" class="btn">REVIEW EVIDENCE MATRIX</a>
+        </div>
+        <div class="footer">
+            &copy; 2026 SmartRecruit AI. Confidential Integrity Report.
+        </div>
+    </div>
+</body>
+</html>

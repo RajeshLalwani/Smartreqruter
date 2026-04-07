@@ -1,0 +1,43 @@
+# SmartRecruit Project - Contributor Work Distribution
+**Date Range:** Feb 26, 2026 - March 5, 2026
+**Expected Effort:** ~7 hours per day (WFH Minimum) per team member.
+**Total Members:** 3
+
+The following breaks down the distinct contributions made by each project partner during the final evaluation sprint, demonstrating how the project was drastically improved and polished to a professional standard.
+
+---
+
+### 1. Frontend & UI/UX Integration 
+**Contributor: Raghunandannath Tiwari**
+
+**Key Responsibilities & Deliverables:**
+*   **Total UI/UX Overhaul:** Audited the entire web portal for design inconsistencies, broken template tags, and unpolished layouts.
+*   **Theme Engine Expansion:** Expanded the 'Appearance' settings drastically. Integrated over 14 dynamic gradient background themes (e.g., Midnight Nebula, Cosmic Slate) and 12 custom accent colors.
+*   **Font Customization System:** Developed a new feature allowing users to change the base reading font size (Font Scale) and the Font Family directly from the settings page.
+*   **State Persistence Implementation:** Wrote complex JavaScript logic to ensure that UI themes, dark modes, font scales, and accent colors persist locally and seamlessly load across all pages (Dashboard, Job Lists, Settings) without flashing default styles.
+*   **Responsive Design Polish:** Addressed overlapping text and formatting bugs on mobile views (especially on the Recruiter Dashboard Analytics canvas elements) ensuring a 100% responsive fluid mobile experience.
+*   **Animation & Micro-interactions:** Added glassmorphism effects, hover states on cards, and smooth CSS transitions (`enhancements.css`) to give the project a premium, state-of-the-art enterprise feel.
+
+---
+
+### 2. Backend Architecture & Integrations 
+**Contributor: Dhruv Sonvane**
+
+**Key Responsibilities & Deliverables:**
+*   **API Optimization:** Optimized the DRF (Django REST Framework) querysets to reduce database load when fetching candidate analytics, cutting response times significantly.
+*   **Analytics Aggregation Engine:** Built the backend logic for the `recruiter_analytics` dashboard, aggregating crucial hiring metrics such as application funnels, technology stack breakdowns, and pass rates into formatted JSON for Chart.js.
+*   **Email Notification Stability:** Resolved template errors (`TemplateSyntaxError`) related to email attachments and fixed the `base_email.html` rendering. Implemented logic for dynamic PDF offer letters generation and asynchronous email dispatch.
+*   **Security & Data Integrity:** Fixed critical issues where raw Django template tags were leaking in the production UI (e.g., raw `{% if %}` and `{% firstof %}` tags). Strengthened password change requirements with strict regex server-side validation.
+*   **Database Migrations & Management:** Handled SQLite to local DB migrations for the new job posting fields, ensuring clean data flow from application to interview stages.
+
+---
+
+### 3. Agentic AI & Automation 
+**Contributor: Rajjj...**
+
+**Key Responsibilities & Deliverables:**
+*   **Agentic AI Smart Assistant Integration:** Designed and implemented the core logic for the "Recruiter Smart Assistant". This Agentic AI component automatically parses pending applications, analyzes `ai_score` and candidate statuses, and proactively generates actionable recommendations (e.g., "Schedule interviews with top 2 candidates").
+*   **NLP Resume Parser Refinement:** Tuned the SpaCy English language models to improve zero-shot keyword extraction from uploaded resumes. Improved accuracy of matching candidate skills against the job description's `technology_stack` by implementing refined TF-IDF vectorization.
+*   **Automated Proctoring Stability:** Patched edge-case bugs in the OpenCV-based video monitoring and the JavaScript tab-switching detection scripts used during Round 1/2 assessments.
+*   **AI Interview Bot Prompt Engineering:** Fine-tuned the system prompts for the conversational Agent (Round 3 Technical Interview). Prevented the AI from asking repetitive questions and improved the sentiment analysis engine that grades the candidate's confidence.
+*   **Quality Assurance & Testing:** Executed programmatic and manual testing (White-box and Black-box) across all AI pipelines to ensure the automation behaved predictably under load.

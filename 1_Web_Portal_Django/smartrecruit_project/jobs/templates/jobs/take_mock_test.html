@@ -1,0 +1,387 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    /* Question Navigator */
+    .q-nav-grid {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 8px;
+    }
+
+    .q-nav-btn {
+        width: 38px;
+        height: 38px;
+        border-radius: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--text-secondary);
+        font-weight: 600;
+        font-size: 0.8rem;
+        cursor: pointer;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .q-nav-btn:hover {
+        background: rgba(99, 102, 241, 0.2);
+        transform: translateY(-2px);
+        border-color: rgba(99, 102, 241, 0.4);
+    }
+
+    .q-nav-btn.answered {
+        background: rgba(16, 185, 129, 0.2);
+        color: #10b981;
+        border-color: rgba(16, 185, 129, 0.4);
+    }
+
+    .q-nav-btn.current {
+        background: rgba(99, 102, 241, 0.3);
+        color: #818cf8;
+        border-color: #6366f1;
+        box-shadow: 0 0 15px rgba(99, 102, 241, 0.3);
+    }
+
+    /* Question card animation */
+    .question-slide {
+        display: none;
+        opacity: 0;
+        transform: translateX(20px);
+        transition: all 0.3s ease;
+    }
+
+    .question-slide.active {
+        display: block;
+        opacity: 1;
+        transform: translateX(0);
+    }
+
+    /* Progress bar */
+    .progress-exam {
+        height: 8px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+    .progress-exam .bar {
+        height: 100%;
+        background: linear-gradient(90deg, #6366f1, #a855f7);
+        transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Timer Pulse */
+    .timer-critical {
+        animation: timer-pulse 1s infinite;
+        color: #ef4444 !important;
+    }
+
+    @keyframes timer-pulse {
+
+        0%,
+        100% {
+            transform: scale(1);
+            opacity: 1;
+        }
+
+        50% {
+            transform: scale(1.05);
+            opacity: 0.8;
+        }
+    }
+
+    .option-card {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        transition: all 0.2s ease;
+    }
+
+    .option-card:hover {
+        background: rgba(99, 102, 241, 0.08);
+        border-color: rgba(99, 102, 241, 0.3);
+        transform: translateX(5px);
+    }
+
+    .option-card.selected {
+        background: rgba(99, 102, 241, 0.15) !important;
+        border-color: #6366f1 !important;
+        box-shadow: 0 0 15px rgba(99, 102, 241, 0.2);
+    }
+</style>
+
+<!-- Fullscreen Entry -->
+<div id="fullscreen-overlay"
+    class="position-fixed top-0 start-0 w-100 h-100 d-flex flex-column justify-content-center align-items-center"
+    style="z-index: 9999; background: radial-gradient(circle at center, #1e1e2e 0%, #11111b 100%);">
+    <div class="glass-panel p-5 text-center shadow-2xl animate-fade-in" style="max-width: 500px; border-radius: 24px;">
+        <div class="mb-4">
+            <i class="fas fa-brain fa-4x text-primary mb-3"></i>
+            <h2 class="fw-bold text-white mb-2">Alpha Mock Test</h2>
+            <p class="text-muted">Domain: <span class="text-info fw-bold">{{ primary_skill }}</span></p>
+        </div>
+
+        <div class="d-flex flex-column gap-3 mb-4 text-start">
+            <div class="d-flex align-items-center gap-3 glass-panel p-3 border-0"
+                style="background: rgba(255,255,255,0.03);">
+                <i class="fas fa-list-ol text-primary"></i>
+                <span class="text-secondary">{{ questions|length }} Industry Questions</span>
+            </div>
+            <div class="d-flex align-items-center gap-3 glass-panel p-3 border-0"
+                style="background: rgba(255,255,255,0.03);">
+                <i class="fas fa-hourglass-half text-warning"></i>
+                <span class="text-secondary">{{ time_limit }} Minutes Total</span>
+            </div>
+            <div class="d-flex align-items-center gap-3 glass-panel p-3 border-0"
+                style="background: rgba(255,255,255,0.03);">
+                <i class="fas fa-eye text-danger"></i>
+                <span class="text-secondary">AI Proctoring Enabled</span>
+            </div>
+        </div>
+
+        <button id="start-fullscreen-btn"
+            class="btn btn-primary btn-lg w-100 rounded-pill py-3 fw-bold shadow-lg hover-scale">
+            <i class="fas fa-play me-2"></i> Initialise Session
+        </button>
+    </div>
+</div>
+
+<div class="container-fluid mt-4 px-lg-5" id="main-assessment-content" style="display: none;">
+    <div class="row g-4">
+        <!-- Main Content -->
+        <div class="col-lg-8">
+            <div class="glass-panel p-4 mb-4 rounded-4 shadow-xl border-0 overflow-hidden position-relative">
+                <div class="d-flex justify-content-between align-items-center position-relative z-1">
+                    <div>
+                        <h3 class="fw-bold text-white mb-1"><i class="fas fa-vial text-info me-2"></i> Professional Mock
+                        </h3>
+                        <p class="text-muted mb-0 small"><i class="fas fa-user me-1"></i> {{ request.user.username }} |
+                            <i class="fas fa-tag me-1 text-primary"></i> {{ primary_skill }}
+                        </p>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <a href="?action=shuffle" class="btn btn-sm btn-outline-info rounded-pill px-3"
+                            title="Shuffle Pool">
+                            <i class="fas fa-random"></i>
+                        </a>
+                        <a href="?action=regenerate" class="btn btn-sm btn-outline-warning rounded-pill px-3"
+                            title="Regenerate All">
+                            <i class="fas fa-sync-alt"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <div class="progress-exam w-100 mb-2">
+                        <div class="bar" id="progress-bar" style="width: 0%"></div>
+                    </div>
+                    <div class="d-flex justify-content-between small text-muted fw-bold">
+                        <span id="progress-text">0 / {{ questions|length }} Completed</span>
+                        <span id="completion-pct">0%</span>
+                    </div>
+                </div>
+            </div>
+
+            <form method="POST" id="mock-test-form">
+                {% csrf_token %}
+                <div id="question-container">
+                    {% for q in questions %}
+                    <div class="question-slide glass-panel p-4 rounded-4 shadow-lg border-0 {% if forloop.first %}active{% endif %}"
+                        id="q-slide-{{ forloop.counter0 }}">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <span class="badge bg-primary bg-opacity-20 text-primary px-3 py-2 rounded-pill fw-bold">
+                                Question {{ forloop.counter }} of {{ questions|length }}
+                            </span>
+                            <span class="text-muted small italic">Topic: {{ primary_skill }}</span>
+                        </div>
+
+                        <h4 class="fw-bold text-white mb-4 lh-base">{{ q.question }}</h4>
+
+                        <div class="d-flex flex-column gap-3">
+                            {% for option in q.options %}
+                            <label class="option-card p-3 rounded-3 d-flex align-items-center gap-3 cursor-pointer">
+                                <input type="radio" name="{{ q.id }}" value="{{ option }}"
+                                    class="form-check-input mt-0 d-none"
+                                    onchange="handleOptionSelect({{ forloop.parentloop.counter0 }}, this)">
+                                <div class="radio-indicator border border-secondary rounded-circle d-flex align-items-center justify-content-center"
+                                    style="min-width: 22px; height: 22px;">
+                                    <div class="inner-dot rounded-circle bg-primary opacity-0 scale-0"
+                                        style="width: 12px; height: 12px; transition: 0.2s;"></div>
+                                </div>
+                                <span class="text-secondary fw-medium fs-6">{{ option }}</span>
+                            </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <div
+                    class="d-flex justify-content-between align-items-center mt-4 glass-panel p-3 rounded-pill border-0">
+                    <button type="button" class="btn btn-outline-secondary rounded-pill px-4" id="prev-btn"
+                        onclick="navTo(currQ - 1)" disabled>
+                        <i class="fas fa-chevron-left me-2"></i> Prev
+                    </button>
+                    <div class="text-muted small fw-bold d-none d-md-block">AI Proctoring Active <i
+                            class="fas fa-circle text-success ms-1" style="font-size: 8px;"></i></div>
+                    <div>
+                        <button type="button" class="btn btn-primary rounded-pill px-4" id="next-btn"
+                            onclick="navTo(currQ + 1)">
+                            Next <i class="fas fa-chevron-right ms-2"></i>
+                        </button>
+                        <button type="submit" class="btn btn-success rounded-pill px-4 d-none" id="submit-btn">
+                            Finalize <i class="fas fa-check-double ms-2"></i>
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Timer Panel -->
+            <div class="glass-panel p-4 mb-4 rounded-4 shadow-lg border-0 text-center">
+                <div class="text-uppercase small text-muted mb-2 ls-1">Time Remaining</div>
+                <div id="timer-display" class="display-5 fw-bold text-primary mb-1">15:00</div>
+                <div class="progress" style="height: 4px; background: rgba(255,255,255,0.05);">
+                    <div id="time-progress" class="progress-bar bg-primary" style="width: 100%;"></div>
+                </div>
+            </div>
+
+            <!-- Proctoring Feed -->
+            <div class="glass-panel p-3 mb-4 rounded-4 shadow-lg border-0">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="mb-0 fw-bold text-muted"><i class="fas fa-video me-2"></i> Supervisor</h6>
+                    <span id="status-indicator" class="badge bg-success rounded-pill">Standby</span>
+                </div>
+                <div class="ratio ratio-4x3 rounded-3 overflow-hidden bg-dark mb-2">
+                    <video id="webcam" autoplay playsinline muted class="w-100 h-100 shadow-inner"
+                        style="object-fit:cover; transform: scaleX(-1);"></video>
+                </div>
+                <p class="small text-muted mb-0"><i class="fas fa-info-circle me-1"></i> AI is monitoring focus and
+                    background.</p>
+            </div>
+
+            <!-- Navigator Grid -->
+            <div class="glass-panel p-3 rounded-4 shadow-lg border-0">
+                <h6 class="mb-3 fw-bold text-muted">Question Map</h6>
+                <div class="q-nav-grid" id="nav-grid">
+                    {% for q in questions %}
+                    <button type="button" class="q-nav-btn {% if forloop.first %}current{% endif %}"
+                        id="nav-{{ forloop.counter0 }}" onclick="navTo({{ forloop.counter0 }})">
+                        {{ forloop.counter }}
+                    </button>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"></script>
+<script src="https://cdn.jsdelivr.net/npm/face-api.js"></script>
+<script src="{% static 'js/proctoring.js' %}"></script>
+
+<script>
+    const TOTAL_Qs = {{ questions| length }};
+    let currQ = 0;
+    let answeredSet = new Set();
+    let timeLimit = {{ time_limit }} * 60;
+    let timeRemaining = timeLimit;
+    let timerInt;
+
+    function navTo(idx) {
+        if (idx < 0 || idx >= TOTAL_Qs) return;
+
+        document.getElementById(`q-slide-${currQ}`).classList.remove('active');
+        document.getElementById(`nav-${currQ}`).classList.remove('current');
+
+        currQ = idx;
+
+        document.getElementById(`q-slide-${currQ}`).classList.add('active');
+        document.getElementById(`nav-${currQ}`).classList.add('current');
+
+        document.getElementById('prev-btn').disabled = (currQ === 0);
+        document.getElementById('next-btn').classList.toggle('d-none', currQ === TOTAL_Qs - 1);
+        document.getElementById('submit-btn').classList.toggle('d-none', currQ !== TOTAL_Qs - 1);
+
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function handleOptionSelect(idx, input) {
+        answeredSet.add(idx);
+        const card = input.closest('.option-card');
+        const slide = document.getElementById(`q-slide-${idx}`);
+
+        slide.querySelectorAll('.option-card').forEach(c => {
+            c.classList.remove('selected');
+            c.querySelector('.inner-dot').classList.add('scale-0', 'opacity-0');
+        });
+
+        card.classList.add('selected');
+        card.querySelector('.inner-dot').classList.remove('scale-0', 'opacity-0');
+
+        document.getElementById(`nav-${idx}`).classList.add('answered');
+        updateProgress();
+    }
+
+    function updateProgress() {
+        const count = answeredSet.size;
+        const pct = Math.round((count / TOTAL_Qs) * 100);
+        document.getElementById('progress-bar').style.width = pct + '%';
+        document.getElementById('progress-text').textContent = `${count} / ${TOTAL_Qs} Completed`;
+        document.getElementById('completion-pct').textContent = pct + '%';
+    }
+
+    // Timer Logic
+    function startTimer() {
+        timerInt = setInterval(() => {
+            timeRemaining--;
+            const mins = Math.floor(timeRemaining / 60);
+            const secs = timeRemaining % 60;
+            const display = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+            document.getElementById('timer-display').textContent = display;
+
+            const pct = (timeRemaining / timeLimit) * 100;
+            document.getElementById('time-progress').style.width = pct + '%';
+
+            if (timeRemaining < 60) {
+                document.getElementById('timer-display').classList.add('timer-critical');
+            }
+
+            if (timeRemaining <= 0) {
+                clearInterval(timerInt);
+                document.getElementById('mock-test-form').submit();
+            }
+        }, 1000);
+    }
+
+    document.getElementById('start-fullscreen-btn').addEventListener('click', async () => {
+        try {
+            await document.documentElement.requestFullscreen();
+        } catch (e) {
+            console.warn("Fullscreen permission denied or not supported:", e);
+        } finally {
+            document.getElementById('fullscreen-overlay').style.display = 'none';
+            document.getElementById('main-assessment-content').style.display = 'block';
+            startTimer();
+            // Start AI Proctor with custom config
+            try {
+                new ProctoringSystem({ maxWarnings: 3 });
+            } catch (procErr) {
+                console.warn("Proctoring unavailable:", procErr);
+            }
+        }
+    });
+
+    window.addEventListener('beforeunload', (e) => {
+        if (timeRemaining > 0) {
+            e.preventDefault();
+            e.returnValue = 'Warning: Session in progress.';
+        }
+    });
+</script>
+{% endblock %}

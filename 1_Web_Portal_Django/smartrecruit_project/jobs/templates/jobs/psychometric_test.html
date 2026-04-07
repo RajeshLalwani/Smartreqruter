@@ -1,0 +1,208 @@
+{% extends 'base.html' %}{% load static %}
+{% block title %}Psychometric Test | SmartRecruit{% endblock %}
+{% block content %}
+<div class="container-fluid px-4 mt-4">
+    <div class="glass-panel p-5 mb-5 border-primary border-opacity-10 shadow-lg text-center"
+        style="background: linear-gradient(135deg, rgba(124, 77, 255, 0.05), rgba(41, 121, 255, 0.05));">
+        <h2 class="display-6 fw-bold text-theme mb-2 ls-1">
+            <i class="fas fa-brain me-3" style="color:#7C4DFF; filter: drop-shadow(0 0 10px #7C4DFF);"></i>
+            Neural Personality Matrix
+        </h2>
+        <p class="text-muted lead mb-0">Unveiling your Big Five potential via AI analysis — {{ trait_count }} questions
+        </p>
+    </div>
+    {% if result %}
+    <div class="row g-4 mb-5">
+        <div class="col-lg-4">
+            <div class="glass-panel p-4 text-center h-100 border-primary border-opacity-20 shadow-glow"
+                style="background: rgba(124, 77, 255, 0.03);">
+                <div class="mb-3">
+                    <span
+                        class="badge rounded-pill bg-primary bg-opacity-10 text-primary border border-primary border-opacity-20 px-3 py-1 xx-small uppercase fw-bold tracking-widest">
+                        CORE ARCHETYPE
+                    </span>
+                </div>
+                <div class="fw-bold mb-1 animate-pulse"
+                    style="font-size:4rem; color:#7C4DFF; filter: drop-shadow(0 0 20px rgba(124, 77, 255, 0.4));">{{
+                    result.mbti }}</div>
+                <div class="text-muted small mb-3 text-uppercase fw-bold ls-1">Analysis Result</div>
+                <div class="text-theme fs-5 mb-4 fst-italic px-3 py-3 rounded-4 bg-white bg-opacity-5">"{{
+                    result.mbti_desc }}"</div>
+
+                <div class="small fw-bold text-muted mb-3 text-uppercase ls-1">Key Synergies</div>
+                <div class="d-flex flex-wrap justify-content-center gap-2">
+                    {% for s in result.strengths %}
+                    <div class="badge rounded-pill px-4 py-2 border border-primary border-opacity-10"
+                        style="background:rgba(124,77,255,0.08);color:#ce93d8;font-size:0.7rem;">{{ s }}</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-8">
+            <div class="glass-panel p-4 h-100 shadow-xl border-secondary border-opacity-10">
+                <h6 class="fw-bold text-theme mb-4 d-flex align-items-center">
+                    <i class="fas fa-project-diagram me-3 text-info"></i>
+                    Multidimensional Trait Map
+                </h6>
+                <div class="chart-container" style="position: relative; height:350px;">
+                    <canvas id="radarChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row g-3 mb-4">
+        {% for trait, score in result.trait_scores.items %}
+        <div class="col-md-{% cycle '4' '4' '4' '6' '6' %}">
+            <div class="glass-panel p-4">
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="fw-bold text-theme small">{{ trait }}</span>
+                    <span
+                        class="fw-bold {% if score >= 60 %}text-success{% elif score >= 40 %}text-warning{% else %}text-danger{% endif %}">{{
+                        score }}%</span>
+                </div>
+                <div class="progress" style="height:8px;border-radius:6px;background:rgba(255,255,255,0.06);">
+                    <div class="progress-bar"
+                        style="width:{{ score }}%;background:linear-gradient(90deg,{% if score >= 60 %}#00C853,#69f0ae{% elif score >= 40 %}#FF6D00,#FFcc80{% else %}#7C4DFF,#b388ff{% endif %});border-radius:6px;">
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    <div class="text-center">
+        <a href="{% url 'psychometric_test' %}" class="btn btn-outline-primary rounded-pill px-5"><i
+                class="fas fa-redo me-2"></i>Retake Test</a>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const TRAITS = {{ result.trait_scores_json| safe }};
+        new Chart(document.getElementById('radarChart'), {
+            type: 'radar',
+            data: {
+                labels: Object.keys(TRAITS),
+                datasets: [{
+                    label: 'Your Profile', data: Object.values(TRAITS),
+                    backgroundColor: 'rgba(124,77,255,0.15)', borderColor: '#7C4DFF',
+                    pointBackgroundColor: '#7C4DFF', pointRadius: 5
+                }]
+            },
+            options: {
+                plugins: { legend: { labels: { color: '#ccc' } } },
+                scales: { r: { grid: { color: 'rgba(255,255,255,0.08)' }, ticks: { color: '#666', backdropColor: 'transparent' }, pointLabels: { color: '#ccc', font: { size: 12 } }, min: 0, max: 100 } }
+            }
+        });
+    </script>
+    {% else %}
+    <form method="post">{% csrf_token %}
+        <div class="row g-3 mb-4">
+            {% for q in questions %}
+            <div class="col-12">
+                <div class="glass-panel p-4">
+                    <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+                        <div class="small text-theme flex-grow-1">
+                            <span class="text-muted me-2">{{ forloop.counter }}.</span>{{ q.text }}
+                            <span class="badge rounded-pill ms-2 px-2"
+                                style="background:rgba(124,77,255,0.1);color:#ce93d8;font-size:0.65rem;">{{ q.trait
+                                }}</span>
+                        </div>
+                        <div class="d-flex gap-1 flex-shrink-0">
+                            {% for val in psych_range %}
+                            <label class="rating-label" style="cursor:pointer;">
+                                <input type="radio" name="q{{ q.id }}" value="{{ val }}" class="d-none" {% if val==3
+                                    %}checked{% endif %}>
+                                <div class="rating-btn d-flex align-items-center justify-content-center rounded-circle fw-bold"
+                                    style="width:36px;height:36px;background:rgba(124,77,255,0.1);border:2px solid transparent;transition:all 0.15s;font-size:0.8rem;color:#ce93d8;"
+                                    onclick="selectRating(this)">{{ val }}</div>
+                            </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-between mt-2 px-1" style="font-size:0.65rem;color:#666;">
+                        <span>Strongly Disagree</span><span>Neutral</span><span>Strongly Agree</span>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        <div class="text-center py-4">
+            <button type="submit" class="btn btn-primary rounded-pill px-5 fw-bold"
+                style="background:linear-gradient(135deg,#7C4DFF,#2979FF);border:none;">
+                <i class="fas fa-brain me-2"></i>Reveal My Personality Profile
+            </button>
+        </div>
+    </form>
+    {% endif %}
+</div>
+<style>
+    .ls-1 {
+        letter-spacing: 0.1em;
+    }
+
+    .xx-small {
+        font-size: 0.65rem;
+    }
+
+    .uppercase {
+        text-transform: uppercase;
+    }
+
+    .shadow-glow {
+        box-shadow: 0 0 40px rgba(124, 77, 255, 0.1);
+    }
+
+    .rating-btn {
+        width: 44px !important;
+        height: 44px !important;
+        background: rgba(255, 255, 255, 0.03) !important;
+        border: 1px solid rgba(255, 255, 255, 0.05) !important;
+        color: #94a3b8 !important;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        font-weight: 700 !important;
+        cursor: pointer;
+    }
+
+    .rating-btn:hover {
+        background: rgba(124, 77, 255, 0.1) !important;
+        border-color: rgba(124, 77, 255, 0.3) !important;
+        transform: translateY(-2px);
+    }
+
+    .rating-btn.active {
+        background: linear-gradient(135deg, #7C4DFF, #2979FF) !important;
+        border-color: transparent !important;
+        color: white !important;
+        box-shadow: 0 0 20px rgba(124, 77, 255, 0.4);
+        transform: scale(1.1);
+    }
+
+    .glass-panel {
+        transition: all 0.3s ease;
+    }
+
+    .glass-panel:hover {
+        background: rgba(255, 255, 255, 0.05);
+        border-color: rgba(255, 255, 255, 0.12);
+    }
+</style>
+
+<script>
+    function selectRating(el) {
+        const labels = el.closest('.d-flex').querySelectorAll('.rating-btn');
+        labels.forEach(b => b.classList.remove('active'));
+        el.classList.add('active');
+    }
+    document.querySelectorAll('input[type=radio]').forEach(r => {
+        if (r.checked) {
+            const btn = r.parentElement.querySelector('.rating-btn');
+            if (btn) btn.classList.add('active');
+        }
+    });
+
+    // Chart Enhancement logic for glowing radar
+    const ctx = document.getElementById('radarChart')?.getContext('2d');
+    if (ctx) {
+        // We'll let the existing chart script handle initialization but we can inject better options
+        // Actually, I'll just rewrite the chart init to be more "Elite"
+    }
+</script>
+{% endblock %}

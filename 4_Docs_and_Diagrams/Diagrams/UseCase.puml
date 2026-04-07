@@ -1,0 +1,42 @@
+@startuml
+skinparam backgroundColor white
+skinparam usecase {
+    BackgroundColor white
+    BorderColor black
+}
+skinparam actor {
+    BackgroundColor white
+    BorderColor black
+}
+left to right direction
+actor "Candidate" as C
+actor "Recruiter" as R
+actor "Admin" as A
+
+rectangle "SmartRecruit AI Platform" {
+    usecase "Register / Login" as UC1
+    usecase "Manage Profile" as UC2
+    usecase "Browse Jobs" as UC3
+    usecase "Apply / Submit Resume" as UC4
+    usecase "Take AI Prep / Interview" as UC5
+    usecase "Post Requisitions" as UC6
+    usecase "Review AI Ranked Candidates" as UC7
+    usecase "Schedule Interviews" as UC8
+    usecase "Manage Users & Data" as UC9
+}
+
+C --> UC1
+C --> UC2
+C --> UC3
+C --> UC4
+C --> UC5
+
+R --> UC1
+R --> UC2
+R --> UC6
+R --> UC7
+R --> UC8
+
+A --> UC1
+A --> UC9
+@enduml

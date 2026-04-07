@@ -1,0 +1,137 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}D&I Dashboard | SmartRecruit{% endblock %}
+
+{% block content %}
+<style>
+    /* Z-INDEX SAFEGUARDS */
+    .modal { z-index: 2000 !important; }
+    .modal-backdrop { z-index: 1050 !important; }
+    .tracking-widest { letter-spacing: 0.15em; }
+    .x-small { font-size: 0.75rem; }
+</style>
+
+<div class="container-fluid px-4 mt-4 fade-up">
+
+    <!-- ─── Hero ─── -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-5 gap-3" data-aos="fade-down">
+        <div>
+            <div class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-3 py-2 rounded-pill mb-3 tracking-widest text-uppercase x-small fw-bold">
+                <i class="fas fa-balance-scale me-2"></i>Equity Intelligence
+            </div>
+            <h1 class="display-6 fw-bold text-white mb-2" style="font-family: 'Space Grotesk', sans-serif;">Diversity &amp; Inclusion <span style="background: linear-gradient(90deg, #00C853, #2979FF); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">Dashboard</span></h1>
+            <p class="lead text-secondary mb-0">Track hiring equity across channels — ensure fair and unbiased recruitment.</p>
+        </div>
+    </div>
+
+    <!-- ─── Stat Cards ─── -->
+    <div class="row g-3 mb-5" data-aos="fade-up">
+        <div class="col-md-3">
+            <div class="glass-panel p-4 text-center rounded-4 border-primary border-opacity-25 hover-scale">
+                <div class="fw-bold text-primary" style="font-size: 2rem; font-family: 'Space Grotesk', sans-serif;">{{ di_score }}%</div>
+                <div class="x-small text-secondary fw-bold tracking-widest text-uppercase mt-1">D&amp;I Score</div>
+                <div class="progress mt-2" style="height: 5px; background: rgba(255,255,255,0.05); border-radius: 4px;">
+                    <div class="progress-bar bg-{% if di_score >= 70 %}success{% elif di_score >= 40 %}warning{% else %}danger{% endif %}" style="width: {{ di_score }}%; border-radius: 4px;"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="glass-panel p-4 text-center rounded-4 border-info border-opacity-25 hover-scale">
+                <div class="fw-bold text-info" style="font-size: 2rem; font-family: 'Space Grotesk', sans-serif;">{{ unique_sources }}</div>
+                <div class="x-small text-secondary fw-bold tracking-widest text-uppercase mt-1">Unique Hire Channels</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="glass-panel p-4 text-center rounded-4 border-warning border-opacity-25 hover-scale">
+                <div class="fw-bold text-warning" style="font-size: 2rem; font-family: 'Space Grotesk', sans-serif;">{{ total }}</div>
+                <div class="x-small text-secondary fw-bold tracking-widest text-uppercase mt-1">Total Applications</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="glass-panel p-4 text-center rounded-4 border-success border-opacity-25 hover-scale">
+                <div class="fw-bold text-success" style="font-size: 2rem; font-family: 'Space Grotesk', sans-serif;">{{ hired }}</div>
+                <div class="x-small text-secondary fw-bold tracking-widest text-uppercase mt-1">Total Hired</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ─── Charts Row ─── -->
+    <div class="row g-4 mb-5" data-aos="fade-up" data-aos-delay="100">
+        <div class="col-md-4">
+            <div class="glass-panel p-4 h-100 rounded-4 border-secondary border-opacity-25">
+                <h6 class="fw-bold text-white mb-3 x-small tracking-widest text-uppercase border-bottom border-light border-opacity-10 pb-3"><i class="fas fa-share-alt text-info me-2"></i>Source Distribution</h6>
+                <canvas id="sourceChart" height="240"></canvas>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="glass-panel p-4 h-100 rounded-4 border-secondary border-opacity-25">
+                <h6 class="fw-bold text-white mb-3 x-small tracking-widest text-uppercase border-bottom border-light border-opacity-10 pb-3"><i class="fas fa-percentage text-success me-2"></i>Hire Rate by Channel</h6>
+                <canvas id="passChart" height="240"></canvas>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="glass-panel p-4 h-100 rounded-4 border-secondary border-opacity-25">
+                <h6 class="fw-bold text-white mb-3 x-small tracking-widest text-uppercase border-bottom border-light border-opacity-10 pb-3"><i class="fas fa-robot text-primary me-2"></i>Avg AI Score by Channel</h6>
+                <canvas id="scoreChart" height="240"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- ─── Channel Equity Table ─── -->
+    <div class="glass-panel p-0 rounded-4 overflow-hidden border-secondary border-opacity-25 shadow-lg" data-aos="fade-up" data-aos-delay="150">
+        <div class="p-4 border-bottom border-light border-opacity-10 bg-dark bg-opacity-25">
+            <h6 class="fw-bold text-white mb-0 x-small tracking-widest text-uppercase"><i class="fas fa-table text-warning me-2"></i>Channel Equity Analysis</h6>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-borderless align-middle mb-0 text-white w-100">
+                <thead class="text-secondary x-small tracking-widest text-uppercase border-bottom border-light border-opacity-10 bg-light bg-opacity-5">
+                    <tr>
+                        <th class="ps-4 py-3 border-0">Channel</th>
+                        <th class="py-3 border-0">Applications</th>
+                        <th class="py-3 border-0">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for src, count in source_counts.items %}
+                    <tr class="border-bottom border-light border-opacity-5">
+                        <td class="ps-4 py-3 x-small fw-semibold text-white">{{ src }}</td>
+                        <td class="py-3 x-small" style="font-family: 'Space Grotesk', sans-serif;">{{ count }}</td>
+                        <td class="py-3"><span class="badge rounded-pill px-2 x-small fw-bold" style="background: rgba(0,200,83,0.15); color: #69f0ae; border: 1px solid rgba(0,200,83,0.25);">Active</span></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+Chart.defaults.color = '#94a3b8';
+Chart.defaults.borderColor = 'rgba(255,255,255,0.04)';
+
+const SRC    = {{ source_json|safe }};
+const PASS   = {{ channel_pass_json|safe }};
+const SCORES = {{ score_by_source_json|safe }};
+const GRID   = { color: 'rgba(255,255,255,0.04)' };
+const TICK   = { color: '#64748b', font: { size: 11 } };
+const COLORS = ['#2979FF', '#7C4DFF', '#00C853', '#FF6D00', '#00B0FF', '#FF4081'];
+
+new Chart(document.getElementById('sourceChart'), {
+    type: 'doughnut',
+    data: { labels: SRC.map(s => s.src), datasets: [{ data: SRC.map(s => s.count), backgroundColor: COLORS, borderWidth: 0 }] },
+    options: { plugins: { legend: { labels: { color: '#94a3b8', font: { size: 11 }, boxWidth: 10 } } }, cutout: '65%' }
+});
+new Chart(document.getElementById('passChart'), {
+    type: 'bar',
+    data: { labels: Object.keys(PASS), datasets: [{ label: 'Hire Rate %', data: Object.values(PASS), backgroundColor: 'rgba(0,200,83,0.6)', borderRadius: 6 }] },
+    options: { plugins: { legend: { display: false } }, scales: { x: { grid: GRID, ticks: TICK }, y: { grid: GRID, ticks: TICK, beginAtZero: true, max: 100 } } }
+});
+new Chart(document.getElementById('scoreChart'), {
+    type: 'bar',
+    data: { labels: Object.keys(SCORES), datasets: [{ label: 'Avg AI Score', data: Object.values(SCORES), backgroundColor: 'rgba(41,121,255,0.6)', borderRadius: 6 }] },
+    options: { plugins: { legend: { display: false } }, scales: { x: { grid: GRID, ticks: TICK }, y: { grid: GRID, ticks: TICK, beginAtZero: true, max: 100 } } }
+});
+</script>
+{% endblock %}

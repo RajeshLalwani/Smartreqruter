@@ -1,0 +1,198 @@
+{% extends 'base.html' %}
+
+{% block title %}Apply for {{ job.title }} | SmartRecruit{% endblock %}
+
+{% block content %}
+<style>
+    /* Z-INDEX SAFEGUARDS & FORM STYLING */
+    .modal { z-index: 2000 !important; }
+    .modal-backdrop { z-index: 1050 !important; }
+    
+    /* Silicon Valley Form Overrides */
+    .form-control {
+        background-color: rgba(10, 10, 15, 0.4) !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        color: #f8f9fa !important;
+        padding: 0.75rem 1rem;
+        border-radius: 0.5rem;
+        transition: all 0.3s ease;
+    }
+    .form-control:focus {
+        background-color: rgba(0, 0, 0, 0.6) !important;
+        border-color: #0dcaf0 !important;
+        box-shadow: 0 0 15px rgba(13, 202, 240, 0.25) inset, 0 0 5px rgba(13, 202, 240, 0.5) !important;
+    }
+    input[type="file"]::file-selector-button {
+        background-color: rgba(13, 202, 240, 0.1);
+        color: #0dcaf0;
+        border: 1px solid rgba(13, 202, 240, 0.2);
+        border-radius: 4px;
+        padding: 0.4rem 1rem;
+        margin-right: 1rem;
+        transition: all 0.2s ease;
+        cursor: pointer;
+    }
+    input[type="file"]::file-selector-button:hover {
+        background-color: rgba(13, 202, 240, 0.2);
+    }
+    label.form-label {
+        color: #adb5bd;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        font-weight: 700;
+        margin-bottom: 0.4rem;
+    }
+</style>
+
+<div class="container-fluid">
+    <!-- Hero Section -->
+    <section class="page-hero mb-4 glass-panel p-5 border-info border-opacity-10 shadow-lg position-relative overflow-hidden" data-aos="fade-down">
+        <div class="position-absolute top-0 end-0 p-4 opacity-10">
+            <i class="fas fa-paper-plane fa-6x text-info"></i>
+        </div>
+        <div class="row align-items-center g-4 position-relative z-2">
+            <div class="col-lg-8">
+                <div class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25 px-3 py-2 rounded-pill mb-3 text-uppercase tracking-widest small fw-bold">
+                    <i class="fas fa-user-astronaut me-2"></i>Candidate Application Portal
+                </div>
+                <h1 class="display-6 fw-bold text-theme mb-3 tracking-tight">Submit your profile to the <span class="text-transparent bg-clip-text bg-gradient-info">neural screening engine</span>.</h1>
+                <p class="lead text-theme-secondary mb-0">You are initiating the sequence for <span class="text-theme fw-bold">{{ job.title }}</span>. Our AI system immediately processes your resume upon submission.</p>
+            </div>
+            <div class="col-lg-4 d-none d-lg-block">
+                <div class="glass-panel p-4 bg-dark bg-opacity-50 border-secondary border-opacity-25 text-white shadow-inner rounded-4 h-100 d-flex flex-column justify-content-center text-center">
+                    <div class="text-info text-uppercase tracking-widest small fw-bold mb-2"><i class="fas fa-file-pdf me-2"></i>File Requirements</div>
+                    <div class="fw-bold text-white mb-1 fs-5">PDF / DOCX Only</div>
+                    <div class="text-secondary small">Max Size: 5MB Vector Limit</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Form Architecture -->
+    <section class="row justify-content-center pb-5" data-aos="fade-up">
+        <div class="col-lg-8">
+            <div class="glass-panel p-4 p-lg-5 border-secondary border-opacity-25 shadow-lg position-relative overflow-hidden">
+                <div class="position-absolute top-0 end-0 p-3 opacity-5"><i class="fas fa-upload fa-4x text-theme-secondary"></i></div>
+                
+                <h4 class="fw-bold text-theme mb-4 d-flex align-items-center border-bottom border-light border-opacity-10 pb-3 position-relative z-2">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center bg-info bg-opacity-10 text-info shadow-inner me-3" style="width:40px;height:40px;"><i class="fas fa-file-upload"></i></div>
+                    Document Upload Sequence
+                </h4>
+
+                <form method="post" enctype="multipart/form-data" id="apply-form" class="position-relative z-2">
+                    {% csrf_token %}
+                    
+                    <div class="p-4 rounded-4 bg-dark bg-opacity-50 border border-info border-opacity-25 shadow-inner mb-4 d-flex align-items-center gap-3">
+                        <i class="fas fa-shield-alt fa-2x text-info opacity-75"></i>
+                        <div>
+                            <div class="fw-bold text-light mb-1 small text-uppercase tracking-widest">Identity Protocol Active</div>
+                            <div class="small text-secondary m-0">Your application will be permanently bound to <span class="text-info fw-bold">{{ user.email }}</span>. Ensure this is your primary contact method.</div>
+                        </div>
+                    </div>
+
+                    <div class="mb-5">
+                        <label for="resume" class="form-label text-info"><i class="fas fa-cloud-upload-alt me-1"></i> Core Resume File</label>
+                        <input type="file" id="resume" name="resume" class="form-control form-control-lg glass-input border-info border-opacity-50 shadow-inner" accept=".pdf,.doc,.docx" required>
+                        <div class="form-text mt-2 text-secondary small"><i class="fas fa-info-circle me-1 text-info"></i>The engine performs highest with dense, chronologically structured PDF files.</div>
+                    </div>
+
+                    <div class="d-flex flex-wrap gap-3 pt-2 border-top border-light border-opacity-10 pt-4" id="action-buttons">
+                        <button type="submit" class="btn thunder-btn thunder-btn--primary btn-lg rounded-pill px-5 fw-bold shadow-lg hover-scale" id="submit-btn" style="animation: bubble-pulse 2s infinite ease-in-out;">
+                            <i class="fas fa-bolt me-2"></i> ⚡ Launch AI Scan
+                        </button>
+                        <a href="{% url 'job_detail' job.id %}" class="btn thunder-btn thunder-btn--ghost btn-lg rounded-pill px-4 hover-scale">
+                            <i class="fas fa-times me-2"></i> Cancel Sequence
+                        </a>
+                    </div>
+
+                    <!-- Thunder Analysis Progress Bar -->
+                    <div id="thunder-progress-container" class="mt-4 d-none p-4 rounded-4 bg-dark bg-opacity-75 border border-info border-opacity-50 shadow-lg position-relative overflow-hidden">
+                        <div class="position-absolute top-0 end-0 p-2 opacity-10"><i class="fas fa-brain fa-3x text-info"></i></div>
+                        <h6 class="text-info mb-3 fw-bold tracking-widest small text-uppercase" id="thunder-status-text">
+                            <i class="fas fa-circle-notch fa-spin me-2"></i> Thunder Analysis Protocol Initiated...
+                        </h6>
+                        <div class="progress bg-black border border-secondary border-opacity-50 shadow-inner" style="height: 12px; border-radius: 6px;">
+                            <div id="thunder-progress-bar" class="progress-bar progress-bar-striped progress-bar-animated bg-info" role="progressbar" style="width: 0%; transition: width 0.5s ease;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                        <div class="text-secondary small mt-3 fst-italic" id="rajesh-hint">
+                            <i class="fas fa-robot me-1 text-info"></i> System: Connecting to Rajesh Lalwani's neural screening engine...
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </section>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('apply-form').addEventListener('submit', function (event) {
+    const input = document.getElementById('resume');
+    if (!input.files.length) {
+        event.preventDefault();
+        return;
+    }
+
+    const file = input.files[0];
+    const allowed = ['.pdf', '.doc', '.docx'];
+    const lower = file.name.toLowerCase();
+    const isValid = allowed.some(ext => lower.endsWith(ext));
+
+    if (!isValid || file.size > 5 * 1024 * 1024) {
+        event.preventDefault();
+        alert('File Protocol Error: Please upload a strictly formatted PDF, DOC, or DOCX file under 5 MB.');
+        
+        // Add error styling
+        input.style.borderColor = '#dc3545';
+        input.style.boxShadow = '0 0 10px rgba(220, 53, 69, 0.3) inset';
+        setTimeout(() => {
+            input.style.borderColor = '';
+            input.style.boxShadow = '';
+        }, 2000);
+        
+        return;
+    }
+
+    const actionButtons = document.getElementById('action-buttons');
+    const progressContainer = document.getElementById('thunder-progress-container');
+    const progressBar = document.getElementById('thunder-progress-bar');
+    const statusText = document.getElementById('thunder-status-text');
+    const rajeshHint = document.getElementById('rajesh-hint');
+    
+    // Hide buttons and show custom progress bar
+    actionButtons.classList.add('d-none');
+    progressContainer.classList.remove('d-none');
+    
+    // Add neon glow success pulse to the upload area
+    input.closest('.glass-panel').style.boxShadow = '0 0 30px rgba(0, 255, 255, 0.5) inset';
+    
+    // Simulate AI screening progression
+    let progress = 0;
+    const stages = [
+        { threshold: 15, text: "Extracting Vector Data...", hint: "Rajesh Lalwani: Parsing raw text from PDF." },
+        { threshold: 40, text: "Analyzing Skills & Experience...", hint: "Rajesh Lalwani: Mapping career trajectory to required competencies." },
+        { threshold: 75, text: "Calculating Job Description Match Score...", hint: "Rajesh Lalwani: Performing semantic RAG gap analysis." },
+        { threshold: 95, text: "Finalizing Shortlist Recommendation...", hint: "Rajesh Lalwani: Generating Thunder Analysis insight." }
+    ];
+    let currentStage = 0;
+    
+    const interval = setInterval(() => {
+        progress += Math.random() * 3 + 1; // Increment by 1-4%
+        if (progress > 98) progress = 98; // Hold at 98% until page reload
+        
+        progressBar.style.width = progress + '%';
+        progressBar.setAttribute('aria-valuenow', progress);
+        
+        if (currentStage < stages.length && progress >= stages[currentStage].threshold) {
+            statusText.innerHTML = '<i class="fas fa-circle-notch fa-spin me-2"></i> ' + stages[currentStage].text;
+            rajeshHint.innerHTML = '<i class="fas fa-robot me-1 text-info"></i> ' + stages[currentStage].hint;
+            currentStage++;
+        }
+        
+    }, 250); // Updates every 250ms
+});
+</script>
+{% endblock %}

@@ -1,0 +1,126 @@
+{% extends 'base.html' %}{% load static %}
+{% block title %}Automated Reference Bot | SmartRecruit AI{% endblock %}
+{% block content %}
+<div class="container-fluid px-4 mt-4">
+    <!-- Header -->
+    <div class="glass-panel p-4 mb-4"
+        style="background:linear-gradient(135deg,rgba(0,200,81,0.08),rgba(41,121,255,0.08));border:1px solid rgba(0,200,81,0.25);">
+        <div class="d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center gap-3">
+                <div class="bg-success bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center text-success fw-bold shadow-sm"
+                    style="width: 56px; height: 56px; font-size: 1.25rem;">
+                    <i class="fas fa-address-card"></i>
+                </div>
+                <div>
+                    <h2 class="fw-bold text-theme mb-1">Automated Reference Bot</h2>
+                    <p class="text-muted mb-0 small"><i class="fas fa-robot me-2 text-primary"></i>AI-driven
+                        verification report for <strong>{{ candidate.full_name }}</strong></p>
+                </div>
+            </div>
+            <div class="text-end">
+                <div class="h3 fw-bold text-success mb-0">{{ report.overall_validity_score }}%</div>
+                <div class="text-muted small fw-bold text-uppercase">Integrity Rating</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-5">
+        <!-- AI Integrity Report -->
+        <div class="col-lg-5">
+            <div class="glass-panel p-4 h-100 shadow-lg border-success border-opacity-20" data-aos="fade-right">
+                <h5 class="fw-bold text-theme mb-4"><i class="fas fa-microscope text-success me-2"></i>AI Verification
+                    Summary</h5>
+
+                <div class="mb-4">
+                    <label class="text-muted x-small uppercase fw-bold mb-2">Integrity Narrative</label>
+                    <p class="text-theme small fst-italic">{{ report.integrity_report }}</p>
+                </div>
+
+                <div class="mb-4">
+                    <label class="text-muted x-small uppercase fw-bold mb-2">Verified Institutional Impact</label>
+                    <div class="p-3 rounded bg-success bg-opacity-5 border border-success border-opacity-10">
+                        <i class="fas fa-certificate text-success me-2"></i>
+                        <span class="small text-theme fw-bold">{{ report.verified_impact }}</span>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="text-muted x-small uppercase fw-bold mb-2">Peer Consensus Analysis</label>
+                    <p class="text-muted small">{{ report.peer_consensus }}</p>
+                </div>
+
+                {% if report.cautionary_note != "None" %}
+                <div
+                    class="alert bg-warning bg-opacity-10 border border-warning border-opacity-20 text-warning x-small">
+                    <i class="fas fa-user-shield me-2"></i>Potential Behavioral Note: {{ report.cautionary_note }}
+                </div>
+                {% endif %}
+
+                <button class="btn btn-sm btn-success w-100 rounded-pill shadow-sm py-2 mt-3">
+                    <i class="fas fa-file-pdf me-2"></i>Download Official Integrity Report
+                </button>
+            </div>
+        </div>
+
+        <!-- Reference Activity Log -->
+        <div class="col-lg-7">
+            <div class="glass-panel p-4 h-100" data-aos="fade-left">
+                <h6 class="fw-bold text-theme mb-4"><i class="fas fa-stream text-primary me-2"></i>Reference Interaction
+                    Activity</h6>
+
+                <div class="d-flex flex-column gap-3">
+                    {% for reference in references %}
+                    <div class="p-4 rounded-4 border border-secondary border-opacity-10 shadow-sm"
+                        style="background:rgba(255,255,255,0.02); transition:transform 0.3s ease;">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="bg-light bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center text-muted fw-bold x-small"
+                                    style="width:34px;height:34px;">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                <div>
+                                    <div class="fw-bold text-theme small">{{ reference.name }}</div>
+                                    <div class="xx-small text-muted uppercase">{{ reference.relation }} @ {{                                         reference.company }}</div>
+                                </div>
+                            </div>
+                            <span
+                                class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-10 xx-small">VERIFIED
+                                BY BOT</span>
+                        </div>
+                        <blockquote class="mb-0">
+                            <i class="fas fa-quote-left text-muted opacity-25 me-2"></i>
+                            <span class="small text-muted font-italic">"{{ reference.response }}"</span>
+                        </blockquote>
+                    </div>
+                    {% endfor %}
+
+                    <!-- Bot Status -->
+                    <div class="p-3 border border-secondary border-opacity-10 rounded-3 text-center border-dashed">
+                        <span class="text-muted x-small italic"><i
+                                class="fas fa-circle-notch fa-spin me-2 text-info"></i>AI Bot is currently processing 1
+                            pending outreach to [EX-MANAGER @ TIER 1]</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .x-small {
+        font-size: 0.75rem;
+    }
+
+    .xx-small {
+        font-size: 0.6rem;
+    }
+
+    .uppercase {
+        text-transform: uppercase;
+    }
+
+    .border-dashed {
+        border-style: dashed !important;
+    }
+</style>
+{% endblock %}
